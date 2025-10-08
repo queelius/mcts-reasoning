@@ -9,14 +9,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="mcts-reasoning",
-    version="0.1.0",
+    version="0.2.0",
     author="Your Name",
     author_email="your.email@example.com",
-    description="Monte Carlo Tree Search for LLM-based reasoning with compositional actions",
+    description="Monte Carlo Tree Search for LLM-based reasoning with advanced compositional prompting",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/yourusername/mcts-reasoning",
-    packages=find_packages(exclude=["tests", "viewer", "examples"]),
+    packages=find_packages(exclude=["tests", "examples"]),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -28,20 +28,23 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
     python_requires=">=3.8",
     install_requires=[
-        # Core dependencies only
-        # LLM providers are optional
+        "numpy>=1.20.0",  # For UCB1 calculations
     ],
     extras_require={
         "ollama": ["requests>=2.28.0"],
-        "openai": ["openai>=0.27.0"],
-        "anthropic": ["anthropic>=0.3.0"],
-        "viewer": [
-            "fastapi>=0.100.0",
-            "uvicorn>=0.22.0",
-            "websockets>=11.0",
+        "openai": ["openai>=1.0.0"],
+        "anthropic": ["anthropic>=0.18.0"],
+        "tui": [
+            "rich>=13.0.0",  # For beautiful TUI
+            "prompt_toolkit>=3.0.0",  # For advanced input with history and completion
+        ],
+        "mcp": [
+            # Future: official MCP SDK when available
+            # For now, MCP support is built-in
         ],
         "dev": [
             "pytest>=7.0.0",
@@ -51,18 +54,18 @@ setup(
             "mypy>=1.0.0",
         ],
         "all": [
+            "numpy>=1.20.0",
             "requests>=2.28.0",
-            "openai>=0.27.0", 
-            "anthropic>=0.3.0",
-            "fastapi>=0.100.0",
-            "uvicorn>=0.22.0",
-            "websockets>=11.0",
+            "openai>=1.0.0",
+            "anthropic>=0.18.0",
+            "rich>=13.0.0",
+            "prompt_toolkit>=3.0.0",
         ]
     },
     entry_points={
         "console_scripts": [
-            "mcts-reasoning=mcts_reasoning.cli:main",
-            "mcts-viewer=mcts_reasoning.viewer.server:main",
+            "mcts-tui=mcts_reasoning.tui:main",
+            "mcts-reasoning-tui=mcts_reasoning.tui:main",  # Alias
         ],
     },
 )
