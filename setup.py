@@ -53,6 +53,12 @@ setup(
             "flake8>=6.0.0",
             "mypy>=1.0.0",
         ],
+        "docs": [
+            "mkdocs>=1.5.0",
+            "mkdocs-material>=9.0.0",
+            "mkdocs-autorefs>=0.5.0",
+            "pymdown-extensions>=10.0.0",
+        ],
         "all": [
             "numpy>=1.20.0",
             "requests>=2.28.0",
@@ -64,8 +70,13 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "mcts-tui=mcts_reasoning.tui:main",
-            "mcts-reasoning-tui=mcts_reasoning.tui:main",  # Alias
+            # Primary commands
+            "mcts=mcts_reasoning.cli:main",              # Non-interactive CLI
+            "mcts-shell=mcts_reasoning.tui:main",  # Interactive shell (TUI)
+
+            # Backwards compatibility aliases
+            "mcts-tui=mcts_reasoning.tui:main",     # Legacy TUI name
+            "mcts-reasoning-tui=mcts_reasoning.tui:main",
         ],
     },
 )

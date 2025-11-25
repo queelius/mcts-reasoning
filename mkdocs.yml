@@ -1,0 +1,112 @@
+site_name: MCTS-Reasoning Documentation
+site_description: Monte Carlo Tree Search for LLM-based reasoning with advanced compositional prompting
+site_author: MCTS-Reasoning Contributors
+repo_url: https://github.com/yourusername/mcts-reasoning
+repo_name: mcts-reasoning
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - autorefs
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Home: index.md
+
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Examples: getting-started/examples.md
+
+  - User Guides:
+    - Interactive Shell: guides/shell-guide.md
+    - Shell Quick Reference: guides/shell-quick-reference.md
+    - Shell Comparison: guides/shell-comparison.md
+    - TUI Interface: guides/tui-guide.md
+    - Remote Ollama Setup: guides/remote-ollama-setup.md
+
+  - Features:
+    - Compositional Actions: features/compositional-actions.md
+    - Prompt Features: features/prompt-features.md
+    - Solution Detection: features/solution-detection.md
+    - Meta-Reasoning: features/meta-reasoning.md
+    - Reflection & Critique: features/reflection.md
+    - Learning System: features/learning.md
+    - Context Management: features/context-management.md
+    - Tree Diagnostics: features/tree-diagnostics.md
+
+  - Advanced:
+    - MCP Integration: advanced/mcp-integration.md
+    - Benchmarking: advanced/benchmarking.md
+    - Automatic Summarization: advanced/automatic-summarization.md
+
+  - Development:
+    - Testing: development/testing.md
+    - Test Summary: development/test-summary.md
+    - Recent Changes: development/changelog.md
+    - Bug Fixes: development/bug-fixes.md
+    - New Features: development/new-features.md
+    - Command Syntax Update: development/command-syntax-update.md
+    - Completed Improvements: development/improvements-complete.md
+    - Short-term Roadmap: development/short-term-improvements.md
+    - Medium-term Roadmap: development/medium-term-improvements.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/yourusername/mcts-reasoning
+  version:
+    provider: mike
+
+copyright: Copyright &copy; 2024 MCTS-Reasoning Contributors

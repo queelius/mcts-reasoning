@@ -20,6 +20,7 @@ class MCTSNode:
     visits: int = 0
     value: float = 0.0
     action_taken: Optional[Any] = None
+    tried_actions: List[Any] = field(default_factory=list)  # Track which actions have been tried
     
     @property
     def is_leaf(self) -> bool:
@@ -65,9 +66,18 @@ class MCTSNode:
             'state': self.state,
             'visits': self.visits,
             'value': self.value,
+            'depth': self.depth,
             'action_taken': str(self.action_taken) if self.action_taken else None,
             'children': [child.to_dict() for child in self.children]
         }
+
+    def get_all_descendants(self) -> List['MCTSNode']:
+        """Get all descendant nodes in depth-first order."""
+        descendants = []
+        for child in self.children:
+            descendants.append(child)
+            descendants.extend(child.get_all_descendants())
+        return descendants
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any], parent: Optional['MCTSNode'] = None) -> 'MCTSNode':
@@ -186,35 +196,63 @@ class MCTS:
         self._backpropagate(node, reward)
     
     def _select(self) -> MCTSNode:
-        """Select node to expand using UCB1."""
+        """
+        Select node to expand using UCB1.
+
+        Traverses tree until finding a node that either:
+        1. Has no children (leaf node)
+        2. Has untried actions (can be expanded further)
+        """
         node = self.root
-        
-        while node.children:
-            # Select child with highest UCB1 value
-            node = max(node.children, 
+
+        while node.children and not self._has_untried_actions(node):
+            # Node has children and no untried actions, so keep selecting
+            node = max(node.children,
                       key=lambda n: n.ucb1(self.exploration_constant))
-        
+
         return node
+
+    def _has_untried_actions(self, node: MCTSNode) -> bool:
+        """Check if node has any untried actions."""
+        actions = self._get_actions(node.state)
+        if not actions:
+            return False
+
+        tried_action_strs = [str(a) for a in node.tried_actions]
+        untried_actions = [a for a in actions if str(a) not in tried_action_strs]
+        return len(untried_actions) > 0
     
     def _expand(self, node: MCTSNode) -> MCTSNode:
-        """Expand node by adding one child."""
+        """Expand node by adding one child with an untried action."""
         # Get possible actions (to be implemented by subclass)
         actions = self._get_actions(node.state)
-        
+
         if not actions:
             return node
-        
-        # Add one random unexplored action
-        action = random.choice(actions)
+
+        # Filter to get only untried actions
+        # Convert actions to string for comparison (handles CompositionalAction objects)
+        tried_action_strs = [str(a) for a in node.tried_actions]
+        untried_actions = [a for a in actions if str(a) not in tried_action_strs]
+
+        # If all actions have been tried, return the node without expanding
+        if not untried_actions:
+            return node
+
+        # Select one random untried action
+        action = random.choice(untried_actions)
+        node.tried_actions.append(action)  # Mark as tried
+
+        # Create new state and child node
         new_state = self._take_action(node.state, action)
-        
+
         child = MCTSNode(
             state=new_state,
             parent=node,
             action_taken=action
         )
         node.children.append(child)
-        
+
         return child
     
     def _rollout(self, node: MCTSNode) -> float:
@@ -318,15 +356,15 @@ class MCTS:
         """Get tree statistics."""
         if not self.root:
             return {}
-        
+
         def count_nodes(node):
             return 1 + sum(count_nodes(c) for c in node.children)
-        
+
         def max_depth(node, d=0):
             if not node.children:
                 return d
             return max(max_depth(c, d+1) for c in node.children)
-        
+
         return {
             'total_nodes': count_nodes(self.root),
             'max_depth': max_depth(self.root),
@@ -335,6 +373,34 @@ class MCTS:
             'best_value': self.best_value,
             'num_children': len(self.root.children),
             'metadata': self._metadata
+        }
+
+    def get_all_nodes(self) -> List[MCTSNode]:
+        """Get all nodes in the tree (depth-first order)."""
+        if not self.root:
+            return []
+        return [self.root] + self.root.get_all_descendants()
+
+    def get_node_by_index(self, index: int) -> Optional[MCTSNode]:
+        """Get a node by its index in depth-first traversal."""
+        nodes = self.get_all_nodes()
+        if 0 <= index < len(nodes):
+            return nodes[index]
+        return None
+
+    def get_node_details(self, node: MCTSNode) -> Dict[str, Any]:
+        """Get detailed information about a node."""
+        return {
+            'depth': node.depth,
+            'visits': node.visits,
+            'value': node.value,
+            'avg_value': node.value / node.visits if node.visits > 0 else 0.0,
+            'action': str(node.action_taken) if node.action_taken else 'ROOT',
+            'state_length': len(node.state),
+            'state_preview': node.state[-500:] if len(node.state) > 500 else node.state,
+            'num_children': len(node.children),
+            'is_leaf': node.is_leaf,
+            'ucb1': node.ucb1(self.exploration_constant) if not node.is_root else 0.0
         }
     
     # ========== Serialization ==========

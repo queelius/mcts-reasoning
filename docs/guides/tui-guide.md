@@ -280,7 +280,7 @@ Goodbye!
 - **Ctrl+L** - Clear screen
 - **/exit** or **/quit** - Exit TUI
 
-See [PROMPT_FEATURES.md](PROMPT_FEATURES.md) for detailed prompt documentation.
+See [../features/prompt-features.md](../features/prompt-features.md) for detailed prompt documentation.
 
 ## Configuration Files
 

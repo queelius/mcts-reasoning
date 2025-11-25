@@ -58,6 +58,52 @@ class LLMProvider(ABC):
         except:
             return False
 
+    @classmethod
+    def probe_endpoint(cls, endpoint_url: str, **kwargs) -> Dict[str, Any]:
+        """
+        Probe an endpoint to check availability and discover models.
+
+        This is a generic interface for endpoint discovery. Providers that support
+        model discovery (like Ollama) should override this method.
+
+        Args:
+            endpoint_url: URL of the endpoint to probe
+            **kwargs: Provider-specific parameters
+
+        Returns:
+            Dictionary with:
+                - available: bool (whether endpoint is reachable)
+                - models: list of model names (if supported)
+                - error: error message if not available
+                - provider_specific info
+        """
+        return {
+            'available': False,
+            'error': f'{cls.__name__} does not support endpoint probing',
+            'models': []
+        }
+
+    def list_models(self) -> List[Dict[str, Any]]:
+        """
+        List available models from this provider.
+
+        Returns:
+            List of model dictionaries. Empty list if not supported.
+        """
+        return []
+
+    def get_model_info(self, model_name: str = None) -> Optional[Dict[str, Any]]:
+        """
+        Get detailed information about a specific model.
+
+        Args:
+            model_name: Model to get info for
+
+        Returns:
+            Dictionary with model info, or None if not supported
+        """
+        return None
+
 
 # ========== Concrete Providers ==========
 
@@ -207,6 +253,45 @@ class AnthropicProvider(LLMProvider):
 
 class OllamaProvider(LLMProvider):
     """Ollama local LLM provider."""
+
+    @classmethod
+    def probe_endpoint(cls, endpoint_url: str, **kwargs) -> Dict[str, Any]:
+        """
+        Probe an Ollama endpoint to check availability and list models.
+
+        Args:
+            endpoint_url: Ollama endpoint URL (e.g., "http://192.168.0.225:11434")
+            **kwargs: Optional timeout parameter (default: 3.0 seconds)
+
+        Returns:
+            Dictionary with:
+                - available: bool (whether endpoint is reachable)
+                - models: list of model names
+                - model_count: number of models available
+                - base_url: normalized endpoint URL
+                - error: error message if not available
+        """
+        timeout = kwargs.get('timeout', 3.0)
+
+        try:
+            import requests
+            endpoint_url = endpoint_url.rstrip('/')
+            response = requests.get(f"{endpoint_url}/api/tags", timeout=timeout)
+            response.raise_for_status()
+            data = response.json()
+            models = [m['name'] for m in data.get('models', [])]
+            return {
+                'available': True,
+                'models': models,
+                'model_count': len(models),
+                'base_url': endpoint_url
+            }
+        except requests.exceptions.Timeout:
+            return {'available': False, 'error': f'Connection timeout to {endpoint_url}', 'models': []}
+        except requests.exceptions.ConnectionError:
+            return {'available': False, 'error': f'Connection refused by {endpoint_url}', 'models': []}
+        except Exception as e:
+            return {'available': False, 'error': str(e), 'models': []}
 
     def __init__(self, model: str = None, host: str = None, port: int = None, base_url: str = None):
         """

@@ -41,6 +41,7 @@ class CognitiveOperation(Enum):
     EVALUATE = "evaluate"            # Assess quality/value
     GENERATE = "generate"            # Create new content
     REFINE = "refine"                # Improve existing content
+    FINALIZE = "finalize"            # Create polished final answer (terminal)
 
 
 class FocusAspect(Enum):
@@ -214,6 +215,83 @@ class ComposingPrompt:
     def add_context(self, context: str) -> 'ComposingPrompt':
         """Add additional context"""
         self._context_additions.append(context)
+        return self
+
+    def with_examples(self, examples: List[Any],
+                     include_steps: bool = True) -> 'ComposingPrompt':
+        """
+        Add examples for few-shot learning.
+
+        Args:
+            examples: List of Example objects or formatted example strings
+            include_steps: Whether to include reasoning steps in examples
+
+        Returns:
+            self (for chaining)
+        """
+        from .examples import Example
+
+        for example in examples:
+            if isinstance(example, Example):
+                self._examples.append(
+                    example.to_prompt_string(include_steps=include_steps)
+                )
+            elif isinstance(example, str):
+                self._examples.append(example)
+            else:
+                raise TypeError(f"Examples must be Example objects or strings, got {type(example)}")
+
+        return self
+
+    def with_rag_examples(self, rag_store, n: int = 3,
+                         include_steps: bool = True) -> 'ComposingPrompt':
+        """
+        Add examples retrieved from a RAG store.
+
+        Args:
+            rag_store: SolutionRAGStore to retrieve examples from
+            n: Number of examples to retrieve
+            include_steps: Whether to include reasoning steps
+
+        Returns:
+            self (for chaining)
+        """
+        from .rag import SolutionRAGStore
+
+        if not isinstance(rag_store, SolutionRAGStore):
+            raise TypeError("rag_store must be a SolutionRAGStore")
+
+        if self._problem_context:
+            # Retrieve similar examples
+            examples = rag_store.retrieve(self._problem_context, k=n)
+            self.with_examples(examples, include_steps=include_steps)
+
+        return self
+
+    def with_rag_guidance(self, rag_store) -> 'ComposingPrompt':
+        """
+        Apply compositional guidance from a RAG store.
+
+        This uses CompositionalRAGStore to set the compositional dimensions
+        based on the problem type.
+
+        Args:
+            rag_store: CompositionalRAGStore to get guidance from
+
+        Returns:
+            self (for chaining)
+        """
+        from .rag import CompositionalRAGStore
+
+        if not isinstance(rag_store, CompositionalRAGStore):
+            raise TypeError("rag_store must be a CompositionalRAGStore")
+
+        if self._problem_context:
+            # Get recommended weights and sample with them
+            weights = rag_store.get_recommended_weights(self._problem_context)
+            if weights:
+                self.sample_weighted(weights)
+
         return self
 
     def sample_weighted(self, weights: Optional[Dict[str, Dict[Any, float]]] = None) -> 'ComposingPrompt':
@@ -556,6 +634,10 @@ __all__ = [
 
     # Utility functions
     'smart_termination',
+
+    # Examples and RAG (lazy imports to avoid circular dependencies)
+    # from .examples import Example, ExampleSet, get_math_examples, etc.
+    # from .rag import CompositionalRAGStore, SolutionRAGStore, etc.
 ]
 
 # Add MCP exports if available

@@ -1,0 +1,117 @@
+{
+  "name": "MATH Dataset Sample",
+  "description": "Sample problems from MATH dataset (algebra, number theory)",
+  "source": "https://github.com/hendrycks/math",
+  "problems": [
+    {
+      "id": "math_001",
+      "category": "algebra",
+      "question": "Solve for x: 2x + 5 = 17",
+      "answer": "6",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "linear_equations"
+      }
+    },
+    {
+      "id": "math_002",
+      "category": "algebra",
+      "question": "Solve for x: 3x - 7 = 14",
+      "answer": "7",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "linear_equations"
+      }
+    },
+    {
+      "id": "math_003",
+      "category": "algebra",
+      "question": "Solve for x: x^2 - 5x + 6 = 0. Give the smallest solution.",
+      "answer": "2",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "quadratic_equations"
+      }
+    },
+    {
+      "id": "math_004",
+      "category": "algebra",
+      "question": "Solve for x: x^2 - 7x + 12 = 0. Give the largest solution.",
+      "answer": "4",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "quadratic_equations"
+      }
+    },
+    {
+      "id": "math_005",
+      "category": "number_theory",
+      "question": "What is the smallest prime number greater than 10?",
+      "answer": "11",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "primes"
+      }
+    },
+    {
+      "id": "math_006",
+      "category": "number_theory",
+      "question": "How many prime numbers are there between 10 and 20 (inclusive)?",
+      "answer": "4",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "primes"
+      }
+    },
+    {
+      "id": "math_007",
+      "category": "number_theory",
+      "question": "What is the greatest common divisor of 48 and 18?",
+      "answer": "6",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "gcd"
+      }
+    },
+    {
+      "id": "math_008",
+      "category": "number_theory",
+      "question": "What is the least common multiple of 12 and 18?",
+      "answer": "36",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "lcm"
+      }
+    },
+    {
+      "id": "math_009",
+      "category": "arithmetic",
+      "question": "What is 15% of 80?",
+      "answer": "12",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "percentage"
+      }
+    },
+    {
+      "id": "math_010",
+      "category": "algebra",
+      "question": "If y = 2x + 3 and x = 5, what is y?",
+      "answer": "13",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "substitution"
+      }
+    }
+  ]
+}

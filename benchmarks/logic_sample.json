@@ -1,0 +1,117 @@
+{
+  "name": "Logic Reasoning Sample",
+  "description": "Sample logic and reasoning problems",
+  "source": "Custom logic problems",
+  "problems": [
+    {
+      "id": "logic_001",
+      "category": "deduction",
+      "question": "If all cats are mammals, and all mammals are animals, are all cats animals?",
+      "answer": "yes",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "boolean",
+        "topic": "syllogism"
+      }
+    },
+    {
+      "id": "logic_002",
+      "category": "deduction",
+      "question": "If some birds can fly, and penguins are birds, can all penguins fly?",
+      "answer": "no",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "boolean",
+        "topic": "syllogism"
+      }
+    },
+    {
+      "id": "logic_003",
+      "category": "set_theory",
+      "question": "In a group of 50 people, 30 like coffee, 25 like tea, and 10 like both. How many like neither?",
+      "answer": "5",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "venn_diagram"
+      }
+    },
+    {
+      "id": "logic_004",
+      "category": "set_theory",
+      "question": "In a class of 40 students, 25 play basketball, 20 play soccer, and 8 play both. How many play at least one sport?",
+      "answer": "37",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "venn_diagram"
+      }
+    },
+    {
+      "id": "logic_005",
+      "category": "sequence",
+      "question": "What is the next number in the sequence: 2, 4, 6, 8, ...?",
+      "answer": "10",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "arithmetic_sequence"
+      }
+    },
+    {
+      "id": "logic_006",
+      "category": "sequence",
+      "question": "What is the next number in the sequence: 1, 4, 9, 16, ...?",
+      "answer": "25",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "squares"
+      }
+    },
+    {
+      "id": "logic_007",
+      "category": "conditional",
+      "question": "If it rains, the ground is wet. The ground is wet. Did it rain?",
+      "answer": "not necessarily",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "text",
+        "topic": "logical_fallacy"
+      }
+    },
+    {
+      "id": "logic_008",
+      "category": "counting",
+      "question": "How many two-digit numbers are there?",
+      "answer": "90",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "topic": "counting"
+      }
+    },
+    {
+      "id": "logic_009",
+      "category": "comparison",
+      "question": "Alice is taller than Bob. Bob is taller than Carol. Who is the shortest?",
+      "answer": "Carol",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "text",
+        "topic": "transitive_relation"
+      }
+    },
+    {
+      "id": "logic_010",
+      "category": "probability",
+      "question": "If you flip a fair coin twice, what is the probability of getting heads both times? Give answer as a fraction.",
+      "answer": "1/4",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "text",
+        "topic": "probability"
+      }
+    }
+  ]
+}

@@ -65,10 +65,16 @@ class CompositionalAction:
             .problem_context(original_question)
         )
 
-        if previous_response:
-            prompt_builder.base_prompt(f"Previous reasoning:\n{previous_response[-500:]}")
+        # Provide substantial context to LLM (configurable via MAX_CONTEXT_LENGTH)
+        # Default 4000 chars should fit in most context windows while preserving reasoning history
+        max_context = getattr(self, 'max_context_length', 4000)
 
-        prompt_builder.base_prompt(f"Current state:\n{current_state[-1000:]}")
+        if previous_response:
+            prompt_builder.base_prompt(f"Previous reasoning:\n{previous_response[-max_context//2:]}")
+
+        # Include full reasoning history up to max_context chars
+        # This prevents context loss as tree deepens
+        prompt_builder.base_prompt(f"Current state:\n{current_state[-max_context:]}")
 
         return prompt_builder.build()
 
@@ -193,24 +199,50 @@ class ActionSelector:
     }
 
     def __init__(self, exploration_constant: float = 1.414,
-                 use_compatibility_rules: bool = True):
+                 use_compatibility_rules: bool = True,
+                 rag_store: Optional[Any] = None):
         """
         Initialize action selector.
 
         Args:
             exploration_constant: UCB1 exploration parameter
             use_compatibility_rules: Whether to enforce compatibility rules
+            rag_store: Optional CompositionalRAGStore for RAG-guided action selection
         """
         self.exploration_constant = exploration_constant
         self.use_compatibility_rules = use_compatibility_rules
+        self.rag_store = rag_store
 
         # Track action statistics for UCB1
         self.action_visit_counts: Dict[CompositionalAction, int] = {}
         self.action_values: Dict[CompositionalAction, float] = {}
 
+    def get_rag_weights(self, problem: str) -> Optional[Dict[str, Dict[Any, float]]]:
+        """
+        Get RAG-guided weights for a problem.
+
+        Args:
+            problem: Problem statement
+
+        Returns:
+            Weight dictionary or None if no RAG store
+        """
+        if self.rag_store is None:
+            return None
+
+        try:
+            from .rag import CompositionalRAGStore
+            if isinstance(self.rag_store, CompositionalRAGStore):
+                return self.rag_store.get_recommended_weights(problem)
+        except ImportError:
+            pass
+
+        return None
+
     def get_valid_actions(self, current_state: str,
                          previous_action: Optional[CompositionalAction] = None,
-                         n_samples: int = 15) -> List[CompositionalAction]:
+                         n_samples: int = 15,
+                         problem: Optional[str] = None) -> List[CompositionalAction]:
         """
         Get valid compositional actions for current state.
 
@@ -218,15 +250,26 @@ class ActionSelector:
             current_state: Current reasoning state
             previous_action: Previous action taken (for connection type)
             n_samples: Number of actions to sample (to keep action space manageable)
+            problem: Optional problem statement for RAG-guided selection
 
         Returns:
             List of valid CompositionalAction objects
         """
+        # Get RAG weights if available
+        rag_weights = self.get_rag_weights(problem) if problem else None
+
         actions = []
 
-        # Sample diverse operations
+        # Sample diverse operations (bias toward RAG recommendations if available)
         operations = list(CognitiveOperation)
-        sampled_operations = random.sample(operations, min(len(operations), 5))
+        if rag_weights and 'cognitive_op' in rag_weights:
+            # Weighted sampling of operations
+            op_weights = rag_weights['cognitive_op']
+            total_weight = sum(op_weights.get(op, 1.0) for op in operations)
+            probs = [op_weights.get(op, 1.0) / total_weight for op in operations]
+            sampled_operations = random.choices(operations, weights=probs, k=min(len(operations), 5))
+        else:
+            sampled_operations = random.sample(operations, min(len(operations), 5))
 
         for operation in sampled_operations:
             # Get compatible focuses

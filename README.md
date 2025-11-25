@@ -49,38 +49,74 @@ pip install -e ".[all]"
 
 ## Quick Start
 
-### Interactive TUI (Recommended)
+### Interactive Shell (Recommended)
 
-The easiest way to get started is with the TUI:
+The easiest way to get started is with the interactive shell:
 
 ```bash
-# Run the TUI
-python mcts_tui.py
+# Run the interactive shell
+mcts-shell
 
-# Or if installed:
-mcts-tui
+# Or directly:
+python mcts_tui.py
 ```
 
 Then use commands like:
 ```
-> /model                                    # Show current model
-> /model ollama llama2 base_url=http://192.168.0.225:11434  # Remote Ollama
-> /models                                   # List available models
-> /ask What is the sum of all prime numbers less than 100?
-> /search 50
-> /solution
-> /sample 5
-> /consistency 20
+> model                                     # Show current model
+> model ollama llama2 base_url=http://192.168.0.225:11434  # Remote Ollama
+> models                                    # List available models
+> ask What is the sum of all prime numbers less than 100?
+> search 50
+> solution
+> sample 5
+> consistency 20
+> verify                                    # Verify solution correctness
+> export markdown report.md                 # Export tree as markdown
 ```
 
+**Note**: Slash prefix is optional (both `ask` and `/ask` work) for backwards compatibility.
+
 **Enhanced Prompt Features:**
-- **Tab completion** for commands and arguments (try `/mo<Tab>`)
+- **Tab completion** for commands and arguments (try `mo<Tab>` or `/mo<Tab>`)
 - **Persistent history** across sessions (use ↑/↓ arrows)
 - **History search** with Ctrl+R
 - **Syntax highlighting** for commands
 - **Emacs-style editing** (Ctrl+A, Ctrl+E, etc.)
 
 See the [TUI Guide](docs/TUI_GUIDE.md) and [Prompt Features](docs/PROMPT_FEATURES.md) for complete documentation.
+
+### Non-Interactive CLI
+
+For scripting and automation, use the non-interactive CLI:
+
+```bash
+# Ask a question and search
+mcts ask "What is 2+2?" --search 50
+
+# Verify a solution (requires saved session)
+mcts verify --session my_session.json
+
+# Export tree in different formats
+mcts export json output.json --session my_session.json
+mcts export markdown report.md --session my_session.json
+mcts export dot graph.dot --session my_session.json
+
+# Show solution
+mcts solution --session my_session.json
+
+# Sample paths
+mcts sample 10 --session my_session.json
+
+# Check consistency
+mcts consistency 20 --session my_session.json
+```
+
+The CLI supports all the same commands as the interactive shell but executes them non-interactively, making it perfect for:
+- Shell scripts and automation
+- CI/CD pipelines
+- Batch processing
+- Integration with other tools
 
 ### Basic Usage (Programmatic)
 
@@ -173,10 +209,46 @@ print(result['solution'])
 
 ## Documentation
 
-- **[TUI Guide](docs/TUI_GUIDE.md)** - Complete TUI documentation with examples
-- **[MCP Integration](docs/MCP_INTEGRATION.md)** - Using external tools with MCP
-- **[API Reference](docs/API.md)** - Full API documentation (coming soon)
-- **[Examples](examples/)** - Code examples and demos
+Full documentation is available at [https://yourusername.github.io/mcts-reasoning/](https://yourusername.github.io/mcts-reasoning/) (or build locally with `mkdocs serve`).
+
+### Quick Links
+
+**Getting Started:**
+- [Installation](docs/getting-started/installation.md) - Setup and dependencies
+- [Quick Start](docs/getting-started/quick-start.md) - Your first MCTS reasoning session
+- [Examples](docs/getting-started/examples.md) - Complete code examples
+
+**User Guides:**
+- [Interactive Shell](docs/guides/shell-guide.md) - Unix-style composable shell
+- [TUI Interface](docs/guides/tui-guide.md) - Terminal user interface
+- [Remote Ollama Setup](docs/guides/remote-ollama-setup.md) - Using remote Ollama servers
+
+**Features:**
+- [Compositional Actions](docs/features/compositional-actions.md) - 5D action space for reasoning
+- [Solution Detection](docs/features/solution-detection.md) - Automatic solution finalization
+- [Meta-Reasoning](docs/features/meta-reasoning.md) - LLM-guided action selection
+- [Reflection & Critique](docs/features/reflection.md) - Self-improvement loops
+- [Learning System](docs/features/learning.md) - Pattern extraction from experience
+
+**Advanced:**
+- [MCP Integration](docs/advanced/mcp-integration.md) - External tool integration
+- [Benchmarking](docs/advanced/benchmarking.md) - Quantitative evaluation
+
+### Building Documentation
+
+```bash
+# Install documentation dependencies
+pip install -e ".[docs]"
+
+# Serve documentation locally
+mkdocs serve
+
+# Build static site
+mkdocs build
+
+# Deploy to GitHub Pages
+mkdocs gh-deploy
+```
 
 ## Examples
 

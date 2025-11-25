@@ -132,8 +132,18 @@ class SessionState:
                 # Merge kwargs (like base_url) into provider_config
                 provider_config.update(kwargs)
 
-                # Create provider
-                self.llm_provider = get_llm(provider, **provider_config)
+                # Filter provider_config to only include parameters the provider accepts in __init__
+                # Note: OllamaProvider doesn't accept temperature/max_tokens in __init__,
+                # but they're still saved in config and used in generate() calls
+                if provider.lower() == "ollama":
+                    # Only pass init params for Ollama
+                    init_params = {k: v for k, v in provider_config.items()
+                                  if k in ['model', 'host', 'port', 'base_url']}
+                    self.llm_provider = get_llm(provider, **init_params)
+                else:
+                    # Other providers (OpenAI, Anthropic) accept temperature/max_tokens in __init__
+                    self.llm_provider = get_llm(provider, **provider_config)
+
                 self.provider_name = provider
 
                 # Save updated config
@@ -152,6 +162,11 @@ class SessionState:
             return True
 
         except Exception as e:
+            # Log the actual error for debugging
+            import logging
+            logging.error(f"Failed to switch model to {provider}/{model}: {e}", exc_info=True)
+            # Store error message for user
+            self._last_error = str(e)
             return False
 
     def set_temperature(self, temp: float) -> bool:

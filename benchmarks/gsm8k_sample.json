@@ -1,0 +1,117 @@
+{
+  "name": "GSM8K Sample",
+  "description": "Sample problems from Grade School Math 8K dataset",
+  "source": "https://github.com/openai/grade-school-math",
+  "problems": [
+    {
+      "id": "gsm8k_001",
+      "category": "arithmetic",
+      "question": "Janet has 16 apples. She gives 7 apples to her friend. How many apples does Janet have left?",
+      "answer": "9",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["subtraction"]
+      }
+    },
+    {
+      "id": "gsm8k_002",
+      "category": "arithmetic",
+      "question": "A store sells pencils for $0.25 each. If you buy 8 pencils, how much will you pay in total?",
+      "answer": "2",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["multiplication"]
+      }
+    },
+    {
+      "id": "gsm8k_003",
+      "category": "word_problem",
+      "question": "A train travels 60 miles in 1 hour. How far will it travel in 3 hours at the same speed?",
+      "answer": "180",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["multiplication"]
+      }
+    },
+    {
+      "id": "gsm8k_004",
+      "category": "word_problem",
+      "question": "Sarah has 24 cookies. She wants to divide them equally among 6 friends. How many cookies will each friend get?",
+      "answer": "4",
+      "difficulty": "easy",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["division"]
+      }
+    },
+    {
+      "id": "gsm8k_005",
+      "category": "multi_step",
+      "question": "A baker makes 12 cupcakes in the morning and 15 cupcakes in the afternoon. If each cupcake costs $2, how much money will the baker make if all cupcakes are sold?",
+      "answer": "54",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["addition", "multiplication"]
+      }
+    },
+    {
+      "id": "gsm8k_006",
+      "category": "multi_step",
+      "question": "Tom has $50. He buys 3 books for $8 each. How much money does he have left?",
+      "answer": "26",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["multiplication", "subtraction"]
+      }
+    },
+    {
+      "id": "gsm8k_007",
+      "category": "percentage",
+      "question": "A shirt originally costs $40. It is on sale for 25% off. What is the sale price?",
+      "answer": "30",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["percentage", "subtraction"]
+      }
+    },
+    {
+      "id": "gsm8k_008",
+      "category": "multi_step",
+      "question": "A classroom has 30 students. 2/5 of the students are boys. How many girls are in the classroom?",
+      "answer": "18",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["fraction", "subtraction"]
+      }
+    },
+    {
+      "id": "gsm8k_009",
+      "category": "multi_step",
+      "question": "Emma reads 15 pages of a book each day. If the book has 180 pages, how many days will it take her to finish the book?",
+      "answer": "12",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["division"]
+      }
+    },
+    {
+      "id": "gsm8k_010",
+      "category": "multi_step",
+      "question": "A farmer has 48 chickens and 24 cows. If each chicken lays 2 eggs per day, how many eggs are laid in total per day?",
+      "answer": "96",
+      "difficulty": "medium",
+      "metadata": {
+        "answer_type": "number",
+        "operations": ["multiplication"]
+      }
+    }
+  ]
+}
