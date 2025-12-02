@@ -63,3 +63,14 @@ Thumbs.db
 # User-specific
 .env
 config.json
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.out
+paper/*.toc
+paper/*.bbl
+paper/*.blg
+paper/*.log
+
+# Archive (legacy code)
+archive/
