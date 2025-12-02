@@ -1,511 +1,654 @@
-\documentclass[11pt]{article}
+\documentclass[11pt,a4paper]{article}
 
-% Standard packages
+% Packages
 \usepackage[utf8]{inputenc}
-\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsthm}
-\usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{algorithm}
-\usepackage{algorithmic}
-\usepackage{natbib}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
 \usepackage{hyperref}
-\usepackage{xcolor}
-\usepackage{tikz}
-\usetikzlibrary{positioning,shapes,arrows}
+\usepackage{cleveref}
+\usepackage[margin=1in]{geometry}
 
 % Theorem environments
-\newtheorem{definition}{Definition}
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{property}{Property}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{remark}{Remark}[section]
 
 % Custom commands
-\newcommand{\R}{\mathbb{R}}
-\newcommand{\N}{\mathbb{N}}
-\newcommand{\calA}{\mathcal{A}}
-\newcommand{\calS}{\mathcal{S}}
+\newcommand{\statespace}{\mathcal{S}}
+\newcommand{\actionspace}{\mathcal{A}}
+\newcommand{\nodeset}{\mathcal{N}}
+\newcommand{\tree}{\mathcal{T}}
+\newcommand{\generator}{\mathcal{G}}
+\newcommand{\evaluator}{\mathcal{E}}
+\newcommand{\visits}{\nu}
+\newcommand{\val}{v}
+\newcommand{\ucb}{\text{UCB1}}
 
-\title{Compositional Prompting for LLM Reasoning:\\
-A Monte Carlo Tree Search Framework with\\
-Structured Action Spaces}
-
-\author{
-Anonymous Authors\\
-Institution Withheld for Review
-}
-
-\date{}
+\title{MCTS-Reasoning: A Canonical Specification of\\Monte Carlo Tree Search for LLM Reasoning}
+\author{Technical Report v0.4}
+\date{\today}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-We present a compositional prompting system for large language model (LLM) reasoning that combines Monte Carlo Tree Search (MCTS) with a structured 5-dimensional action space. Unlike traditional approaches that rely on hand-crafted prompts or simple action templates, our system decomposes reasoning guidance into orthogonal dimensions: cognitive operations ($\omega$), focus aspects ($\phi$), reasoning styles ($\sigma$), connection types ($\kappa$), and output formats ($\tau$). This decomposition creates a space of over 30,000 distinct prompt compositions while maintaining semantic coherence through learned compatibility rules. We integrate this compositional framework with MCTS to enable systematic exploration of reasoning strategies, incorporating smart termination detection and optional tool usage via the Model Context Protocol (MCP). Our approach provides a principled foundation for prompt engineering in reasoning tasks, enabling both automated exploration and human-interpretable reasoning paths. We demonstrate the framework's flexibility through multiple sampling strategies and consistency checking mechanisms, offering a path toward more reliable and diverse LLM reasoning.
+This technical report provides a rigorous specification of Monte Carlo Tree Search (MCTS) applied to Large Language Model (LLM) reasoning. We present formal definitions of the search tree structure, the four phases of MCTS (Selection, Expansion, Simulation, Backpropagation), and their adaptation for step-by-step reasoning with language models. Key design choices---including tree-building rollouts and terminal-only evaluation---are explicitly documented and justified. The goal is to establish a canonical reference specification that authentically captures the MCTS algorithm while adapting it for the unique characteristics of LLM-based reasoning tasks.
 \end{abstract}
 
+\tableofcontents
+\newpage
+
+%==============================================================================
 \section{Introduction}
+%==============================================================================
 
-Large language models (LLMs) have demonstrated remarkable capabilities in complex reasoning tasks, from mathematical problem-solving to multi-step logical inference \citep{brown2020language, wei2022chain, kojima2022large}. However, eliciting effective reasoning from LLMs remains challenging and typically relies on carefully crafted prompts or multi-turn interactions. Recent work on chain-of-thought prompting \citep{wei2022chain}, tree-of-thoughts \citep{yao2023tree}, and self-consistency \citep{wang2023selfconsistency} has shown that guiding LLM reasoning through structured approaches yields significant improvements over naive prompting.
+Monte Carlo Tree Search (MCTS) is a best-first search algorithm that uses random sampling to build a search tree and evaluate actions \cite{kocsis2006, coulom2006}. Originally developed for game playing---notably achieving superhuman performance in Go \cite{silver2016}---MCTS has proven effective in domains where the state space is too large for exhaustive search but where states can be evaluated through simulation.
 
-Despite these advances, current methods face several limitations. First, prompt engineering remains largely manual and task-specific, requiring expert knowledge to design effective reasoning guidance. Second, most approaches lack systematic exploration mechanisms, instead relying on greedy or fixed strategies. Third, the space of possible reasoning paths is rarely explored comprehensively, potentially missing superior solutions. Finally, existing systems offer limited mechanisms for ensuring reasoning consistency or detecting completion.
-
-We address these challenges through a compositional approach to prompt construction integrated with Monte Carlo Tree Search. Our key insight is that effective reasoning prompts can be decomposed into orthogonal semantic dimensions, each capturing a distinct aspect of reasoning guidance. This decomposition serves three purposes: (1) it creates a rich, structured action space amenable to systematic exploration, (2) it enables automated generation of diverse, semantically coherent prompts, and (3) it provides human-interpretable reasoning trajectories.
-
-\subsection{Contributions}
-
-This work makes the following contributions:
-
+In this report, we apply MCTS to \emph{reasoning} with Large Language Models. The key insight is that multi-step reasoning can be viewed as a sequential decision problem:
 \begin{itemize}
-    \item \textbf{Compositional Action Space:} We introduce a 5-dimensional framework for prompt construction spanning cognitive operations, focus aspects, reasoning styles, connection types, and output formats, creating a space of 30,240 possible action combinations.
-
-    \item \textbf{MCTS Integration:} We develop a tight integration between compositional prompting and MCTS, including UCB1-based action selection, weighted sampling for biased exploration, and compatibility rules that enforce semantic coherence.
-
-    \item \textbf{Smart Termination Detection:} We propose a hybrid approach combining pattern matching with LLM-based assessment to reliably detect reasoning completion without manual specification.
-
-    \item \textbf{Tool-Aware Reasoning:} We introduce MCP integration that enables approximately 40\% of reasoning actions to encourage external tool usage, with transparent incorporation of tool results into the reasoning context.
-
-    \item \textbf{Multiple Sampling Strategies:} We provide value-based, visit-based, and diversity-maximizing sampling strategies, along with consistency checking across multiple solution paths.
+    \item \textbf{States} are partial reasoning traces (text strings)
+    \item \textbf{Actions} are reasoning continuations (next steps)
+    \item \textbf{Terminal states} are complete solutions with answers
+    \item \textbf{Rewards} are quality assessments of final answers
 \end{itemize}
 
-The complete system provides a foundation for systematic exploration of LLM reasoning strategies while maintaining interpretability and enabling both automated and human-guided search.
+This formulation allows MCTS to systematically explore different reasoning paths, allocating more search effort to promising directions while maintaining exploration of alternatives. Recent work has explored similar ideas under the names ``Tree of Thoughts'' \cite{yao2023} and ``Reasoning via Planning'' \cite{hao2023}.
 
-\section{Related Work}
+\subsection{Goals of This Specification}
 
-\subsection{Prompting Strategies for LLM Reasoning}
+\begin{enumerate}
+    \item Provide \textbf{rigorous definitions} of all components
+    \item Present the \textbf{MCTS algorithm} with precise pseudocode
+    \item Specify the \textbf{adaptation to LLM reasoning} with clear interfaces
+    \item Document \textbf{design choices} that distinguish this variant from classical MCTS
+\end{enumerate}
 
-Chain-of-thought (CoT) prompting \citep{wei2022chain} demonstrates that including step-by-step reasoning in prompts significantly improves LLM performance on complex tasks. Zero-shot CoT \citep{kojima2022large} shows that simple meta-prompts like ``Let's think step by step'' can elicit reasoning without examples. Tree-of-thoughts \citep{yao2023tree} extends this by exploring multiple reasoning paths and using deliberate search. Self-consistency \citep{wang2023selfconsistency} samples multiple reasoning paths and selects the most consistent answer.
+\subsection{Scope and Assumptions}
 
-Our work builds on these insights but introduces a more structured framework for generating diverse reasoning prompts. Where prior work uses fixed templates or manual design, we decompose prompts into compositional dimensions that can be systematically combined and explored.
-
-\subsection{Monte Carlo Tree Search}
-
-MCTS has proven highly effective for decision-making in domains ranging from game playing \citep{silver2016mastering, silver2017mastering} to program synthesis \citep{kocsis2006bandit}. The UCB1 algorithm \citep{auer2002finite} provides theoretical guarantees on exploration-exploitation tradeoffs. Recent work has applied MCTS to language tasks including code generation \citep{zhang2023planning} and mathematical reasoning \citep{feng2023alphageometry}.
-
-We extend MCTS to LLM reasoning with a novel compositional action space. Unlike prior work that uses simple action primitives, our actions encode rich reasoning guidance through multi-dimensional composition.
-
-\subsection{Prompt Engineering and Meta-Learning}
-
-Automated prompt optimization has been explored through gradient-based methods \citep{shin2020autoprompt}, reinforcement learning \citep{deng2022rlprompt}, and evolutionary approaches \citep{zhou2023large}. Meta-prompting \citep{suzgun2022prompt} uses LLMs to generate and refine prompts.
-
-Our compositional framework differs by providing explicit semantic structure rather than treating prompts as opaque strings. This enables interpretable exploration and systematic coverage of the prompt space.
-
-\subsection{Tool Use and External Knowledge}
-
-Recent work has equipped LLMs with external tools through frameworks like Toolformer \citep{schick2023toolformer}, ReAct \citep{yao2023react}, and the Model Context Protocol. These approaches enable LLMs to access calculators, search engines, and code execution environments.
-
-We integrate tool access directly into our reasoning framework, with specific action types that encourage tool usage while maintaining coherent reasoning narratives.
-
-\section{Method}
-
-\subsection{Compositional Action Space}
-
-We define a compositional action as a tuple $a = (\omega, \phi, \sigma, \kappa, \tau)$ where each component captures a distinct dimension of reasoning guidance:
-
-\begin{definition}[Compositional Action]
-A compositional action $a \in \calA$ is a 5-tuple:
-\begin{align}
-a = (\omega, \phi, \sigma, \kappa, \tau)
-\end{align}
-where:
+This specification covers single-threaded MCTS for text-based reasoning. We assume:
 \begin{itemize}
-    \item $\omega \in \Omega$ is a \textbf{cognitive operation}: decompose, analyze, synthesize, verify, abstract, concretize, compare, evaluate, generate, or refine ($|\Omega| = 10$)
+    \item The LLM produces valid text output for each query
+    \item The Evaluator returns scores in $[0, 1]$
+    \item State strings have bounded length (context window limits)
+\end{itemize}
 
-    \item $\phi \in \Phi$ is a \textbf{focus aspect}: structure, details, assumptions, constraints, goal, progress, errors, alternatives, patterns, solution, correctness, efficiency, examples, or relationships ($|\Phi| = 14$)
+%==============================================================================
+\section{Preliminaries}
+%==============================================================================
 
-    \item $\sigma \in \Sigma$ is a \textbf{reasoning style}: systematic, intuitive, formal, exploratory, critical, or creative ($|\Sigma| = 6$)
+\subsection{Notation}
 
-    \item $\kappa \in K$ is a \textbf{connection type}: continue, contrast, elaborate, summarize, pivot, verify, conclude, question, therefore, however, building\_on, or alternatively ($|K| = 12$)
+We use the following notation throughout:
+\begin{center}
+\begin{tabular}{cl}
+\toprule
+Symbol & Meaning \\
+\midrule
+$\statespace$ & State space (set of all possible reasoning traces) \\
+$\actionspace$ & Action space (set of all possible continuations) \\
+$s \in \statespace$ & A state (partial or complete reasoning trace) \\
+$a \in \actionspace$ & An action (reasoning continuation) \\
+$\nodeset$ & Set of nodes in the search tree \\
+$n \in \nodeset$ & A node in the search tree \\
+$\visits(n)$ & Visit count of node $n$ \\
+$\val(n)$ & Cumulative value of node $n$ \\
+$c$ & Exploration constant in UCB1 \\
+$B$ & Branching factor bound (max children per node) \\
+$D$ & Maximum rollout depth \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-    \item $\tau \in T$ is an \textbf{output format}: list, steps, comparison, explanation, solution, code, mathematical, freeform, narrative, or table ($|T| = 10$)
+%==============================================================================
+\section{Formal Definitions}
+%==============================================================================
+
+\begin{definition}[State]
+\label{def:state}
+A \emph{state} $s \in \statespace$ is a string representing a partial or complete reasoning trace. A state consists of the concatenation of:
+\begin{enumerate}
+    \item The original question
+    \item Zero or more reasoning steps
+    \item Optionally, a terminal marker with a final answer
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Terminal State]
+\label{def:terminal}
+A state $s$ is \emph{terminal} if a \emph{terminal detector} determines it contains a complete answer. Formally:
+\[
+\textsc{IsTerminal}(s) = \textsc{TerminalDetector}.\textsc{Check}(s)
+\]
+The detector also extracts the answer: $\textsc{ExtractAnswer}(s) \rightarrow \text{Answer} \cup \{\bot\}$.
+\end{definition}
+
+\begin{definition}[Terminal Detector]
+\label{def:terminaldetector}
+A \emph{terminal detector} is a component that determines when reasoning is complete:
+\begin{itemize}
+    \item $\textsc{Check}(s) \rightarrow \{\texttt{true}, \texttt{false}\}$: determines if $s$ is terminal
+    \item $\textsc{ExtractAnswer}(s) \rightarrow \text{Answer}$: extracts the answer from terminal $s$
+    \item $\textsc{FormatInstruction}() \rightarrow \text{String}$: provides prompt guidance for the LLM
 \end{itemize}
 \end{definition}
 
-The total action space size is $|\calA| = |\Omega| \times |\Phi| \times |\Sigma| \times |K| \times |T| = 10 \times 14 \times 6 \times 12 \times 10 = 100{,}800$ possible combinations. However, not all combinations are semantically coherent. We enforce compatibility constraints through learned rules.
+\begin{remark}[Terminal Detector Implementations]
+The canonical implementation uses a \emph{marker-based detector} that looks for the string ``\texttt{ANSWER:}''. Alternative implementations include:
+\begin{itemize}
+    \item \textbf{BoxedDetector}: Looks for \LaTeX-style $\backslash$\texttt{boxed\{...\}} (common in math benchmarks)
+    \item \textbf{MultiMarkerDetector}: Accepts multiple completion signals
+    \item \textbf{LLM-as-Judge}: Asks an LLM whether reasoning is complete (more expensive)
+\end{itemize}
+The terminal detector's \textsc{FormatInstruction} is included in prompts so the LLM knows the expected answer format.
+\end{remark}
 
-Figure \ref{fig:action_space} illustrates the compositional structure and how dimensions combine to form complete actions.
+\begin{definition}[Action]
+\label{def:action}
+An \emph{action} $a$ is an operation that transforms a state into a new state. Formally:
+\[
+a: \statespace \rightarrow \statespace
+\]
+The canonical action is \textsc{Continue}, which prompts the LLM to generate the next reasoning step:
+\[
+\textsc{Continue}(s) = s \oplus \generator(s)
+\]
+where $\oplus$ denotes string concatenation with appropriate formatting.
+\end{definition}
 
-\input{figure_action_space}
+\begin{definition}[Action Space]
+\label{def:actionspace}
+The \emph{action space} $\actionspace(s)$ is the set of actions available at state $s$:
+\[
+\actionspace(s) = \begin{cases}
+\emptyset & \text{if } \textsc{IsTerminal}(s) \\
+\{\textsc{Continue}\} & \text{otherwise (canonical case)}
+\end{cases}
+\]
+\end{definition}
 
-\subsection{Prompt Construction}
+\begin{remark}[State-Dependent Actions]
+In standard MCTS for games, different positions have different legal moves. Similarly, different reasoning states may have different available actions. The canonical implementation uses only \textsc{Continue}, but extensions (Section~\ref{sec:extensions}) may include additional actions such as \textsc{Compress} for long traces.
+\end{remark}
 
-Each compositional action $a$ is mapped to a natural language prompt through a template function $\psi: \calA \rightarrow \text{String}$. The function constructs prompts by composing dimension-specific template fragments:
+\begin{definition}[Node]
+\label{def:node}
+A \emph{node} $n$ in the search tree consists of:
+\begin{itemize}
+    \item $\text{state}(n) \in \statespace$: the reasoning trace at this node
+    \item $\visits(n) \in \mathbb{N}_0$: the number of times this node has been visited
+    \item $\val(n) \in \mathbb{R}_{\geq 0}$: the cumulative value from simulations through this node
+    \item $\text{children}(n) \subseteq \nodeset$: the set of child nodes
+    \item $\text{parent}(n) \in \nodeset \cup \{\bot\}$: the parent node (or $\bot$ for root)
+    \item $\text{terminal}(n) \in \{\texttt{true}, \texttt{false}\}$: whether this is a terminal state
+    \item $\text{answer}(n)$: the extracted answer (if terminal)
+\end{itemize}
+\end{definition}
 
-\begin{algorithm}
-\caption{Prompt Construction}
+\begin{definition}[Search Tree]
+\label{def:tree}
+A \emph{search tree} $\tree = (\nodeset, E, r)$ is a rooted tree where:
+\begin{itemize}
+    \item $\nodeset$ is the set of nodes
+    \item $E = \{(\text{parent}(n), n) : n \in \nodeset, \text{parent}(n) \neq \bot\}$ is the edge set
+    \item $r \in \nodeset$ is the root node with $\text{parent}(r) = \bot$
+\end{itemize}
+The tree is an arborescence: every node except the root has exactly one parent, and there is a unique path from $r$ to any node.
+\end{definition}
+
+\begin{definition}[Average Value]
+\label{def:avgvalue}
+The \emph{average value} of a node $n$ with $\visits(n) > 0$ is:
+\[
+\bar{\val}(n) = \frac{\val(n)}{\visits(n)}
+\]
+For $\visits(n) = 0$, the average value is undefined.
+\end{definition}
+
+\begin{definition}[Branching Factor Bound]
+\label{def:branching}
+The \emph{branching factor bound} $B \in \mathbb{N}$ is the maximum number of children any node may have. A node $n$ is \emph{fully expanded} if and only if:
+\[
+\textsc{FullyExpanded}(n) = \big(|\text{children}(n)| \geq B\big) \lor \textsc{IsTerminal}(\text{state}(n))
+\]
+\end{definition}
+
+%==============================================================================
+\section{The MCTS Algorithm}
+%==============================================================================
+
+MCTS builds a search tree incrementally through repeated \emph{simulations}. Each simulation consists of four phases: Selection, Expansion, Rollout, and Backpropagation.
+
+\begin{algorithm}[H]
+\caption{MCTS Main Loop}
+\label{alg:mcts-main}
 \begin{algorithmic}[1]
-\STATE \textbf{Input:} Action $a = (\omega, \phi, \sigma, \kappa, \tau)$, state $s$, question $q$
-\STATE \textbf{Output:} Prompt string $p$
-\STATE $p \leftarrow \text{``Problem: ''} + q$
-\STATE $p \leftarrow p + \text{ template}_\omega(\omega)$  \COMMENT{e.g., ``Let me analyze this''}
-\STATE $p \leftarrow p + \text{ template}_\phi(\phi)$  \COMMENT{e.g., ``focusing on structure''}
-\STATE $p \leftarrow p + \text{ template}_\sigma(\sigma)$  \COMMENT{e.g., ``systematically''}
-\STATE $p \leftarrow p + \text{ template}_\kappa(\kappa)$  \COMMENT{e.g., ``Therefore,''}
-\STATE $p \leftarrow p + \text{ template}_\tau(\tau)$  \COMMENT{e.g., ``as steps:''}
-\STATE $p \leftarrow p + \text{``Current state: ''} + s[-1000:]$
-\STATE \textbf{return} $p$
+\Require Question $q$, number of simulations $K$, branching factor $B$, max depth $D$
+\Ensure Search tree with root $r$
+\Procedure{Search}{$q, K, B, D$}
+    \State $r \gets \textsc{CreateNode}(q)$ \Comment{Root state is the question}
+    \For{$i = 1$ \textbf{to} $K$}
+        \State $n_{\text{leaf}} \gets \textsc{Select}(r)$
+        \State $n_{\text{exp}} \gets \textsc{Expand}(n_{\text{leaf}}, B)$
+        \State $n_{\text{term}}, \val \gets \textsc{Rollout}(n_{\text{exp}}, D)$
+        \State \textsc{Backpropagate}($n_{\text{term}}, \val$)
+    \EndFor
+    \State \Return $r$
+\EndProcedure
 \end{algorithmic}
 \end{algorithm}
 
-This modular construction ensures semantic coherence while enabling flexible combination of reasoning guidance.
+%------------------------------------------------------------------------------
+\subsection{Phase 1: Selection}
+%------------------------------------------------------------------------------
 
-\subsection{Compatibility Rules}
+Selection traverses the tree from root to a leaf, choosing children according to the UCB1 policy.
 
-To maintain semantic coherence, we define compatibility constraints between action dimensions. Let $C_{\omega,\phi}: \Omega \times \Phi \rightarrow \{0,1\}$ indicate whether operation $\omega$ is compatible with focus $\phi$. Similarly, $C_{\omega,\sigma}: \Omega \times \Sigma \rightarrow \{0,1\}$ encodes operation-style compatibility.
+\begin{definition}[UCB1]
+\label{def:ucb1}
+For a non-root node $n$ with parent $p = \text{parent}(n)$, the \emph{Upper Confidence Bound} is:
+\[
+\ucb(n) = \begin{cases}
++\infty & \text{if } \visits(n) = 0 \\[6pt]
+\displaystyle \bar{\val}(n) + c \sqrt{\frac{\ln \visits(p)}{\visits(n)}} & \text{if } \visits(n) > 0
+\end{cases}
+\]
+where $c > 0$ is the exploration constant. The first term $\bar{\val}(n)$ is the \emph{exploitation} component; the second term is the \emph{exploration} component.
+\end{definition}
 
-For example:
-\begin{itemize}
-    \item $C_{\text{decompose}, \text{structure}} = 1$ (decomposition pairs well with structural focus)
-    \item $C_{\text{decompose}, \text{errors}} = 0$ (decomposition less suited to error focus)
-    \item $C_{\text{verify}, \text{formal}} = 1$ (verification benefits from formal style)
-    \item $C_{\text{generate}, \text{creative}} = 1$ (generation pairs well with creativity)
-\end{itemize}
+\begin{remark}[Exploration Constant]
+The theoretical value $c = \sqrt{2}$ derives from the UCB1 bandit algorithm \cite{kocsis2006}. In practice, $c$ may be tuned: larger values encourage exploration, smaller values favor exploitation.
+\end{remark}
 
-During action selection, we filter the action space to $\calA_{\text{valid}} = \{a \in \calA \mid C_{\omega,\phi}(a_\omega, a_\phi) = 1 \land C_{\omega,\sigma}(a_\omega, a_\sigma) = 1\}$.
+\begin{remark}[Tie-Breaking]
+When multiple children have equal UCB1 values (including multiple unvisited children with $\ucb = +\infty$), we select uniformly at random among them.
+\end{remark}
 
-These rules reduce the effective action space to approximately 15,000-20,000 semantically valid combinations while preserving diversity.
+\begin{algorithm}[H]
+\caption{Selection Phase}
+\label{alg:selection}
+\begin{algorithmic}[1]
+\Require Node $n$ (typically root)
+\Ensure Leaf node for expansion
+\Procedure{Select}{$n$}
+    \While{$\textsc{FullyExpanded}(n)$ \textbf{and} $\text{children}(n) \neq \emptyset$}
+        \State $n \gets \arg\max_{c \in \text{children}(n)} \ucb(c)$ \Comment{Break ties randomly}
+    \EndWhile
+    \State \Return $n$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-\subsection{MCTS Integration}
+%------------------------------------------------------------------------------
+\subsection{Phase 2: Expansion}
+%------------------------------------------------------------------------------
 
-We integrate compositional actions with standard MCTS phases:
+Expansion adds a new child node by generating a continuation from the Generator.
 
-\subsubsection{Selection}
+\begin{algorithm}[H]
+\caption{Expansion Phase}
+\label{alg:expansion}
+\begin{algorithmic}[1]
+\Require Node $n$, branching factor bound $B$
+\Ensure Expanded node (new child or $n$ if unexpandable)
+\Procedure{Expand}{$n, B$}
+    \If{$\textsc{IsTerminal}(\text{state}(n))$}
+        \State \Return $n$ \Comment{Cannot expand terminal nodes}
+    \EndIf
+    \If{$|\text{children}(n)| \geq B$}
+        \State \Return $n$ \Comment{Fully expanded}
+    \EndIf
+    \State $a \gets \generator.\textsc{Generate}(\text{state}(n))$ \Comment{Get one continuation}
+    \State $s' \gets \text{state}(n) \oplus a$
+    \State $n' \gets \textsc{CreateNode}(s')$
+    \State $\text{parent}(n') \gets n$
+    \State $\text{children}(n) \gets \text{children}(n) \cup \{n'\}$
+    \State \Return $n'$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-Starting from the root node, we traverse the tree by selecting children with maximum UCB1 value:
+%------------------------------------------------------------------------------
+\subsection{Phase 3: Rollout (Simulation)}
+%------------------------------------------------------------------------------
 
-\begin{align}
-\text{UCB1}(n) = \frac{V(n)}{N(n)} + c\sqrt{\frac{\ln N(\text{parent}(n))}{N(n)}}
-\end{align}
+The rollout phase continues from the expanded node until reaching a terminal state or the maximum depth.
 
-where $V(n)$ is the cumulative value, $N(n)$ is the visit count, and $c$ is the exploration constant (default: $\sqrt{2}$).
-
-\subsubsection{Expansion}
-
-At a leaf node, we sample valid compositional actions. We provide two sampling modes:
-
+\begin{remark}[Design Choice: Tree-Building Rollout]
+\label{rem:tree-building}
+In classical MCTS for games, rollouts typically use a fast, random policy \emph{without} adding nodes to the tree. However, for LLM reasoning, we make a deliberate design choice to \textbf{add rollout nodes to the tree}. This preserves the full reasoning trace and allows:
 \begin{enumerate}
-    \item \textbf{Uniform sampling:} Sample actions uniformly from $\calA_{\text{valid}}$
-    \item \textbf{Weighted sampling:} Define weight distributions $W_\omega, W_\phi, W_\sigma, W_\kappa, W_\tau$ and sample each dimension according to its weights. This enables biased exploration toward specific reasoning patterns.
+    \item Reuse of reasoning steps in future simulations
+    \item Inspection of the complete reasoning path
+    \item Consistent state representation throughout the tree
 \end{enumerate}
+This is sometimes called ``tree policy all the way'' or ``persistent tree'' MCTS.
+\end{remark}
 
-For each sampled action $a$, we:
-\begin{enumerate}
-    \item Construct prompt $p = \psi(a, s, q)$
-    \item Query LLM: $s' = \text{LLM}(p)$
-    \item Create child node with state $s'$ and action $a$
-\end{enumerate}
+\begin{algorithm}[H]
+\caption{Rollout Phase (Tree-Building)}
+\label{alg:rollout}
+\begin{algorithmic}[1]
+\Require Node $n$, maximum depth $D$
+\Ensure Terminal node $n_{\text{term}}$ and its value $\val$
+\Procedure{Rollout}{$n, D$}
+    \State $\text{current} \gets n$
+    \State $\text{depth} \gets 0$
+    \While{$\neg\textsc{IsTerminal}(\text{state}(\text{current}))$ \textbf{and} $\text{depth} < D$}
+        \State $a \gets \generator.\textsc{Generate}(\text{state}(\text{current}))$
+        \State $s' \gets \text{state}(\text{current}) \oplus a$
+        \State $n' \gets \textsc{CreateNode}(s')$
+        \State $\text{parent}(n') \gets \text{current}$
+        \State $\text{children}(\text{current}) \gets \text{children}(\text{current}) \cup \{n'\}$
+        \State $\text{current} \gets n'$
+        \State $\text{depth} \gets \text{depth} + 1$
+    \EndWhile
+    \If{$\textsc{IsTerminal}(\text{state}(\text{current}))$}
+        \State $\val \gets \evaluator.\textsc{Evaluate}(\text{state}(\text{current}), \text{answer}(\text{current}))$
+    \Else
+        \State $\val \gets 0$ \Comment{No terminal reached within depth limit}
+    \EndIf
+    \State \Return $(\text{current}, \val)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-\subsubsection{Rollout}
+%------------------------------------------------------------------------------
+\subsection{Phase 4: Backpropagation}
+%------------------------------------------------------------------------------
 
-From an expanded node, we simulate to a terminal state through repeated action sampling and LLM querying. We limit rollout depth to avoid excessive computation (default: 5 steps).
+Backpropagation updates visit counts and values along the path from the terminal node to the root.
 
-\subsubsection{Backpropagation}
+\begin{algorithm}[H]
+\caption{Backpropagation Phase}
+\label{alg:backprop}
+\begin{algorithmic}[1]
+\Require Terminal node $n_{\text{term}}$, value $\val$
+\Procedure{Backpropagate}{$n_{\text{term}}, \val$}
+    \State $n \gets n_{\text{term}}$
+    \While{$n \neq \bot$}
+        \State $\visits(n) \gets \visits(n) + 1$
+        \State $\val(n) \gets \val(n) + \val$
+        \State $n \gets \text{parent}(n)$
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-Terminal states are evaluated through an LLM-based evaluation prompt:
+\begin{property}[Visit Count Invariant]
+\label{prop:visits}
+For any node $n$ in the tree:
+\[
+\visits(n) = \sum_{c \in \text{children}(n)} \visits(c) + \mathbb{1}[n \text{ is a rollout endpoint}]
+\]
+where $\mathbb{1}[\cdot]$ is the indicator function. In particular, $\visits(\text{root}) = K$ after $K$ simulations.
+\end{property}
+
+%==============================================================================
+\section{Application to LLM Reasoning}
+%==============================================================================
+
+The MCTS algorithm requires two external components: a \emph{Generator} to produce continuations and an \emph{Evaluator} to score terminal states.
+
+%------------------------------------------------------------------------------
+\subsection{Generator}
+%------------------------------------------------------------------------------
+
+\begin{definition}[Generator]
+\label{def:generator}
+A \emph{Generator} $\generator$ is a function that produces reasoning continuations:
+\[
+\generator: \statespace \rightarrow \actionspace
+\]
+Given a state $s$, it returns a continuation $a$. The continuation may result in a terminal state (if it contains the answer marker) or a non-terminal state (requiring further reasoning).
+\end{definition}
+
+For LLM-based generation, we use the following procedure:
+
+\begin{algorithm}[H]
+\caption{LLM Generator}
+\label{alg:llm-generator}
+\begin{algorithmic}[1]
+\Require State $s$, temperature $\tau$
+\Ensure Continuation $a$
+\Procedure{Generate}{$s$}
+    \State $\text{prompt} \gets \textsc{FormatPrompt}(s)$
+    \State $\text{response} \gets \text{LLM}(\text{prompt}, \text{temperature}=\tau)$
+    \State $a \gets \textsc{ParseContinuation}(\text{response})$
+    \State \Return $a$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{definition}[Prompt Template]
+\label{def:prompt}
+The prompt template formats the current state for the LLM:
 \begin{verbatim}
-Evaluate reasoning quality on [0,1]:
-Question: {q}
-Reasoning: {s}
-Score:
+You are solving a problem step by step.
+Current reasoning:
+{state}
+
+Continue with the next step. When you reach a final answer,
+write "ANSWER: " followed by your answer.
+
+Next step:
 \end{verbatim}
+The temperature $\tau > 0$ controls diversity: higher temperatures yield more varied continuations.
+\end{definition}
 
-The extracted score is propagated up the tree, updating visit counts and cumulative values.
+%------------------------------------------------------------------------------
+\subsection{Evaluator}
+%------------------------------------------------------------------------------
 
-\subsection{Smart Termination Detection}
+\begin{definition}[Evaluator]
+\label{def:evaluator}
+An \emph{Evaluator} $\evaluator$ is a function that scores terminal states:
+\[
+\evaluator: \statespace \times \text{Answer} \rightarrow [0, 1]
+\]
+Given a terminal state and its extracted answer, it returns a quality score.
+\end{definition}
 
-A key challenge in reasoning tasks is detecting when the LLM has reached a complete solution. We employ a hybrid approach:
+\begin{remark}[Terminal-Only Evaluation]
+The Evaluator is invoked \emph{only} on terminal states. This design choice reduces computational cost: intermediate reasoning states are not evaluated, and LLM-as-judge calls occur only when a complete answer is produced.
+\end{remark}
 
-\begin{algorithm}
-\caption{Smart Termination}
+\begin{algorithm}[H]
+\caption{LLM Evaluator (LLM-as-Judge)}
+\label{alg:llm-evaluator}
 \begin{algorithmic}[1]
-\STATE \textbf{Input:} State $s$, LLM provider (optional)
-\STATE \textbf{Output:} Boolean indicating termination
-\STATE \textbf{Pattern Check:}
-\FOR{pattern $p$ in \{\texttt{final answer}, \texttt{conclusion}, \texttt{therefore the answer}, \texttt{QED}, ...\}}
-    \IF{$p$ matches $s$}
-        \STATE \textbf{return} True
-    \ENDIF
-\ENDFOR
-\STATE \textbf{LLM Assessment} (if provider available):
-\STATE prompt $\leftarrow$ ``Is this reasoning complete? Answer TERMINAL or CONTINUE.''
-\STATE response $\leftarrow$ LLM(prompt)
-\IF{``TERMINAL'' in response}
-    \STATE \textbf{return} True
-\ENDIF
-\STATE \textbf{return} False
+\Require Terminal state $s$, extracted answer $a$
+\Ensure Score $\in [0, 1]$
+\Procedure{Evaluate}{$s, a$}
+    \State $\text{prompt} \gets \textsc{FormatJudgePrompt}(s, a)$
+    \State $\text{response} \gets \text{LLM}(\text{prompt}, \text{temperature}=0)$
+    \State $\text{score} \gets \textsc{ParseScore}(\text{response})$
+    \State \Return $\text{score}$
+\EndProcedure
 \end{algorithmic}
 \end{algorithm}
 
-This two-stage approach handles both explicit conclusion markers and implicit completion through semantic understanding.
-
-\subsection{Tool-Aware Reasoning with MCP}
-
-We extend compositional actions with an additional dimension for tool usage intent. An MCP-aware action is $a_{\text{MCP}} = (\omega, \phi, \sigma, \kappa, \tau, \iota, \mathcal{T})$ where:
-
+\textbf{Alternative Evaluators:}
 \begin{itemize}
-    \item $\iota \in I$ is the \textbf{tool intent}: execute\_code, test\_solution, calculate, research, verify\_facts, read\_data, write\_results, or none
-    \item $\mathcal{T} \subseteq \text{Tools}$ is a set of suggested tools
+    \item \textbf{Ground Truth}: Compare answer to known correct answer with normalization (lowercase, strip punctuation). Supports partial credit when answer contains the truth or vice versa.
+
+    \item \textbf{Numeric}: For mathematical problems, compares numeric values with configurable tolerance (absolute and relative). Extracts numbers from text, handles fractions (e.g., ``1/2''), scientific notation, and provides partial credit based on relative error.
+
+    \item \textbf{Process}: Evaluates reasoning quality using heuristics---presence of step-by-step structure, mathematical notation, verification statements, and logical connectives. Can be combined with an answer evaluator via weighted sum.
+
+    \item \textbf{Composite}: Weighted combination of multiple evaluators. For example: $0.7 \times \text{NumericScore} + 0.3 \times \text{ProcessScore}$.
+
+    \item \textbf{Self-Consistency}: Score based on agreement with other sampled solutions (not implemented in canonical version).
 \end{itemize}
 
-During prompt construction, tool-aware actions include guidance like:
-\begin{quote}
-\textit{``Consider using the execute\_python tool to verify calculations. You can write and run Python to test algorithms and validate logic.''}
-\end{quote}
+%==============================================================================
+\section{Result Extraction}
+%==============================================================================
 
-By default, approximately 40\% of sampled actions include tool intents, encouraging but not mandating tool usage. When the LLM invokes a tool (via XML or function call syntax), the result is automatically incorporated into the reasoning state.
+After search completes, we extract the best answer from the tree.
 
-\subsection{Sampling and Consistency Checking}
+\begin{algorithm}[H]
+\caption{Best Answer Extraction}
+\label{alg:best-answer}
+\begin{algorithmic}[1]
+\Require Root node $r$
+\Ensure Best answer and confidence score
+\Procedure{GetBestAnswer}{$r$}
+    \State $n \gets r$
+    \While{$\text{children}(n) \neq \emptyset$}
+        \State $n \gets \arg\max_{c \in \text{children}(n)} \visits(c)$ \Comment{Most-visited child}
+    \EndWhile
+    \If{$\textsc{IsTerminal}(\text{state}(n))$}
+        \State \Return $(\text{answer}(n), \bar{\val}(n))$
+    \Else
+        \State \Return $(\texttt{null}, 0)$
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-After MCTS search completes, we provide multiple strategies for solution extraction:
+\begin{remark}
+Following most-visited children (rather than highest-value) is standard practice in MCTS, as visit counts are more robust to value noise than raw averages.
+\end{remark}
 
-\subsubsection{Value-Based Sampling}
+%==============================================================================
+\section{Complexity Analysis}
+%==============================================================================
 
-Sample paths according to softmax over node values:
-\begin{align}
-P(\text{child}_i \mid \text{parent}) = \frac{\exp(V_i/\tau)}{\sum_j \exp(V_j/\tau)}
-\end{align}
-where $\tau$ is a temperature parameter controlling randomness.
-
-\subsubsection{Visit-Based Sampling}
-
-Sample paths proportional to visit counts (AlphaGo-style):
-\begin{align}
-P(\text{child}_i \mid \text{parent}) = \frac{N_i}{\sum_j N_j}
-\end{align}
-
-\subsubsection{Diverse Sampling}
-
-Iteratively sample paths, accepting only those with Levenshtein distance $\geq d_{\min}$ from previously sampled paths. This ensures syntactically diverse solution strategies.
-
-\subsubsection{Consistency Checking}
-
-To assess solution reliability:
-\begin{enumerate}
-    \item Sample $n$ reasoning paths (default: $n=10$)
-    \item Extract final solutions
-    \item Cluster solutions (exact match or LLM-based semantic similarity)
-    \item Return the solution from the largest cluster with confidence $= \text{cluster size}/n$
-\end{enumerate}
-
-This provides a measure of agreement across multiple reasoning strategies, analogous to self-consistency but with diverse search paths.
-
-\section{Experimental Design}
-
-While full empirical evaluation is beyond the scope of this initial work, we outline planned experiments and preliminary observations.
-
-\subsection{Evaluation Domains}
-
-We propose evaluation on:
-
-\begin{enumerate}
-    \item \textbf{Mathematical Reasoning:} GSM8K \citep{cobbe2021training}, MATH dataset \citep{hendrycks2021measuring}
-    \item \textbf{Logical Reasoning:} PrOntoQA \citep{saparov2022language}, proof-based tasks
-    \item \textbf{Commonsense Reasoning:} StrategyQA \citep{geva2021did}, CommonsenseQA \citep{talmor2019commonsenseqa}
-    \item \textbf{Programming:} HumanEval \citep{chen2021evaluating}, MBPP \citep{austin2021program}
-\end{enumerate}
-
-\subsection{Baselines}
-
-Relevant baselines include:
+\begin{property}[Time Complexity]
+For $K$ simulations with maximum depth $D$:
 \begin{itemize}
-    \item Direct prompting
-    \item Chain-of-thought (zero-shot and few-shot)
-    \item Tree-of-thoughts with breadth-first search
-    \item Self-consistency with fixed prompts
-    \item ReAct for tool-using tasks
+    \item \textbf{Selection}: $O(D)$ node traversals per simulation
+    \item \textbf{Expansion}: $O(1)$ plus one Generator call
+    \item \textbf{Rollout}: $O(D)$ Generator calls (worst case)
+    \item \textbf{Backpropagation}: $O(D)$ node updates
 \end{itemize}
+Total tree operations: $O(KD)$. The dominant cost is typically LLM calls: up to $O(KD)$ Generator calls and $O(K)$ Evaluator calls.
+\end{property}
 
-\subsection{Metrics}
+\begin{property}[Space Complexity]
+The search tree contains at most $O(KD)$ nodes, each storing a state string. With bounded state length $L$, space complexity is $O(KDL)$.
+\end{property}
+
+%==============================================================================
+\section{Extensions}
+\label{sec:extensions}
+%==============================================================================
+
+The following extensions are under consideration for future versions:
+
+\subsection{Extended Action Spaces}
+
+The canonical implementation uses only the \textsc{Continue} action. Extended action spaces may include:
 
 \begin{itemize}
-    \item \textbf{Accuracy:} Correctness of final solutions
-    \item \textbf{Efficiency:} Number of LLM calls to solution
-    \item \textbf{Diversity:} Average Levenshtein distance between sampled paths
-    \item \textbf{Consistency:} Agreement rate across multiple samples
-    \item \textbf{Coverage:} Proportion of action space explored
+    \item \textbf{Compress}: When the reasoning trace exceeds a threshold length, the \textsc{Compress} action summarizes the trace into a more compact representation. Subsequent reasoning continues from the compressed state, reducing context length while preserving key insights.
+    \[
+    \actionspace(s) = \begin{cases}
+        \{\textsc{Continue}, \textsc{Compress}\} & \text{if } |s| > \text{threshold} \\
+        \{\textsc{Continue}\} & \text{otherwise}
+    \end{cases}
+    \]
+
+    \item \textbf{Verify}: Ask the LLM to verify the current reasoning before continuing
+
+    \item \textbf{ToolCall}: Invoke external tools (calculator, search, code execution)
+
+    \item \textbf{Backtrack}: Explicitly mark a reasoning path as unpromising
 \end{itemize}
 
-\subsection{Ablation Studies}
-
-To assess contribution of each component:
-\begin{enumerate}
-    \item \textbf{Dimensionality:} Compare full 5D space vs. reduced dimensions
-    \item \textbf{Compatibility Rules:} Test with/without semantic constraints
-    \item \textbf{Termination:} Pattern-only vs. hybrid detection
-    \item \textbf{Tool Access:} Evaluate impact of MCP integration
-    \item \textbf{Sampling Strategy:} Compare value-based, visit-based, and diverse sampling
-\end{enumerate}
-
-\subsection{Preliminary Observations}
-
-In preliminary usage with mathematical and logical reasoning tasks, we observe:
+\subsection{Algorithm Variants}
 
 \begin{itemize}
-    \item The system successfully generates diverse, semantically coherent reasoning strategies
-    \item Compatibility rules effectively filter invalid combinations while preserving exploration
-    \item Smart termination reliably identifies completed reasoning (95\%+ accuracy in informal testing)
-    \item Consistency checking typically achieves 60-80\% agreement across 10 samples on well-defined problems
-    \item Tool integration increases success rate on calculation-heavy tasks
+    \item \textbf{Progressive Widening}: Dynamically adjust $B$ based on visit count
+    \item \textbf{RAVE}: Rapid Action Value Estimation for faster convergence
+    \item \textbf{Parallel MCTS}: Root parallelization or tree parallelization
+    \item \textbf{Value Networks}: Learned evaluation functions for intermediate states
+    \item \textbf{Policy Networks}: Learned action selection to guide expansion
+    \item \textbf{Self-Consistency Integration}: Aggregate across multiple terminal states
+    \item \textbf{Beam Search Hybrid}: Combine MCTS exploration with beam search
 \end{itemize}
 
-Formal evaluation with controlled experiments and statistical analysis is planned for future work.
+\subsection{Beyond Trees: Graph-Based Reasoning}
 
-\section{Discussion}
+The tree structure of MCTS imposes fundamental constraints on reasoning patterns. Certain operations naturally suggest non-tree structures:
 
-\subsection{Advantages}
-
-\subsubsection{Systematic Exploration}
-
-The compositional framework enables systematic coverage of reasoning strategies. Where manual prompt engineering might explore 5-10 variations, our system can explore thousands while maintaining coherence through compatibility rules.
-
-\subsubsection{Interpretability}
-
-Each reasoning path is explicitly constructed from compositional actions with clear semantic meaning. This enables post-hoc analysis of which reasoning dimensions contribute to successful solutions.
-
-\subsubsection{Flexibility}
-
-The system supports:
 \begin{itemize}
-    \item Weighted sampling to bias toward domain-specific strategies
-    \item Custom compatibility rules for specialized domains
-    \item Optional tool integration for tasks requiring external knowledge or computation
-    \item Multiple solution extraction strategies for different use cases
+    \item \textbf{Problem Decomposition}: Splitting a problem into independent subproblems, solving each separately, and combining results creates a DAG structure where the ``combine'' node has multiple parents.
+
+    \item \textbf{Critique-Revision Cycles}: Evaluating a solution, identifying issues, and refining creates potential cycles that trees cannot represent.
+
+    \item \textbf{Cross-Path Information Sharing}: Using insights from one reasoning path to inform another requires edges between branches.
 \end{itemize}
 
-\subsubsection{Theoretical Foundation}
-
-Unlike opaque prompt optimization, compositional prompting provides explicit semantic structure. The MCTS framework offers theoretical guarantees on exploration-exploitation tradeoffs through UCB1.
-
-\subsection{Limitations}
-
-\subsubsection{Computational Cost}
-
-MCTS requires multiple LLM queries per simulation. While this enables thorough exploration, it incurs significant computational cost. Typical searches with 50-100 simulations require hundreds of LLM calls.
-
-\subsubsection{Action Space Size}
-
-Even with compatibility rules, the action space remains large. Effective exploration requires either significant computation or careful initialization of weights.
-
-\subsubsection{LLM Dependence}
-
-System performance depends heavily on base LLM capabilities. Weaker models may not respond effectively to compositional prompts, while stronger models might succeed without elaborate guidance.
-
-\subsubsection{Evaluation Complexity}
-
-Automatically evaluating reasoning quality is challenging. Our LLM-based evaluation is a reasonable proxy but may miss subtle errors or bias toward certain reasoning styles.
-
-\subsection{Design Choices}
-
-Several design decisions merit discussion:
-
-\subsubsection{Dimensionality}
-
-We chose five dimensions based on analysis of effective prompts in prior work. More dimensions would increase expressiveness but also complexity. Fewer dimensions might miss important reasoning aspects.
-
-\subsubsection{Template-Based Construction}
-
-We use template-based prompt construction rather than learned embeddings. This sacrifices potential optimality for interpretability and controllability.
-
-\subsubsection{Compatibility Rules}
-
-Current compatibility rules are manually designed. Learning these from data could improve coverage and quality but would require substantial labeled examples of effective prompt combinations.
-
-\subsubsection{MCTS vs. Alternative Search}
-
-We chose MCTS for its strong theoretical properties and success in similar domains. Beam search, best-first search, or evolutionary algorithms could be viable alternatives.
-
-\subsection{Broader Implications}
-
-\subsubsection{Prompt Engineering Foundations}
-
-This work suggests that effective prompt engineering can be grounded in compositional semantic structures rather than treating prompts as opaque strings. This may enable more principled approaches to prompt design and optimization.
-
-\subsubsection{Human-AI Collaboration}
-
-The interpretability of compositional actions facilitates human understanding and guidance. Users can specify high-level reasoning strategies (e.g., ``prefer systematic decomposition'') through weights without manual prompt construction.
-
-\subsubsection{Reasoning Diversity}
-
-Access to diverse reasoning paths enables applications like:
+These patterns require \emph{graph-based} or \emph{hypergraph-based} search with:
 \begin{itemize}
-    \item Robustness testing (do multiple strategies agree?)
-    \item Explanation generation (show alternative solution approaches)
-    \item Failure analysis (why did some strategies fail?)
+    \item Multiple edge types (continuation, decomposition, aggregation, critique)
+    \item Generalized propagation beyond simple backpropagation
+    \item Synchronization semantics for subproblem completion
 \end{itemize}
 
-\section{Future Work}
+Such extensions are outside the scope of this tree-based MCTS specification but represent promising directions for future work on structured reasoning.
 
-Several directions warrant investigation:
+\begin{remark}[Natural Decomposition within MCTS]
+Note that the LLM within a \textsc{Continue} action can naturally perform soft versions of these operations: reasoning about subproblems sequentially within a single path, self-critiquing before continuing, or reconsidering earlier steps. The tree structure captures \emph{alternative} reasoning paths, while complex reasoning \emph{within} a path remains expressible through the continuation mechanism.
+\end{remark}
 
-\subsection{Learned Compatibility Rules}
-
-Train models to predict which action combinations yield effective reasoning. This could be formulated as:
-\begin{itemize}
-    \item Binary classification: is this action combination valid?
-    \item Regression: predict expected reasoning quality
-    \item Reinforcement learning: optimize compatibility rules through task performance
-\end{itemize}
-
-\subsection{Adaptive Weighting}
-
-Rather than fixed weights, adaptively adjust sampling distributions based on:
-\begin{itemize}
-    \item Task characteristics (detected through initial exploration)
-    \item Historical performance (which dimensions worked well?)
-    \item Error patterns (what went wrong in failed attempts?)
-\end{itemize}
-
-\subsection{Hierarchical Reasoning}
-
-Extend the framework to multi-level reasoning:
-\begin{itemize}
-    \item High-level strategic planning (which major steps?)
-    \item Mid-level tactical execution (how to execute each step?)
-    \item Low-level detail filling (specific calculations/lookups)
-\end{itemize}
-
-\subsection{Multi-Model Reasoning}
-
-Different LLMs excel at different reasoning styles. A multi-model approach could:
-\begin{itemize}
-    \item Route actions to specialized models (e.g., code generation to Codex)
-    \item Ensemble predictions from multiple models
-    \item Use cheaper models for exploration, expensive models for critical decisions
-\end{itemize}
-
-\subsection{Formal Verification}
-
-For domains with formal semantics (mathematics, programming):
-\begin{itemize}
-    \item Integrate theorem provers or compilers
-    \item Use formal verification as terminal state evaluation
-    \item Guide search toward verifiable reasoning steps
-\end{itemize}
-
-\subsection{Interactive Reasoning}
-
-Enable human-in-the-loop interaction:
-\begin{itemize}
-    \item Users can steer search by adjusting weights
-    \item Manual action injection for critical decisions
-    \item Explanation of why certain actions were taken or avoided
-\end{itemize}
-
+%==============================================================================
 \section{Conclusion}
+%==============================================================================
 
-We have presented a compositional framework for LLM reasoning that combines structured prompt construction with Monte Carlo Tree Search. By decomposing reasoning guidance into five semantic dimensions—cognitive operations, focus aspects, reasoning styles, connection types, and output formats—we create a rich action space amenable to systematic exploration while maintaining interpretability.
+This report establishes a canonical specification for MCTS applied to LLM reasoning. The key contributions are:
 
-The integration with MCTS enables automated discovery of effective reasoning strategies through principled exploration-exploitation tradeoffs. Smart termination detection and optional tool integration address practical challenges in deploying reasoning systems. Multiple sampling strategies and consistency checking provide mechanisms for solution extraction and validation.
+\begin{enumerate}
+    \item \textbf{Rigorous formal definitions} of states, actions, nodes, and the search tree
+    \item \textbf{Precise specification} of the four MCTS phases with pseudocode
+    \item \textbf{Clear interfaces} for Generator and Evaluator components
+    \item \textbf{Explicit documentation} of design choices (tree-building rollouts, terminal-only evaluation, bounded branching)
+\end{enumerate}
 
-While full empirical evaluation remains future work, preliminary observations suggest the framework successfully generates diverse, coherent reasoning strategies. The system demonstrates that effective prompt engineering can be grounded in explicit semantic structures rather than opaque optimization.
+The specification serves as a reference for implementation, ensuring the algorithm is authentically represented while being appropriately adapted for language model reasoning tasks.
 
-This work provides a foundation for future research in structured reasoning systems, with applications ranging from automated problem-solving to human-AI collaborative reasoning. The compositional approach offers a principled alternative to black-box prompt optimization while maintaining the flexibility to adapt to diverse reasoning tasks.
+%==============================================================================
+% References
+%==============================================================================
+\bibliographystyle{plain}
+\begin{thebibliography}{9}
 
-\section*{Acknowledgments}
+\bibitem{kocsis2006}
+Kocsis, L., \& Szepesv{\'a}ri, C. (2006).
+Bandit based monte-carlo planning.
+\textit{European Conference on Machine Learning}, 282--293.
 
-We thank the open-source community for foundational work on LLM reasoning and MCTS implementations that inspired this research.
+\bibitem{coulom2006}
+Coulom, R. (2006).
+Efficient selectivity and backup operators in monte-carlo tree search.
+\textit{International Conference on Computers and Games}, 72--83.
 
-\bibliographystyle{plainnat}
-\bibliography{references}
+\bibitem{browne2012}
+Browne, C. B., et al. (2012).
+A survey of monte carlo tree search methods.
+\textit{IEEE Transactions on Computational Intelligence and AI in Games}, 4(1), 1--43.
+
+\bibitem{silver2016}
+Silver, D., et al. (2016).
+Mastering the game of Go with deep neural networks and tree search.
+\textit{Nature}, 529(7587), 484--489.
+
+\bibitem{yao2023}
+Yao, S., et al. (2023).
+Tree of thoughts: Deliberate problem solving with large language models.
+\textit{arXiv preprint arXiv:2305.10601}.
+
+\bibitem{hao2023}
+Hao, S., et al. (2023).
+Reasoning with language model is planning with world model.
+\textit{arXiv preprint arXiv:2305.14992}.
+
+\end{thebibliography}
 
 \end{document}

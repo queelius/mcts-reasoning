@@ -1,22 +1,62 @@
 """
-MCTS-Reasoning: Monte Carlo Tree Search for LLM-based reasoning
+MCTS-Reasoning: Monte Carlo Tree Search for LLM-based reasoning.
 
-A clean implementation of MCTS with compositional actions for systematic reasoning.
-Integrates advanced compositional prompting with tree search exploration.
+A clean implementation of MCTS for systematic reasoning with LLMs.
+Separates Search (MCTS), Generator (LLM), and Evaluator (Judge) concerns.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.4.0"
 
-# Core MCTS
-from .core import MCTS, MCTSNode
+# Core MCTS components
+from .node import Node
+from .mcts import MCTS, SearchResult
 
-# Reasoning-specific MCTS
-from .reasoning import ReasoningMCTS
+# Actions (state-dependent operations)
+from .actions import (
+    Action,
+    ActionResult,
+    ActionSpace,
+    ContinueAction,
+    DefaultActionSpace,
+    # Extensions
+    CompressAction,
+    ExtendedActionSpace,
+)
 
-# Sampling strategies
-from .sampling import MCTSSampler, SampledPath, SamplingMCTS
+# Terminal detection
+from .terminal import (
+    TerminalDetector,
+    TerminalCheck,
+    MarkerTerminalDetector,
+    BoxedTerminalDetector,
+    MultiMarkerTerminalDetector,
+)
 
-# Unified LLM providers
+# Generator interface and implementations
+from .generator import (
+    Generator,
+    LLMGenerator,
+    MockGenerator,
+    Continuation,
+    ANSWER_MARKER,
+)
+
+# Evaluator interface and implementations
+from .evaluator import (
+    Evaluator,
+    LLMEvaluator,
+    MockEvaluator,
+    GroundTruthEvaluator,
+    NumericEvaluator,
+    ProcessEvaluator,
+    CompositeEvaluator,
+    Evaluation,
+)
+
+# LLM provider adapter for v2
+from .llm_provider import create_generator, create_evaluator
+
+# LLM Providers (unified interface)
 from .compositional.providers import (
     LLMProvider,
     OpenAIProvider,
@@ -26,36 +66,51 @@ from .compositional.providers import (
     get_llm,
 )
 
-# Compositional prompting system
-from .compositional import (
-    CognitiveOperation,
-    FocusAspect,
-    ReasoningStyle,
-    ConnectionType,
-    OutputFormat,
-    ComposingPrompt,
-    smart_termination,
-)
-
-# Compositional actions for MCTS
-from .compositional.actions import (
-    CompositionalAction,
-    ActionSelector,
-)
-
 # Configuration
 from .config import Config, get_config
 
 __all__ = [
-    # Core
+    # Core MCTS
+    "Node",
     "MCTS",
-    "MCTSNode",
-    "ReasoningMCTS",
+    "SearchResult",
 
-    # Sampling
-    "MCTSSampler",
-    "SampledPath",
-    "SamplingMCTS",
+    # Actions
+    "Action",
+    "ActionResult",
+    "ActionSpace",
+    "ContinueAction",
+    "DefaultActionSpace",
+    "CompressAction",
+    "ExtendedActionSpace",
+
+    # Terminal Detection
+    "TerminalDetector",
+    "TerminalCheck",
+    "MarkerTerminalDetector",
+    "BoxedTerminalDetector",
+    "MultiMarkerTerminalDetector",
+
+    # Generator
+    "Generator",
+    "LLMGenerator",
+    "MockGenerator",
+    "Continuation",
+    "ANSWER_MARKER",
+
+    # Evaluator
+    "Evaluator",
+    "LLMEvaluator",
+    "MockEvaluator",
+    "GroundTruthEvaluator",
+    "NumericEvaluator",
+    "ProcessEvaluator",
+    "CompositeEvaluator",
+    "Evaluation",
+
+    # LLM Provider Adapter
+    "create_generator",
+    "create_evaluator",
 
     # LLM Providers
     "LLMProvider",
@@ -65,63 +120,7 @@ __all__ = [
     "MockLLMProvider",
     "get_llm",
 
-    # Compositional prompting
-    "CognitiveOperation",
-    "FocusAspect",
-    "ReasoningStyle",
-    "ConnectionType",
-    "OutputFormat",
-    "ComposingPrompt",
-    "smart_termination",
-
-    # Compositional actions
-    "CompositionalAction",
-    "ActionSelector",
-
     # Configuration
     "Config",
     "get_config",
 ]
-
-# Try to import MCP features (optional)
-try:
-    from .compositional import (
-        MCPToolType,
-        MCPTool,
-        MCPToolCall,
-        MCPToolResult,
-        MCPClient,
-        MCPLLMProvider,
-        create_mcp_client,
-        create_mcp_provider,
-        MCPActionIntent,
-        MCPCompositionalAction,
-        MCPActionSelector,
-        create_mcp_action,
-        create_code_execution_action,
-        create_research_action,
-    )
-
-    __all__.extend([
-        # MCP Core
-        "MCPToolType",
-        "MCPTool",
-        "MCPToolCall",
-        "MCPToolResult",
-        "MCPClient",
-        "MCPLLMProvider",
-        "create_mcp_client",
-        "create_mcp_provider",
-
-        # MCP Actions
-        "MCPActionIntent",
-        "MCPCompositionalAction",
-        "MCPActionSelector",
-        "create_mcp_action",
-        "create_code_execution_action",
-        "create_research_action",
-    ])
-
-    _has_mcp = True
-except ImportError:
-    _has_mcp = False
