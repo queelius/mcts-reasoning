@@ -1,492 +1,255 @@
 # MCTS-Reasoning
 
-Monte Carlo Tree Search for LLM-based reasoning with advanced compositional prompting and MCP integration.
+Monte Carlo Tree Search for LLM-based step-by-step reasoning.
 
-Combines systematic tree search with sophisticated prompt engineering to enable structured, exploratory reasoning across multiple solution paths.
+A clean, canonical implementation of MCTS that explores multiple reasoning paths to find high-quality solutions.
 
-## ✨ Features
+## Features
 
-- **🎯 Pure MCTS Implementation**: Clean, canonical MCTS with proper Selection, Expansion, Rollout, and Backpropagation phases
-- **🧩 Advanced Compositional Prompting**: Rich action space with 5 dimensions (ω, φ, σ, κ, τ) enabling 30,000+ action combinations
-  - Cognitive Operations (ω): decompose, analyze, synthesize, verify, etc.
-  - Focus Aspects (φ): structure, patterns, assumptions, correctness, etc.
-  - Reasoning Styles (σ): systematic, intuitive, critical, creative, etc.
-  - Connection Types (κ): therefore, however, building_on, etc.
-  - Output Formats (τ): steps, list, mathematical, code, etc.
-- **🔌 MCP Tool Integration**: Automatic access to external tools via Model Context Protocol
-  - Python code execution
-  - Web search
-  - File operations
-  - Custom tools
-- **🖥️ Interactive TUI**: Claude Code-style terminal interface with stateful sessions
-- **🤖 Unified LLM Provider System**: Seamless support for OpenAI, Anthropic, Ollama, and mock LLMs
-- **🎨 Fluent API**: Chainable method calls for intuitive configuration
-- **📊 Multiple Sampling Strategies**: Value-based, visit-based, diverse, and top-K sampling
-- **✅ Consistency Checking**: Validate solutions across multiple reasoning paths
-- **🎓 Smart Termination**: Hybrid pattern + LLM-based detection of complete reasoning
-- **💾 JSON Serialization**: Save/load search trees for analysis and resumption
-- **🔧 Flexible Architecture**: Easy to extend and customize for different reasoning tasks
+- **Canonical MCTS**: Selection (UCB1), Expansion, Tree-building Rollouts, Backpropagation
+- **Multiple Evaluators**: LLM-as-judge, ground truth, numeric (with tolerance), process quality
+- **Sampling Strategies**: Value-based, visit-based, diverse, top-k
+- **Pluggable Providers**: OpenAI, Anthropic, Ollama, Mock (for testing)
+- **CLI Tool**: `mcts-reason` for command-line reasoning
+- **Full Test Coverage**: 255+ tests
 
 ## Installation
 
 ```bash
-# Install from source
-git clone https://github.com/yourusername/mcts-reasoning.git
+git clone https://github.com/queelius/mcts-reasoning.git
 cd mcts-reasoning
 pip install -e .
 
-# With TUI (recommended)
-pip install -e ".[tui]"
-
-# With specific LLM support
+# With OpenAI support
 pip install -e ".[openai]"
-pip install -e ".[anthropic]"
-pip install -e ".[ollama]"
 
-# Everything (TUI + all LLM providers)
+# With Anthropic support
+pip install -e ".[anthropic]"
+
+# Everything
 pip install -e ".[all]"
 ```
 
 ## Quick Start
 
-### Interactive Shell (Recommended)
-
-The easiest way to get started is with the interactive shell:
+### Command Line
 
 ```bash
-# Run the interactive shell
-mcts-shell
+# Simple question
+mcts-reason "What is 15*7+23?"
 
-# Or directly:
-python mcts_tui.py
+# With ground truth for evaluation
+mcts-reason "What is 15*7+23?" --answer 128 --simulations 10
+
+# With specific provider
+mcts-reason "Explain photosynthesis" --provider ollama --model llama3.2
+
+# JSON output for scripting
+mcts-reason "What is 2+2?" --json
+
+# Verbose with tree visualization
+mcts-reason "Solve: 5*6+10" --answer 40 -v --consistency
 ```
 
-Then use commands like:
-```
-> model                                     # Show current model
-> model ollama llama2 base_url=http://192.168.0.225:11434  # Remote Ollama
-> models                                    # List available models
-> ask What is the sum of all prime numbers less than 100?
-> search 50
-> solution
-> sample 5
-> consistency 20
-> verify                                    # Verify solution correctness
-> export markdown report.md                 # Export tree as markdown
-```
-
-**Note**: Slash prefix is optional (both `ask` and `/ask` work) for backwards compatibility.
-
-**Enhanced Prompt Features:**
-- **Tab completion** for commands and arguments (try `mo<Tab>` or `/mo<Tab>`)
-- **Persistent history** across sessions (use ↑/↓ arrows)
-- **History search** with Ctrl+R
-- **Syntax highlighting** for commands
-- **Emacs-style editing** (Ctrl+A, Ctrl+E, etc.)
-
-See the [TUI Guide](docs/TUI_GUIDE.md) and [Prompt Features](docs/PROMPT_FEATURES.md) for complete documentation.
-
-### Non-Interactive CLI
-
-For scripting and automation, use the non-interactive CLI:
-
-```bash
-# Ask a question and search
-mcts ask "What is 2+2?" --search 50
-
-# Verify a solution (requires saved session)
-mcts verify --session my_session.json
-
-# Export tree in different formats
-mcts export json output.json --session my_session.json
-mcts export markdown report.md --session my_session.json
-mcts export dot graph.dot --session my_session.json
-
-# Show solution
-mcts solution --session my_session.json
-
-# Sample paths
-mcts sample 10 --session my_session.json
-
-# Check consistency
-mcts consistency 20 --session my_session.json
-```
-
-The CLI supports all the same commands as the interactive shell but executes them non-interactively, making it perfect for:
-- Shell scripts and automation
-- CI/CD pipelines
-- Batch processing
-- Integration with other tools
-
-### Basic Usage (Programmatic)
+### Python API
 
 ```python
-from mcts_reasoning import ReasoningMCTS, get_llm
+from mcts_reasoning import (
+    MCTS,
+    LLMGenerator,
+    NumericEvaluator,
+    ProcessEvaluator,
+    PathSampler,
+    get_llm,
+)
 
-# Auto-detect LLM from environment (or use specific provider)
-llm = get_llm()  # Auto-detect
+# Get LLM provider (auto-detect or specify)
+llm = get_llm()  # Auto-detect from environment
+# llm = get_llm("ollama", model="llama3.2")
 # llm = get_llm("openai", model="gpt-4")
-# llm = get_llm("anthropic", model="claude-3-5-sonnet-20241022")
-# llm = get_llm("ollama", model="llama2")
 
-# Create MCTS with fluent API
-mcts = (
-    ReasoningMCTS()
-    .with_llm(llm)
-    .with_question("What is the optimal algorithm for sorting 1 million integers?")
-    .with_exploration(1.414)
-    .with_compositional_actions(enabled=True)
-    .with_max_rollout_depth(5)
+# Create generator and evaluator
+generator = LLMGenerator(llm=llm, temperature=0.7)
+evaluator = ProcessEvaluator(
+    answer_evaluator=NumericEvaluator(ground_truth=128),
+    answer_weight=0.7,
+    process_weight=0.3,
 )
 
-# Run search
-initial_state = "Let's think about this step by step..."
-mcts.search(initial_state, simulations=50)
-
-# Get best solution
-print(f"Solution: {mcts.solution}")
-print(f"Confidence: {mcts.best_value:.2%}")
-
-# Save tree
-mcts.save("reasoning_tree.json")
-```
-
-### Compositional Prompting
-
-```python
-from mcts_reasoning import ComposingPrompt, CognitiveOperation, FocusAspect, ReasoningStyle
-
-# Build a structured reasoning prompt
-prompt = (
-    ComposingPrompt()
-    .cognitive_op(CognitiveOperation.DECOMPOSE)
-    .focus(FocusAspect.STRUCTURE)
-    .style(ReasoningStyle.SYSTEMATIC)
-    .problem_context("Find all prime numbers less than 100")
-    .build()
+# Create MCTS and search
+mcts = MCTS(
+    generator=generator,
+    evaluator=evaluator,
+    exploration_constant=1.414,
+    max_rollout_depth=5,
 )
 
-print(prompt)
-# Output: "Problem: Find all prime numbers less than 100
-# Let me break this problem down systematically. I'll focus on the structural
-# relationships and organization. I'll approach this systematically and methodically."
+result = mcts.search("What is 15*7+23?", simulations=20)
+
+print(f"Answer: {result.best_answer}")
+print(f"Confidence: {result.confidence:.1%}")
+print(f"Stats: {result.stats}")
+
+# Sample diverse paths
+sampler = PathSampler(result.root)
+paths = sampler.sample(n=5, strategy="diverse")
+for path in paths:
+    print(f"Answer: {path.answer}, Value: {path.value:.2f}")
 ```
 
-### MCP Tool Integration
+## Core Components
+
+### MCTS Search
 
 ```python
-from mcts_reasoning import create_mcp_client, create_mcp_provider
+from mcts_reasoning import MCTS, MockGenerator, MockEvaluator
 
-# Enable MCP tools
-mcp_client = create_mcp_client({
-    "python": {"type": "python"},
-    "web": {"type": "web"}
-})
+mcts = MCTS(
+    generator=MockGenerator(),
+    evaluator=MockEvaluator(),
+    exploration_constant=1.414,  # UCB1 exploration
+    max_children_per_node=3,     # Branching factor
+    max_rollout_depth=5,         # Max reasoning steps
+)
 
-# Wrap LLM with MCP awareness
-mcp_llm = create_mcp_provider(base_llm, mcp_client=mcp_client)
-
-# Now the LLM can automatically use tools!
-mcts = ReasoningMCTS().with_llm(mcp_llm).with_question("Calculate fibonacci(50)")
+result = mcts.search(question="What is 2+2?", simulations=50)
 ```
 
-See [MCP Integration Guide](docs/MCP_INTEGRATION.md) for details.
-
-### Advanced Sampling
+### Evaluators
 
 ```python
-# Sample diverse reasoning paths
-paths = mcts.sample(n=5, strategy="diverse", temperature=1.5)
+from mcts_reasoning import (
+    LLMEvaluator,        # LLM-as-judge scoring
+    GroundTruthEvaluator,# Compare to known answer
+    NumericEvaluator,    # Math with tolerance
+    ProcessEvaluator,    # Reasoning quality
+    CompositeEvaluator,  # Combine multiple
+)
 
-for i, path in enumerate(paths, 1):
-    print(f"Path {i}: {path.final_state}")
+# For math problems
+evaluator = NumericEvaluator(
+    ground_truth=42.0,
+    rel_tol=0.01,  # 1% tolerance
+)
 
-# Check consistency across multiple samples
-result = mcts.check_consistency(n_samples=20)
-print(f"Most consistent solution (confidence={result['confidence']:.1%}):")
-print(result['solution'])
+# For evaluating reasoning process
+evaluator = ProcessEvaluator(
+    answer_evaluator=NumericEvaluator(ground_truth=42.0),
+    answer_weight=0.7,
+    process_weight=0.3,
+)
+
+# For open-ended problems
+evaluator = LLMEvaluator(llm=my_llm, temperature=0.1)
 ```
 
-## Documentation
+### Sampling
 
-Full documentation is available at [https://yourusername.github.io/mcts-reasoning/](https://yourusername.github.io/mcts-reasoning/) (or build locally with `mkdocs serve`).
+```python
+from mcts_reasoning import PathSampler
 
-### Quick Links
+sampler = PathSampler(result.root)
 
-**Getting Started:**
-- [Installation](docs/getting-started/installation.md) - Setup and dependencies
-- [Quick Start](docs/getting-started/quick-start.md) - Your first MCTS reasoning session
-- [Examples](docs/getting-started/examples.md) - Complete code examples
+# By value (quality)
+best_paths = sampler.sample(n=5, strategy="value")
 
-**User Guides:**
-- [Interactive Shell](docs/guides/shell-guide.md) - Unix-style composable shell
-- [TUI Interface](docs/guides/tui-guide.md) - Terminal user interface
-- [Remote Ollama Setup](docs/guides/remote-ollama-setup.md) - Using remote Ollama servers
+# By visits (confidence)
+confident_paths = sampler.sample(n=5, strategy="visits")
 
-**Features:**
-- [Compositional Actions](docs/features/compositional-actions.md) - 5D action space for reasoning
-- [Solution Detection](docs/features/solution-detection.md) - Automatic solution finalization
-- [Meta-Reasoning](docs/features/meta-reasoning.md) - LLM-guided action selection
-- [Reflection & Critique](docs/features/reflection.md) - Self-improvement loops
-- [Learning System](docs/features/learning.md) - Pattern extraction from experience
+# Maximize diversity
+diverse_paths = sampler.sample(n=5, strategy="diverse")
 
-**Advanced:**
-- [MCP Integration](docs/advanced/mcp-integration.md) - External tool integration
-- [Benchmarking](docs/advanced/benchmarking.md) - Quantitative evaluation
+# Answer distribution
+dist = sampler.get_answer_distribution()
+print(dist)  # {'42': {'count': 3, 'avg_value': 0.9}, ...}
 
-### Building Documentation
+# Consistency score
+score = sampler.consistency_score()
+print(f"Consistency: {score:.1%}")
+```
+
+### Terminal Detection
+
+```python
+from mcts_reasoning import (
+    MarkerTerminalDetector,    # Look for "ANSWER:"
+    BoxedTerminalDetector,     # Look for \boxed{}
+    MultiMarkerTerminalDetector,  # Multiple markers
+)
+
+# Custom marker
+detector = MarkerTerminalDetector(marker="FINAL:")
+
+# Math benchmark style
+detector = BoxedTerminalDetector()
+
+# Multiple formats
+detector = MultiMarkerTerminalDetector(
+    markers=["ANSWER:", "\\boxed{", "Therefore, the answer is"]
+)
+```
+
+## Environment Variables
 
 ```bash
-# Install documentation dependencies
-pip install -e ".[docs]"
-
-# Serve documentation locally
-mkdocs serve
-
-# Build static site
-mkdocs build
-
-# Deploy to GitHub Pages
-mkdocs gh-deploy
-```
-
-## Examples
-
-See the `examples/` directory for complete examples:
-
-- `basic_usage.py` - Basic MCTS with simple actions
-- `compositional_demo.py` - Full compositional prompting demonstration
-- `mcp_demo.py` - MCP tool integration examples
-- `sampling_demo.py` - Various sampling strategies
-- `consistency_check.py` - Solution consistency validation
-
-### Math Problem
-
-```python
-from mcts_reasoning import ReasoningMCTS, MockLLMProvider
-
-llm = MockLLMProvider({
-    "calculate": "37 * 43 = 1591",
-    "verify": "Correct",
-    "terminal": "YES"
-})
-
-mcts = (
-    ReasoningMCTS()
-    .with_llm(llm)
-    .with_question("What is 37 * 43?")
-    .with_max_rollout_depth(3)
-)
-
-mcts.search("Let's calculate:", simulations=20)
-print(f"Answer: {mcts.solution}")
-print(f"Confidence: {mcts.best_value:.2f}")
-```
-
-### Logic Puzzle with Compositional Actions
-
-```python
-question = """
-Three boxes contain fruits. Box A is labeled "Apples",
-Box B is labeled "Oranges", Box C is labeled "Mixed".
-All labels are wrong. You can pick one fruit from one box.
-How do you determine the correct labels?
-"""
-
-mcts = (
-    ReasoningMCTS()
-    .with_llm(llm)
-    .with_question(question)
-    .with_exploration(1.5)  # More exploration
-    .with_compositional_actions(enabled=True)
-)
-
-mcts.search("Let's reason systematically:", simulations=30)
-
-# Get diverse solutions
-paths = mcts.sample(n=5, strategy="diverse")
-for i, path in enumerate(paths, 1):
-    print(f"\nSolution {i}:")
-    print(path.final_state)
-```
-
-## Compositional Actions
-
-The system uses a compositional action space with 5 dimensions:
-
-- **Operations**: analyze, decompose, solve, verify, synthesize
-- **Focus**: problem, solution, assumptions, constraints, approach
-- **Style**: systematic, intuitive, formal
-- **Connection**: therefore, however, furthermore, alternatively, specifically
-- **Format**: statement, question, list
-
-This creates a rich space of 30,000+ possible actions that can be efficiently explored.
-
-## Weighted Action Sampling
-
-You can bias the compositional action space toward certain operations, styles, or focuses:
-
-```python
-# Define weights
-weights = {
-    'cognitive_op': {
-        CognitiveOperation.DECOMPOSE: 3.0,  # Strongly prefer decomposition
-        CognitiveOperation.VERIFY: 2.0,     # Prefer verification
-    },
-    'style': {
-        ReasoningStyle.SYSTEMATIC: 3.0,     # Strongly prefer systematic
-        ReasoningStyle.FORMAL: 1.5,
-    }
-}
-
-# Sample with weights
-prompt = ComposingPrompt.sample_action(weights)
-print(prompt.get_action_vector())
-```
-
-## LLM Adapters
-
-### Using Different LLMs
-
-```python
-from mcts_reasoning import get_llm
-
-# Auto-detection from environment
-llm = get_llm()
-
-# Or specify provider
-llm = get_llm("openai", model="gpt-4")
-llm = get_llm("anthropic", model="claude-3-5-sonnet-20241022")
-llm = get_llm("ollama", model="llama2")
-llm = get_llm("mock")  # For testing
-```
-
-### Auto-detection from Environment
-
-```bash
-# Set environment variable
-export LLM_PROVIDER=openai
+# LLM Provider selection
+export LLM_PROVIDER=ollama  # or openai, anthropic
+export OLLAMA_BASE_URL=http://localhost:11434
 export OPENAI_API_KEY=your-key
-
-# Or for Anthropic
-export LLM_PROVIDER=anthropic
 export ANTHROPIC_API_KEY=your-key
-```
-
-```python
-# In Python
-from mcts_reasoning import get_llm
-llm = get_llm()  # Auto-detects from environment
 ```
 
 ## Architecture
 
 ```
 mcts_reasoning/
-├── core.py                    # Pure MCTS implementation
-├── reasoning.py               # LLM-specific reasoning layer
-├── sampling.py                # Sampling strategies
-├── compositional/             # Compositional prompting system
-│   ├── __init__.py           # Core enums + ComposingPrompt
-│   ├── providers.py          # Unified LLM providers
-│   ├── actions.py            # Compositional actions for MCTS
-│   ├── mcp.py                # MCP client and tool integration
-│   └── mcp_actions.py        # MCP-aware actions
-└── tui/                       # Terminal User Interface
-    ├── app.py                # Main TUI application
-    ├── session.py            # Session state management
-    └── commands.py           # Command handlers
+├── node.py          # Tree node with UCB1
+├── mcts.py          # MCTS search algorithm
+├── generator.py     # LLM continuation generation
+├── evaluator.py     # Terminal state evaluation
+├── terminal.py      # Terminal detection
+├── actions.py       # Action space abstraction
+├── sampling.py      # Path sampling strategies
+├── cli.py           # Command-line interface
+└── compositional/
+    └── providers.py # LLM provider adapters
 ```
 
-## Key Concepts
+## MCTS Algorithm
 
-### MCTS Phases
+1. **Selection**: Navigate tree using UCB1 to find promising leaf
+2. **Expansion**: Generate new reasoning step via LLM
+3. **Rollout**: Continue reasoning until terminal or max depth
+4. **Backpropagation**: Update values up the tree
 
-1. **Selection**: Navigate tree using UCB1 formula
-2. **Expansion**: Add one new child node
-3. **Rollout**: Simulate to terminal state
-4. **Backpropagation**: Update statistics up the tree
-
-### UCB1 Formula
-
-```python
-ucb1 = value/visits + c * sqrt(ln(parent_visits)/visits)
 ```
-
-Where `c` is the exploration constant (default: 1.414).
-
-### Terminal State Detection
-
-The system uses smart termination combining:
-- Pattern matching (keywords like "therefore", "QED", "final answer")
-- LLM-based assessment of reasoning completeness
-
-### MCP Tool Integration
-
-LLMs can automatically access external tools:
-- Results are incorporated into reasoning context
-- ~40% of MCTS actions encourage tool usage by default
-- Custom tools can be easily registered
-
-## Configuration
-
-### MCTS Parameters
-
-- `exploration_constant`: UCB1 exploration parameter (default: 1.414)
-- `max_rollout_depth`: Maximum depth for rollouts (default: 5)
-- `use_compositional`: Enable compositional actions (default: True)
-- `discount_factor`: Reward discount for deeper nodes (default: 0.95)
-
-### TUI Commands
-
-See [TUI Guide](docs/TUI_GUIDE.md) for complete command reference.
-
-Common commands:
-- `/ask <question>` - Start reasoning
-- `/search <n>` - Run simulations
-- `/solution` - Show best solution
-- `/tree` - Visualize search tree
-- `/sample <n>` - Sample diverse paths
-- `/consistency` - Check solution consistency
+UCB1 = average_value + c * sqrt(ln(parent_visits) / visits)
+```
 
 ## Testing
 
 ```bash
-# Run tests
+# Run all tests
 pytest tests/
 
 # With coverage
 pytest --cov=mcts_reasoning tests/
 
-# Run examples
-python examples/basic_usage.py
-python examples/compositional_demo.py
-python examples/mcp_demo.py
+# Specific module
+pytest tests/test_sampling.py -v
 ```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License
 
 ## Citation
 
-If you use this in your research, please cite:
-
 ```bibtex
 @software{mcts_reasoning,
-  title = {MCTS-Reasoning: Monte Carlo Tree Search for LLM Reasoning with Compositional Prompting},
+  title = {MCTS-Reasoning: Monte Carlo Tree Search for LLM Reasoning},
+  author = {Towell, Alex},
   year = {2024},
-  url = {https://github.com/yourusername/mcts-reasoning}
+  url = {https://github.com/queelius/mcts-reasoning}
 }
 ```
-
-## Acknowledgments
-
-- Inspired by AlphaGo's MCTS implementation
-- Compositional prompting based on reasoning-llm-policy research
-- TUI design inspired by Claude Code
-- MCP integration following Model Context Protocol specification

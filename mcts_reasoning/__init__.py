@@ -53,6 +53,13 @@ from .evaluator import (
     Evaluation,
 )
 
+# Sampling strategies
+from .sampling import (
+    PathSampler,
+    SampledPath,
+    SamplingStrategy,
+)
+
 # LLM provider adapter for v2
 from .llm_provider import create_generator, create_evaluator
 
@@ -107,6 +114,11 @@ __all__ = [
     "ProcessEvaluator",
     "CompositeEvaluator",
     "Evaluation",
+
+    # Sampling
+    "PathSampler",
+    "SampledPath",
+    "SamplingStrategy",
 
     # LLM Provider Adapter
     "create_generator",
