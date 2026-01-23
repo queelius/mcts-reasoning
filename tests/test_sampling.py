@@ -261,3 +261,145 @@ class TestSamplingStrategy:
         """Test creating strategy from string."""
         assert SamplingStrategy("value") == SamplingStrategy.VALUE
         assert SamplingStrategy("visits") == SamplingStrategy.VISITS
+
+
+class TestSelfConsistency:
+    """Tests for self-consistency voting."""
+
+    def _create_voting_tree(self):
+        """Create a tree with various answers for voting tests."""
+        root = Node(state="What is 2+2?")
+
+        # 3 paths saying "4" with varying values
+        for i, value in enumerate([0.9, 0.8, 0.7]):
+            step = root.add_child(state=f"What is 2+2?\nPath {i}")
+            terminal = step.add_child(
+                state=f"What is 2+2?\nPath {i}\nANSWER: 4",
+                is_terminal=True,
+                answer="4",
+            )
+            terminal.visits = 1
+            terminal.value = value
+
+        # 2 paths saying "5" with lower values
+        for i, value in enumerate([0.3, 0.2]):
+            step = root.add_child(state=f"What is 2+2?\nWrong path {i}")
+            terminal = step.add_child(
+                state=f"What is 2+2?\nWrong path {i}\nANSWER: 5",
+                is_terminal=True,
+                answer="5",
+            )
+            terminal.visits = 1
+            terminal.value = value
+
+        return root
+
+    def test_majority_vote(self):
+        """Test simple majority voting."""
+        root = self._create_voting_tree()
+        sampler = PathSampler(root)
+
+        answer, confidence = sampler.majority_vote()
+
+        assert answer == "4"
+        assert confidence == pytest.approx(3 / 5)  # 3 out of 5
+
+    def test_weighted_vote(self):
+        """Test value-weighted voting."""
+        root = self._create_voting_tree()
+        sampler = PathSampler(root)
+
+        answer, confidence = sampler.weighted_vote()
+
+        assert answer == "4"
+        # "4" has total value 0.9+0.8+0.7=2.4
+        # "5" has total value 0.3+0.2=0.5
+        # Total = 2.9, so confidence = 2.4/2.9 ≈ 0.828
+        assert confidence > 0.8
+
+    def test_self_consistency_vote_full_result(self):
+        """Test full self-consistency result dict."""
+        root = self._create_voting_tree()
+        sampler = PathSampler(root)
+
+        result = sampler.self_consistency_vote()
+
+        assert result["answer"] == "4"
+        assert result["total_votes"] == 5
+        assert result["votes"]["4"] == 3
+        assert result["votes"]["5"] == 2
+        assert "weighted_votes" in result
+        assert result["confidence"] > 0
+
+    def test_self_consistency_normalize_answers(self):
+        """Test answer normalization in voting."""
+        root = Node(state="Q")
+
+        # Add answers with different formatting
+        answers = ["$100", "100", " 100 ", "$100.00"]
+        for i, ans in enumerate(answers):
+            terminal = root.add_child(
+                state=f"Q\nPath {i}\nANSWER: {ans}",
+                is_terminal=True,
+                answer=ans,
+            )
+            terminal.visits = 1
+            terminal.value = 0.5
+
+        sampler = PathSampler(root)
+
+        # With normalization: all should be same answer
+        result = sampler.self_consistency_vote(normalize_answers=True)
+        assert result["total_votes"] == 4
+        # All normalize to "100" or "100.00"
+        assert len(result["votes"]) <= 2  # Some may still differ due to .00
+
+    def test_self_consistency_no_normalize(self):
+        """Test voting without normalization."""
+        root = Node(state="Q")
+
+        # Add answers with different formatting
+        for ans in ["$100", "100"]:
+            terminal = root.add_child(
+                state=f"Q\nANSWER: {ans}",
+                is_terminal=True,
+                answer=ans,
+            )
+            terminal.visits = 1
+            terminal.value = 0.5
+
+        sampler = PathSampler(root)
+
+        # Without normalization: treated as different
+        result = sampler.self_consistency_vote(normalize_answers=False)
+        assert len(result["votes"]) == 2  # Two different answers
+
+    def test_self_consistency_empty_tree(self):
+        """Test voting with no terminal states."""
+        root = Node(state="Q")
+        root.add_child(state="Q\nPartial")  # Non-terminal
+
+        sampler = PathSampler(root)
+        result = sampler.self_consistency_vote()
+
+        assert result["answer"] is None
+        assert result["confidence"] == 0.0
+        assert result["total_votes"] == 0
+
+    def test_self_consistency_single_answer(self):
+        """Test voting with single terminal."""
+        root = Node(state="Q")
+        terminal = root.add_child(
+            state="Q\nANSWER: 42",
+            is_terminal=True,
+            answer="42",
+        )
+        terminal.visits = 1
+        terminal.value = 1.0
+
+        sampler = PathSampler(root)
+        result = sampler.self_consistency_vote()
+
+        assert result["answer"] == "42"
+        assert result["confidence"] == 1.0
+        assert result["total_votes"] == 1

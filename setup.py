@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="mcts-reasoning",
-    version="0.4.0",
+    version="0.5.0",
     author="Alex Towell",
     author_email="lex@metafunctor.com",
     description="Monte Carlo Tree Search for LLM-based reasoning",
@@ -37,9 +37,11 @@ setup(
     extras_require={
         "openai": ["openai>=1.0.0"],
         "anthropic": ["anthropic>=0.18.0"],
+        "tools": ["mcp>=1.0.0"],
         "dev": [
             "pytest>=7.0.0",
             "pytest-cov>=4.0.0",
+            "pytest-asyncio>=0.21.0",
             "black>=23.0.0",
             "flake8>=6.0.0",
             "mypy>=1.0.0",
@@ -48,6 +50,7 @@ setup(
             "requests>=2.28.0",
             "openai>=1.0.0",
             "anthropic>=0.18.0",
+            "mcp>=1.0.0",
         ]
     },
     entry_points={

@@ -42,7 +42,20 @@ Examples:
   mcts-reason "What is 2+2?"
   mcts-reason "Solve: 15*7+23" --answer 128
   mcts-reason "Explain photosynthesis" --simulations 20
+
+  # Specify provider and model
   mcts-reason "Complex problem" --provider ollama --model llama3.2
+  mcts-reason "Question" --provider openai --model gpt-4
+
+  # Remote Ollama server
+  mcts-reason "Question" --base-url http://192.168.0.225:11434 --model llama3.2
+
+  # Save/load search tree
+  mcts-reason "Hard problem" --simulations 50 --save tree.json
+  mcts-reason "Hard problem" --load tree.json --simulations 50
+
+  # Self-consistency voting
+  mcts-reason "What is 5*6?" --simulations 20 --vote majority
         """,
     )
 
@@ -70,6 +83,12 @@ Examples:
         "-m", "--model",
         default=None,
         help="Model name (provider-specific)",
+    )
+
+    parser.add_argument(
+        "--base-url",
+        default=None,
+        help="Provider base URL (overrides env var). For Ollama or OpenAI-compatible APIs",
     )
 
     parser.add_argument(
@@ -134,7 +153,14 @@ Examples:
         type=int,
         default=0,
         metavar="N",
-        help="Sample N diverse paths from tree",
+        help="Sample N paths from tree",
+    )
+
+    parser.add_argument(
+        "--sample-strategy",
+        choices=["value", "visits", "diverse", "topk"],
+        default="diverse",
+        help="Sampling strategy (default: diverse)",
     )
 
     parser.add_argument(
@@ -143,29 +169,76 @@ Examples:
         help="Show answer consistency score",
     )
 
+    # Serialization options
+    parser.add_argument(
+        "--save",
+        metavar="FILE",
+        help="Save search tree to file after search",
+    )
+
+    parser.add_argument(
+        "--load",
+        metavar="FILE",
+        help="Load search tree from file and continue search",
+    )
+
+    parser.add_argument(
+        "--vote",
+        choices=["majority", "weighted"],
+        default=None,
+        help="Use self-consistency voting instead of best answer",
+    )
+
     return parser
 
 
 def get_provider(args):
     """Get LLM provider based on args."""
     try:
+        kwargs = {}
+        if args.model:
+            kwargs["model"] = args.model
+        if args.base_url:
+            kwargs["base_url"] = args.base_url
+
         if args.provider:
-            kwargs = {"model": args.model} if args.model else {}
             llm = get_llm(args.provider, **kwargs)
         else:
-            llm = get_llm()
+            llm = get_llm(**kwargs)
 
         # Check availability
         if not llm.is_available():
-            print(f"Warning: {llm.get_provider_name()} not available, using mock",
-                  file=sys.stderr)
+            _print_mock_warning(
+                f"{llm.get_provider_name()} not available",
+                "Check your API keys or server connection"
+            )
             return MockLLMProvider()
         return llm
 
     except Exception as e:
-        print(f"Warning: Could not initialize provider: {e}", file=sys.stderr)
-        print("Using mock provider", file=sys.stderr)
+        _print_mock_warning(
+            f"Could not initialize provider: {e}",
+            "Check your configuration"
+        )
         return MockLLMProvider()
+
+
+def _print_mock_warning(reason: str, suggestion: str):
+    """Print a prominent warning about mock provider fallback."""
+    print("", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    print("WARNING: USING MOCK PROVIDER - RESULTS ARE NOT REAL", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    print(f"Reason: {reason}", file=sys.stderr)
+    print(f"Suggestion: {suggestion}", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("The mock provider returns predetermined responses.", file=sys.stderr)
+    print("To use a real LLM, set environment variables:", file=sys.stderr)
+    print("  - OPENAI_API_KEY for OpenAI", file=sys.stderr)
+    print("  - ANTHROPIC_API_KEY for Anthropic", file=sys.stderr)
+    print("  - Or start Ollama: ollama serve", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    print("", file=sys.stderr)
 
 
 def get_evaluator(args, llm):
@@ -198,31 +271,68 @@ def run_search(args, question: str) -> dict:
     )
     evaluator = get_evaluator(args, llm)
 
-    # Create MCTS
-    mcts = MCTS(
-        generator=generator,
-        evaluator=evaluator,
-        exploration_constant=args.exploration,
-        max_children_per_node=args.branching,
-        max_rollout_depth=args.max_depth,
-    )
+    # Load existing tree or create new MCTS
+    if args.load:
+        try:
+            mcts = MCTS.load(args.load, generator, evaluator)
+            print(f"Loaded tree from {args.load}", file=sys.stderr)
+            # Continue search with additional simulations
+            result = mcts.continue_search(simulations=args.simulations)
+        except FileNotFoundError:
+            print(f"Error: File not found: {args.load}", file=sys.stderr)
+            sys.exit(1)
+        except Exception as e:
+            print(f"Error loading tree: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        # Create new MCTS
+        mcts = MCTS(
+            generator=generator,
+            evaluator=evaluator,
+            exploration_constant=args.exploration,
+            max_children_per_node=args.branching,
+            max_rollout_depth=args.max_depth,
+        )
 
-    # Run search
-    result = mcts.search(
-        question=question,
-        simulations=args.simulations,
-    )
+        # Run search
+        result = mcts.search(
+            question=question,
+            simulations=args.simulations,
+        )
+
+    # Save tree if requested
+    if args.save:
+        mcts.save(args.save)
+        print(f"Saved tree to {args.save}", file=sys.stderr)
+
+    # Use self-consistency voting if requested
+    if args.vote:
+        sampler = PathSampler(result.root)
+        if args.vote == "majority":
+            vote_answer, vote_confidence = sampler.majority_vote()
+        else:  # weighted
+            vote_answer, vote_confidence = sampler.weighted_vote()
+        best_answer = vote_answer
+        confidence = vote_confidence
+    else:
+        best_answer = result.best_answer
+        confidence = result.confidence
 
     # Build results dict
     output = {
         "question": question,
-        "answer": result.best_answer,
-        "confidence": result.confidence,
+        "answer": best_answer,
+        "confidence": confidence,
         "simulations": result.simulations,
         "terminal_states": len(result.terminal_states),
         "stats": result.stats,
         "provider": llm.get_provider_name(),
     }
+
+    # Add voting info if used
+    if args.vote:
+        output["voting_method"] = args.vote
+        output["mcts_best_answer"] = result.best_answer
 
     # Add ground truth comparison if provided
     if args.answer is not None:
@@ -236,7 +346,8 @@ def run_search(args, question: str) -> dict:
     # Add sampling results if requested
     if args.sample > 0:
         sampler = PathSampler(result.root)
-        paths = sampler.sample(n=args.sample, strategy="diverse")
+        paths = sampler.sample(n=args.sample, strategy=args.sample_strategy)
+        output["sample_strategy"] = args.sample_strategy
         output["sampled_paths"] = [
             {
                 "answer": p.answer,
@@ -268,6 +379,10 @@ def print_results(output: dict, result: SearchResult, args):
     print()
     print(f"Best Answer: {output['answer']}")
     print(f"Confidence: {output['confidence']:.1%}")
+    if output.get("voting_method"):
+        print(f"Voting Method: {output['voting_method']}")
+        if output.get("mcts_best_answer") != output["answer"]:
+            print(f"MCTS Best Answer: {output['mcts_best_answer']}")
     print(f"Simulations: {output['simulations']}")
     print(f"Terminal States: {output['terminal_states']}")
 
@@ -296,7 +411,8 @@ def print_results(output: dict, result: SearchResult, args):
     # Sampled paths
     if args.sample > 0 and "sampled_paths" in output:
         print()
-        print(f"Sampled Paths ({len(output['sampled_paths'])} diverse):")
+        strategy = output.get("sample_strategy", "diverse")
+        print(f"Sampled Paths ({len(output['sampled_paths'])} {strategy}):")
         for i, path in enumerate(output["sampled_paths"], 1):
             print(f"\n  Path {i} (answer: {path['answer']}, value: {path['value']:.2f}):")
             for j, step in enumerate(path["steps"][:3], 1):

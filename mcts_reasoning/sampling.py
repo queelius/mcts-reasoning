@@ -223,6 +223,8 @@ class PathSampler:
 
         Selects paths that maximize diversity by choosing paths
         that differ most from already selected paths.
+
+        Uses index marking instead of list.pop() to avoid O(m²) complexity.
         """
         candidates = self._get_candidate_nodes(include_non_terminal)
         if not candidates:
@@ -238,19 +240,23 @@ class PathSampler:
         # Greedy diverse selection
         selected: List[SampledPath] = []
         selected_steps: List[frozenset] = []
+        used: Set[int] = set()  # Track used indices instead of list.pop()
 
         # Start with highest value path
         path_data.sort(key=lambda x: x[0].value, reverse=True)
         selected.append(path_data[0][0])
         selected_steps.append(path_data[0][1])
-        path_data = path_data[1:]
+        used.add(0)
 
-        while len(selected) < n and path_data:
+        while len(selected) < n and len(used) < len(path_data):
             # Find path most different from selected paths
-            best_idx = 0
+            best_idx = -1
             best_diversity = -1
 
             for i, (path, steps) in enumerate(path_data):
+                if i in used:
+                    continue
+
                 # Calculate minimum Jaccard distance to any selected path
                 min_similarity = 1.0
                 for sel_steps in selected_steps:
@@ -269,9 +275,10 @@ class PathSampler:
                     best_diversity = diversity
                     best_idx = i
 
-            selected.append(path_data[best_idx][0])
-            selected_steps.append(path_data[best_idx][1])
-            path_data.pop(best_idx)
+            if best_idx >= 0:
+                selected.append(path_data[best_idx][0])
+                selected_steps.append(path_data[best_idx][1])
+                used.add(best_idx)
 
         return selected
 
@@ -325,3 +332,110 @@ class PathSampler:
 
         most_common_count = counter.most_common(1)[0][1]
         return most_common_count / len(terminals)
+
+    def self_consistency_vote(
+        self,
+        weighted: bool = True,
+        normalize_answers: bool = True,
+    ) -> dict:
+        """
+        Apply self-consistency voting to select the best answer.
+
+        Self-consistency (Wang et al., 2022) samples multiple reasoning
+        paths and selects the answer that appears most frequently,
+        optionally weighted by path quality.
+
+        Args:
+            weighted: If True, weight votes by path value
+            normalize_answers: If True, normalize answers before comparing
+                              (lowercase, strip whitespace, remove $ and ,)
+
+        Returns:
+            Dictionary with:
+            - answer: Winning answer
+            - confidence: Confidence score (proportion of votes)
+            - votes: Vote count per answer
+            - weighted_votes: Weighted vote count (if weighted=True)
+            - total_votes: Total number of votes
+        """
+        terminals = self.get_terminals()
+        if not terminals:
+            return {
+                "answer": None,
+                "confidence": 0.0,
+                "votes": {},
+                "weighted_votes": {},
+                "total_votes": 0,
+            }
+
+        def normalize(answer: Optional[str]) -> Optional[str]:
+            if answer is None:
+                return None
+            if not normalize_answers:
+                return answer
+            # Normalize: lowercase, strip, remove currency/formatting
+            result = answer.lower().strip()
+            result = result.replace("$", "").replace(",", "")
+            return result
+
+        # Count votes
+        from collections import Counter
+        votes = Counter()
+        weighted_votes = {}
+
+        for terminal in terminals:
+            answer = normalize(terminal.answer)
+            if answer is not None:
+                votes[answer] += 1
+                if answer not in weighted_votes:
+                    weighted_votes[answer] = 0.0
+                weighted_votes[answer] += terminal.average_value
+
+        if not votes:
+            return {
+                "answer": None,
+                "confidence": 0.0,
+                "votes": {},
+                "weighted_votes": {},
+                "total_votes": 0,
+            }
+
+        total_votes = sum(votes.values())
+
+        # Select winner based on voting strategy
+        if weighted:
+            winner = max(weighted_votes.keys(), key=lambda a: weighted_votes[a])
+            # Confidence is normalized weighted vote
+            total_weight = sum(weighted_votes.values())
+            confidence = weighted_votes[winner] / total_weight if total_weight > 0 else 0.0
+        else:
+            winner = votes.most_common(1)[0][0]
+            confidence = votes[winner] / total_votes
+
+        return {
+            "answer": winner,
+            "confidence": confidence,
+            "votes": dict(votes),
+            "weighted_votes": weighted_votes,
+            "total_votes": total_votes,
+        }
+
+    def majority_vote(self) -> tuple:
+        """
+        Simple majority voting across terminal states.
+
+        Returns:
+            (answer, confidence) tuple
+        """
+        result = self.self_consistency_vote(weighted=False)
+        return result["answer"], result["confidence"]
+
+    def weighted_vote(self) -> tuple:
+        """
+        Value-weighted voting across terminal states.
+
+        Returns:
+            (answer, confidence) tuple
+        """
+        result = self.self_consistency_vote(weighted=True)
+        return result["answer"], result["confidence"]

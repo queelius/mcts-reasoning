@@ -160,16 +160,18 @@ class MockLLMProvider(LLMProvider):
 class OpenAIProvider(LLMProvider):
     """OpenAI GPT provider."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4", base_url: Optional[str] = None):
         """
         Initialize OpenAI provider.
 
         Args:
             api_key: OpenAI API key (or use OPENAI_API_KEY env var)
             model: Model name (e.g., "gpt-4", "gpt-3.5-turbo")
+            base_url: Optional base URL for OpenAI-compatible APIs (e.g., vLLM, LocalAI)
         """
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         self.model = model
+        self.base_url = base_url or os.environ.get("OPENAI_BASE_URL")
         self._client = None
 
     def _get_client(self):
@@ -177,7 +179,10 @@ class OpenAIProvider(LLMProvider):
         if self._client is None:
             try:
                 import openai
-                self._client = openai.OpenAI(api_key=self.api_key)
+                kwargs = {"api_key": self.api_key}
+                if self.base_url:
+                    kwargs["base_url"] = self.base_url
+                self._client = openai.OpenAI(**kwargs)
             except ImportError:
                 raise ImportError("openai package not installed. Install with: pip install openai")
         return self._client
@@ -341,6 +346,7 @@ class OllamaProvider(LLMProvider):
 
     def generate(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
         """Generate using Ollama."""
+        import requests
         session = self._get_session()
 
         try:
@@ -358,6 +364,18 @@ class OllamaProvider(LLMProvider):
             )
             response.raise_for_status()
             return response.json()["response"]
+        except requests.exceptions.ConnectionError:
+            raise RuntimeError(
+                f"Cannot connect to Ollama at {self.base_url}. "
+                f"Set OLLAMA_BASE_URL environment variable or start local Ollama server."
+            )
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                raise RuntimeError(
+                    f"Ollama model '{self.model}' not found at {self.base_url}. "
+                    f"Run 'ollama pull {self.model}' or check OLLAMA_BASE_URL."
+                )
+            raise RuntimeError(f"Ollama HTTP error: {e}")
         except Exception as e:
             raise RuntimeError(f"Ollama generation failed: {e}")
 
@@ -446,7 +464,7 @@ class ProviderFactory:
         return providers[provider_lower](**kwargs)
 
     @staticmethod
-    def from_env() -> LLMProvider:
+    def from_env(**kwargs) -> LLMProvider:
         """
         Create provider from environment variables.
 
@@ -455,24 +473,27 @@ class ProviderFactory:
         2. OPENAI_API_KEY -> OpenAI
         3. ANTHROPIC_API_KEY -> Anthropic
         4. Default to Mock (for testing without setup)
+
+        Args:
+            **kwargs: Provider-specific config (e.g., model) passed to detected provider
         """
         provider = os.environ.get("LLM_PROVIDER")
 
         if provider:
             logger.info(f"Using LLM_PROVIDER={provider} from environment")
-            return ProviderFactory.create(provider)
+            return ProviderFactory.create(provider, **kwargs)
 
         if os.environ.get("OPENAI_API_KEY"):
             logger.info("Detected OPENAI_API_KEY, using OpenAI provider")
-            return ProviderFactory.create("openai")
+            return ProviderFactory.create("openai", **kwargs)
 
         if os.environ.get("ANTHROPIC_API_KEY"):
             logger.info("Detected ANTHROPIC_API_KEY, using Anthropic provider")
-            return ProviderFactory.create("anthropic")
+            return ProviderFactory.create("anthropic", **kwargs)
 
         # Default to Ollama if it's available, otherwise Mock
         try:
-            ollama = ProviderFactory.create("ollama")
+            ollama = ProviderFactory.create("ollama", **kwargs)
             if ollama.is_available():
                 logger.info("Detected Ollama server, using Ollama provider")
                 return ollama
@@ -480,7 +501,7 @@ class ProviderFactory:
             pass
 
         logger.warning("No LLM provider configured, using MockLLMProvider")
-        return ProviderFactory.create("mock")
+        return ProviderFactory.create("mock", **kwargs)
 
 
 def get_llm(provider: Optional[str] = None, **kwargs) -> LLMProvider:
@@ -510,7 +531,7 @@ def get_llm(provider: Optional[str] = None, **kwargs) -> LLMProvider:
     """
     if provider:
         return ProviderFactory.create(provider, **kwargs)
-    return ProviderFactory.from_env()
+    return ProviderFactory.from_env(**kwargs)
 
 
 def test_provider(provider: LLMProvider) -> bool:

@@ -92,7 +92,6 @@ Common fixtures are defined in `conftest.py`:
 - `mock_llm` - Basic MockLLMProvider instance
 - `mock_llm_with_responses` - MockLLMProvider with predefined responses
 - `sample_example_dict` - Sample example data for testing
-- `sample_compositional_weights` - Sample weight dictionary for actions
 
 ## Coverage Goals
 

@@ -4,13 +4,6 @@ Pytest configuration and shared fixtures.
 
 import pytest
 from mcts_reasoning.compositional.providers import MockLLMProvider
-from mcts_reasoning.compositional import (
-    CognitiveOperation,
-    FocusAspect,
-    ReasoningStyle,
-    ConnectionType,
-    OutputFormat,
-)
 
 
 @pytest.fixture
@@ -40,23 +33,4 @@ def sample_example_dict():
         "solution": "4",
         "reasoning_steps": ["Add the two numbers", "2 + 2 = 4"],
         "metadata": {"domain": "arithmetic", "difficulty": "easy"}
-    }
-
-
-@pytest.fixture
-def sample_compositional_weights():
-    """Sample weight dictionary for compositional actions."""
-    return {
-        'cognitive_op': {
-            CognitiveOperation.DECOMPOSE: 3.0,
-            CognitiveOperation.ANALYZE: 2.5
-        },
-        'focus': {
-            FocusAspect.STRUCTURE: 2.5,
-            FocusAspect.PATTERNS: 2.0
-        },
-        'style': {
-            ReasoningStyle.SYSTEMATIC: 3.0,
-            ReasoningStyle.FORMAL: 2.0
-        }
     }

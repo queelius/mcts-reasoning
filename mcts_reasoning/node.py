@@ -9,7 +9,8 @@ Each node contains:
 
 from __future__ import annotations
 import math
-from typing import Optional, List, Any
+import json
+from typing import Optional, List, Any, Dict
 from dataclasses import dataclass, field
 
 
@@ -141,3 +142,68 @@ class Node:
     def __repr__(self) -> str:
         state_preview = self.state[:50] + "..." if len(self.state) > 50 else self.state
         return f"Node(visits={self.visits}, value={self.value:.2f}, state='{state_preview}')"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Serialize node and its subtree to a dictionary.
+
+        Parent references are not included (reconstructed on load).
+        Continuation cache is preserved for resuming expansion.
+        """
+        return {
+            "state": self.state,
+            "visits": self.visits,
+            "value": self.value,
+            "is_terminal": self.is_terminal,
+            "answer": self.answer,
+            # Continuation cache for resuming
+            "_continuations": self._continuations,
+            "_continuation_index": self._continuation_index,
+            "_continuation_info": getattr(self, '_continuation_info', None),
+            # Recursively serialize children
+            "children": [child.to_dict() for child in self.children],
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any], parent: Optional[Node] = None) -> Node:
+        """
+        Deserialize node and its subtree from a dictionary.
+
+        Args:
+            data: Dictionary from to_dict()
+            parent: Parent node (for reconstructing parent references)
+
+        Returns:
+            Reconstructed Node with full subtree
+        """
+        node = cls(
+            state=data["state"],
+            parent=parent,
+            visits=data.get("visits", 0),
+            value=data.get("value", 0.0),
+            is_terminal=data.get("is_terminal", False),
+            answer=data.get("answer"),
+        )
+
+        # Restore continuation cache
+        node._continuations = data.get("_continuations")
+        node._continuation_index = data.get("_continuation_index", 0)
+        if data.get("_continuation_info"):
+            node._continuation_info = data["_continuation_info"]
+
+        # Recursively deserialize children
+        for child_data in data.get("children", []):
+            child = cls.from_dict(child_data, parent=node)
+            node.children.append(child)
+
+        return node
+
+    def to_json(self, indent: int = 2) -> str:
+        """Serialize to JSON string."""
+        return json.dumps(self.to_dict(), indent=indent)
+
+    @classmethod
+    def from_json(cls, json_str: str) -> Node:
+        """Deserialize from JSON string."""
+        data = json.loads(json_str)
+        return cls.from_dict(data)

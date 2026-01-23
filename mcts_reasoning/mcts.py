@@ -13,6 +13,8 @@ Implements the spec from paper/main.tex with:
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 import random
+import json
+from pathlib import Path
 
 from .node import Node
 from .generator import Generator, Continuation
@@ -28,10 +30,14 @@ class SearchResult:
     root: Node
     simulations: int
     terminal_states: List[Dict[str, Any]] = field(default_factory=list)
+    _cached_stats: Optional[Dict[str, Any]] = field(default=None, repr=False)
 
     @property
     def stats(self) -> Dict[str, Any]:
-        """Get search statistics."""
+        """Get search statistics (cached for efficiency)."""
+        if self._cached_stats is not None:
+            return self._cached_stats
+
         def count_nodes(node: Node) -> int:
             return 1 + sum(count_nodes(c) for c in node.children)
 
@@ -40,7 +46,7 @@ class SearchResult:
                 return 0
             return 1 + max(max_depth(c) for c in node.children)
 
-        return {
+        self._cached_stats = {
             "total_nodes": count_nodes(self.root),
             "max_depth": max_depth(self.root),
             "simulations": self.simulations,
@@ -48,6 +54,11 @@ class SearchResult:
             "best_answer": self.best_answer,
             "confidence": self.confidence,
         }
+        return self._cached_stats
+
+    def invalidate_stats_cache(self):
+        """Invalidate cached stats (call after modifying tree)."""
+        self._cached_stats = None
 
 
 class MCTS:
@@ -380,3 +391,161 @@ class MCTS:
 
         visualize(self.root, "", True)
         return "\n".join(lines)
+
+    # ========== Serialization ==========
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Serialize the MCTS state to a dictionary.
+
+        Note: Generator and evaluator are not serialized. They must be
+        provided when loading via from_dict() or load().
+        """
+        if self.root is None:
+            raise ValueError("Cannot serialize MCTS without a root node")
+
+        return {
+            "version": "0.4.0",
+            "question": self.question,
+            "exploration_constant": self.exploration_constant,
+            "max_children_per_node": self.max_children_per_node,
+            "max_rollout_depth": self.max_rollout_depth,
+            "terminal_states": self.terminal_states,
+            "root": self.root.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: Dict[str, Any],
+        generator: Generator,
+        evaluator: Evaluator,
+        action_space: Optional["ActionSpace"] = None,
+    ) -> "MCTS":
+        """
+        Deserialize MCTS state from a dictionary.
+
+        Args:
+            data: Dictionary from to_dict()
+            generator: Generator instance (required for continued search)
+            evaluator: Evaluator instance (required for continued search)
+            action_space: Optional custom action space
+
+        Returns:
+            MCTS instance with restored tree state
+        """
+        mcts = cls(
+            generator=generator,
+            evaluator=evaluator,
+            exploration_constant=data.get("exploration_constant", 1.414),
+            max_children_per_node=data.get("max_children_per_node", 3),
+            max_rollout_depth=data.get("max_rollout_depth", 10),
+            action_space=action_space,
+        )
+
+        mcts.question = data.get("question", "")
+        mcts.terminal_states = data.get("terminal_states", [])
+        mcts.root = Node.from_dict(data["root"])
+
+        return mcts
+
+    def to_json(self, indent: int = 2) -> str:
+        """Serialize to JSON string."""
+        return json.dumps(self.to_dict(), indent=indent)
+
+    @classmethod
+    def from_json(
+        cls,
+        json_str: str,
+        generator: Generator,
+        evaluator: Evaluator,
+        action_space: Optional["ActionSpace"] = None,
+    ) -> "MCTS":
+        """Deserialize from JSON string."""
+        data = json.loads(json_str)
+        return cls.from_dict(data, generator, evaluator, action_space)
+
+    def save(self, path: str) -> None:
+        """
+        Save MCTS tree state to a file.
+
+        Args:
+            path: File path to save to (will be created/overwritten)
+
+        Example:
+            result = mcts.search("What is 2+2?", simulations=50)
+            mcts.save("tree.json")
+        """
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as f:
+            f.write(self.to_json())
+
+    @classmethod
+    def load(
+        cls,
+        path: str,
+        generator: Generator,
+        evaluator: Evaluator,
+        action_space: Optional["ActionSpace"] = None,
+    ) -> "MCTS":
+        """
+        Load MCTS tree state from a file.
+
+        Args:
+            path: File path to load from
+            generator: Generator instance (required for continued search)
+            evaluator: Evaluator instance (required for continued search)
+            action_space: Optional custom action space
+
+        Returns:
+            MCTS instance with restored tree state
+
+        Example:
+            mcts = MCTS.load("tree.json", generator, evaluator)
+            result = mcts.continue_search(simulations=50)
+        """
+        with open(path, "r") as f:
+            json_str = f.read()
+        return cls.from_json(json_str, generator, evaluator, action_space)
+
+    # ========== Continued Search ==========
+
+    def continue_search(self, simulations: int = 100) -> SearchResult:
+        """
+        Continue search from existing tree state.
+
+        Use this to add more simulations to an existing search,
+        either after initial search() or after loading a saved tree.
+
+        Args:
+            simulations: Additional simulations to run
+
+        Returns:
+            SearchResult with updated statistics
+
+        Example:
+            result = mcts.search("What is 2+2?", simulations=50)
+            # Later, add more simulations
+            result = mcts.continue_search(simulations=50)
+        """
+        if self.root is None:
+            raise ValueError("Cannot continue search without existing tree. Use search() first.")
+
+        # Run additional simulations
+        for _ in range(simulations):
+            self._simulate()
+
+        # Get updated best answer
+        best_answer, confidence = self._get_best_answer()
+
+        # Count total simulations from root visits
+        total_simulations = self.root.visits
+
+        return SearchResult(
+            best_answer=best_answer,
+            confidence=confidence,
+            root=self.root,
+            simulations=total_simulations,
+            terminal_states=self.terminal_states,
+        )
