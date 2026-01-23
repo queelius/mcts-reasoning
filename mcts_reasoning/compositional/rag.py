@@ -6,10 +6,8 @@ Provides two types of RAG:
 2. SolutionRAGStore: Maps problems to complete solution examples
 """
 
-from typing import List, Dict, Any, Optional, Set, Tuple
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
-import random
-import json
 from pathlib import Path
 
 from . import (
@@ -17,12 +15,13 @@ from . import (
     FocusAspect,
     ReasoningStyle,
     ConnectionType,
-    OutputFormat
+    OutputFormat,
 )
 from .examples import Example, ExampleSet
 
 
 # ========== Type (a): Compositional RAG ==========
+
 
 @dataclass
 class CompositionalGuidance:
@@ -65,29 +64,19 @@ class CompositionalGuidance:
         weights = {}
 
         if self.recommended_operations:
-            weights['cognitive_op'] = {
-                op: 3.0 for op in self.recommended_operations
-            }
+            weights["cognitive_op"] = {op: 3.0 for op in self.recommended_operations}
 
         if self.recommended_focuses:
-            weights['focus'] = {
-                focus: 2.5 for focus in self.recommended_focuses
-            }
+            weights["focus"] = {focus: 2.5 for focus in self.recommended_focuses}
 
         if self.recommended_styles:
-            weights['style'] = {
-                style: 3.0 for style in self.recommended_styles
-            }
+            weights["style"] = {style: 3.0 for style in self.recommended_styles}
 
         if self.recommended_connections:
-            weights['connection'] = {
-                conn: 2.0 for conn in self.recommended_connections
-            }
+            weights["connection"] = {conn: 2.0 for conn in self.recommended_connections}
 
         if self.recommended_formats:
-            weights['output_format'] = {
-                fmt: 2.0 for fmt in self.recommended_formats
-            }
+            weights["output_format"] = {fmt: 2.0 for fmt in self.recommended_formats}
 
         return weights
 
@@ -105,7 +94,9 @@ class CompositionalGuidance:
 
         # Keyword matching
         if self.problem_keywords:
-            matches = sum(1 for kw in self.problem_keywords if kw.lower() in problem_lower)
+            matches = sum(
+                1 for kw in self.problem_keywords if kw.lower() in problem_lower
+            )
             return min(matches / len(self.problem_keywords), 1.0)
 
         # Pattern matching (simple substring)
@@ -132,18 +123,21 @@ class CompositionalRAGStore:
         """
         self.guidance: List[CompositionalGuidance] = guidance_list or []
 
-    def add_guidance(self, guidance: CompositionalGuidance) -> 'CompositionalRAGStore':
+    def add_guidance(self, guidance: CompositionalGuidance) -> "CompositionalRAGStore":
         """Add guidance entry."""
         self.guidance.append(guidance)
         return self
 
-    def add(self, problem_pattern: str,
-            keywords: Optional[List[str]] = None,
-            operations: Optional[List[CognitiveOperation]] = None,
-            focuses: Optional[List[FocusAspect]] = None,
-            styles: Optional[List[ReasoningStyle]] = None,
-            domain: Optional[str] = None,
-            **kwargs) -> 'CompositionalRAGStore':
+    def add(
+        self,
+        problem_pattern: str,
+        keywords: Optional[List[str]] = None,
+        operations: Optional[List[CognitiveOperation]] = None,
+        focuses: Optional[List[FocusAspect]] = None,
+        styles: Optional[List[ReasoningStyle]] = None,
+        domain: Optional[str] = None,
+        **kwargs,
+    ) -> "CompositionalRAGStore":
         """
         Add guidance entry from components.
 
@@ -166,7 +160,7 @@ class CompositionalRAGStore:
             recommended_focuses=focuses,
             recommended_styles=styles,
             domain=domain,
-            **kwargs
+            **kwargs,
         )
         self.guidance.append(guidance)
         return self
@@ -186,10 +180,7 @@ class CompositionalRAGStore:
             return []
 
         # Score all guidance entries
-        scored = [
-            (g.matches_problem(problem), g)
-            for g in self.guidance
-        ]
+        scored = [(g.matches_problem(problem), g) for g in self.guidance]
 
         # Sort by score and return top k
         scored.sort(reverse=True, key=lambda x: x[0])
@@ -197,8 +188,9 @@ class CompositionalRAGStore:
         # Filter out zero scores
         return [g for score, g in scored[:k] if score > 0]
 
-    def get_recommended_weights(self, problem: str,
-                                merge_strategy: str = 'average') -> Dict[str, Dict[Any, float]]:
+    def get_recommended_weights(
+        self, problem: str, merge_strategy: str = "average"
+    ) -> Dict[str, Dict[Any, float]]:
         """
         Get recommended weights for a problem by merging guidance.
 
@@ -214,7 +206,7 @@ class CompositionalRAGStore:
         if not relevant_guidance:
             return {}
 
-        if merge_strategy == 'first':
+        if merge_strategy == "first":
             return relevant_guidance[0].to_weights_dict()
 
         # Merge multiple guidance entries
@@ -229,11 +221,11 @@ class CompositionalRAGStore:
 
                 for component, weight in dim_weights.items():
                     if component in all_weights[dim]:
-                        if merge_strategy == 'average':
+                        if merge_strategy == "average":
                             all_weights[dim][component] = (
                                 all_weights[dim][component] + weight
                             ) / 2
-                        elif merge_strategy == 'max':
+                        elif merge_strategy == "max":
                             all_weights[dim][component] = max(
                                 all_weights[dim][component], weight
                             )
@@ -252,7 +244,7 @@ class CompositionalRAGStore:
         """
         for guidance in self.retrieve(problem, k=1):
             # Simple running average update
-            n = getattr(guidance, '_update_count', 0)
+            n = getattr(guidance, "_update_count", 0)
             old_rate = guidance.success_rate
             guidance.success_rate = (old_rate * n + (1.0 if success else 0.0)) / (n + 1)
             guidance._update_count = n + 1  # Track update count
@@ -263,7 +255,7 @@ class CompositionalRAGStore:
         pass
 
     @classmethod
-    def load(cls, filepath: Path) -> 'CompositionalRAGStore':
+    def load(cls, filepath: Path) -> "CompositionalRAGStore":
         """Load RAG store from JSON file."""
         # TODO: Implement deserialization
         return cls()
@@ -276,6 +268,7 @@ class CompositionalRAGStore:
 
 
 # ========== Type (b): Solution RAG ==========
+
 
 class SolutionRAGStore:
     """
@@ -294,14 +287,18 @@ class SolutionRAGStore:
         """
         self.examples = examples or ExampleSet()
 
-    def add_example(self, example: Example) -> 'SolutionRAGStore':
+    def add_example(self, example: Example) -> "SolutionRAGStore":
         """Add a solution example."""
         self.examples.add(example)
         return self
 
-    def add(self, problem: str, solution: str,
-            reasoning_steps: Optional[List[str]] = None,
-            **metadata) -> 'SolutionRAGStore':
+    def add(
+        self,
+        problem: str,
+        solution: str,
+        reasoning_steps: Optional[List[str]] = None,
+        **metadata,
+    ) -> "SolutionRAGStore":
         """
         Add example from components.
 
@@ -318,12 +315,13 @@ class SolutionRAGStore:
             problem=problem,
             solution=solution,
             reasoning_steps=reasoning_steps,
-            **metadata
+            **metadata,
         )
         return self
 
-    def retrieve(self, problem: str, k: int = 3,
-                method: str = 'keyword') -> List[Example]:
+    def retrieve(
+        self, problem: str, k: int = 3, method: str = "keyword"
+    ) -> List[Example]:
         """
         Retrieve k most similar solution examples.
 
@@ -337,8 +335,9 @@ class SolutionRAGStore:
         """
         return self.examples.retrieve_similar(problem, k, method)
 
-    def to_few_shot_prompt(self, problem: str, n_examples: int = 3,
-                          include_steps: bool = True) -> str:
+    def to_few_shot_prompt(
+        self, problem: str, n_examples: int = 3, include_steps: bool = True
+    ) -> str:
         """
         Generate few-shot prompt for a problem.
 
@@ -353,8 +352,8 @@ class SolutionRAGStore:
         return self.examples.to_few_shot_prompt(
             n_examples=n_examples,
             query=problem,
-            retrieval_method='keyword',
-            include_steps=include_steps
+            retrieval_method="keyword",
+            include_steps=include_steps,
         )
 
     def __len__(self) -> int:
@@ -365,6 +364,7 @@ class SolutionRAGStore:
 
 
 # ========== Predefined RAG Stores ==========
+
 
 def get_math_compositional_rag() -> CompositionalRAGStore:
     """Get predefined compositional RAG for math problems."""
@@ -377,7 +377,7 @@ def get_math_compositional_rag() -> CompositionalRAGStore:
         operations=[CognitiveOperation.DECOMPOSE, CognitiveOperation.ANALYZE],
         focuses=[FocusAspect.STRUCTURE, FocusAspect.PATTERNS],
         styles=[ReasoningStyle.SYSTEMATIC, ReasoningStyle.FORMAL],
-        domain="algebra"
+        domain="algebra",
     )
 
     # Prime numbers
@@ -387,7 +387,7 @@ def get_math_compositional_rag() -> CompositionalRAGStore:
         operations=[CognitiveOperation.GENERATE, CognitiveOperation.VERIFY],
         focuses=[FocusAspect.PATTERNS, FocusAspect.CORRECTNESS],
         styles=[ReasoningStyle.SYSTEMATIC],
-        domain="number_theory"
+        domain="number_theory",
     )
 
     # Arithmetic
@@ -397,7 +397,7 @@ def get_math_compositional_rag() -> CompositionalRAGStore:
         operations=[CognitiveOperation.DECOMPOSE, CognitiveOperation.ANALYZE],
         focuses=[FocusAspect.STRUCTURE, FocusAspect.EFFICIENCY],
         styles=[ReasoningStyle.SYSTEMATIC],
-        domain="arithmetic"
+        domain="arithmetic",
     )
 
     # Proofs
@@ -407,7 +407,7 @@ def get_math_compositional_rag() -> CompositionalRAGStore:
         operations=[CognitiveOperation.VERIFY, CognitiveOperation.ANALYZE],
         focuses=[FocusAspect.CORRECTNESS, FocusAspect.ASSUMPTIONS],
         styles=[ReasoningStyle.FORMAL, ReasoningStyle.CRITICAL],
-        domain="proofs"
+        domain="proofs",
     )
 
     return store
@@ -424,7 +424,7 @@ def get_coding_compositional_rag() -> CompositionalRAGStore:
         operations=[CognitiveOperation.DECOMPOSE, CognitiveOperation.GENERATE],
         focuses=[FocusAspect.STRUCTURE, FocusAspect.EFFICIENCY],
         styles=[ReasoningStyle.SYSTEMATIC],
-        domain="algorithms"
+        domain="algorithms",
     )
 
     # Debugging
@@ -434,7 +434,7 @@ def get_coding_compositional_rag() -> CompositionalRAGStore:
         operations=[CognitiveOperation.ANALYZE, CognitiveOperation.VERIFY],
         focuses=[FocusAspect.ERRORS, FocusAspect.ASSUMPTIONS],
         styles=[ReasoningStyle.CRITICAL, ReasoningStyle.SYSTEMATIC],
-        domain="debugging"
+        domain="debugging",
     )
 
     # Optimization
@@ -444,7 +444,7 @@ def get_coding_compositional_rag() -> CompositionalRAGStore:
         operations=[CognitiveOperation.EVALUATE, CognitiveOperation.REFINE],
         focuses=[FocusAspect.EFFICIENCY, FocusAspect.ALTERNATIVES],
         styles=[ReasoningStyle.CRITICAL, ReasoningStyle.CREATIVE],
-        domain="optimization"
+        domain="optimization",
     )
 
     return store
@@ -461,7 +461,7 @@ def get_logic_compositional_rag() -> CompositionalRAGStore:
         operations=[CognitiveOperation.ANALYZE, CognitiveOperation.VERIFY],
         focuses=[FocusAspect.ASSUMPTIONS, FocusAspect.CORRECTNESS],
         styles=[ReasoningStyle.FORMAL, ReasoningStyle.SYSTEMATIC],
-        domain="logic"
+        domain="logic",
     )
 
     # Puzzles
@@ -471,17 +471,17 @@ def get_logic_compositional_rag() -> CompositionalRAGStore:
         operations=[CognitiveOperation.DECOMPOSE, CognitiveOperation.GENERATE],
         focuses=[FocusAspect.CONSTRAINTS, FocusAspect.ALTERNATIVES],
         styles=[ReasoningStyle.CREATIVE, ReasoningStyle.SYSTEMATIC],
-        domain="puzzles"
+        domain="puzzles",
     )
 
     return store
 
 
 __all__ = [
-    'CompositionalGuidance',
-    'CompositionalRAGStore',
-    'SolutionRAGStore',
-    'get_math_compositional_rag',
-    'get_coding_compositional_rag',
-    'get_logic_compositional_rag',
+    "CompositionalGuidance",
+    "CompositionalRAGStore",
+    "SolutionRAGStore",
+    "get_math_compositional_rag",
+    "get_coding_compositional_rag",
+    "get_logic_compositional_rag",
 ]

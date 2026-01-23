@@ -51,6 +51,7 @@ import re
 @dataclass
 class Evaluation:
     """Result of evaluating a terminal state."""
+
     score: float  # 0 to 1
     reasoning: Optional[str] = None  # Evaluator's explanation (for debugging)
     is_correct: Optional[bool] = None  # If ground truth available
@@ -143,7 +144,7 @@ Respond with ONLY a number between 0 and 1 (e.g., 0.8):"""
     def _parse_score(self, response: str) -> float:
         """Parse a score from the LLM response."""
         # Try to find a decimal number
-        match = re.search(r'(\d+\.?\d*)', response)
+        match = re.search(r"(\d+\.?\d*)", response)
         if match:
             score = float(match.group(1))
             # Clamp to 0-1
@@ -177,8 +178,8 @@ class GroundTruthEvaluator(Evaluator):
     def _default_normalize(self, s: str) -> str:
         """Default normalization: lowercase, strip whitespace/punctuation."""
         s = s.lower().strip()
-        s = re.sub(r'[^\w\s]', '', s)  # Remove punctuation
-        s = re.sub(r'\s+', ' ', s)  # Normalize whitespace
+        s = re.sub(r"[^\w\s]", "", s)  # Remove punctuation
+        s = re.sub(r"\s+", " ", s)  # Normalize whitespace
         return s
 
     def evaluate(self, question: str, state: str, answer: str) -> Evaluation:
@@ -192,7 +193,10 @@ class GroundTruthEvaluator(Evaluator):
             score = 1.0
         elif self.partial_credit:
             # Simple partial credit: check if answer is contained in truth or vice versa
-            if normalized_answer in normalized_truth or normalized_truth in normalized_answer:
+            if (
+                normalized_answer in normalized_truth
+                or normalized_truth in normalized_answer
+            ):
                 score = 0.7
             else:
                 score = 0.0
@@ -279,17 +283,17 @@ class NumericEvaluator(Evaluator):
             pass
 
         # Try fractions first (must check before integers to catch "1/2" not just "1")
-        fraction_match = re.search(r'[-+]?\d+/\d+', text)
+        fraction_match = re.search(r"[-+]?\d+/\d+", text)
         if fraction_match:
             found = fraction_match.group()
             try:
-                num, denom = found.split('/')
+                num, denom = found.split("/")
                 return float(num) / float(denom)
             except (ValueError, ZeroDivisionError):
                 pass
 
         # Try scientific notation and decimals
-        number_match = re.search(r'[-+]?\d+\.?\d*(?:[eE][-+]?\d+)?', text)
+        number_match = re.search(r"[-+]?\d+\.?\d*(?:[eE][-+]?\d+)?", text)
         if number_match:
             try:
                 return float(number_match.group())
@@ -381,12 +385,12 @@ class ProcessEvaluator(Evaluator):
 
         # Check for step structure
         step_patterns = [
-            r'[Ss]tep\s*\d',
-            r'\d+\.\s+\w',
-            r'[Ff]irst[,:]',
-            r'[Nn]ext[,:]',
-            r'[Tt]hen[,:]',
-            r'[Ff]inally[,:]',
+            r"[Ss]tep\s*\d",
+            r"\d+\.\s+\w",
+            r"[Ff]irst[,:]",
+            r"[Nn]ext[,:]",
+            r"[Tt]hen[,:]",
+            r"[Ff]inally[,:]",
         ]
         if any(re.search(p, state) for p in step_patterns):
             score += 0.25
@@ -394,11 +398,11 @@ class ProcessEvaluator(Evaluator):
 
         # Check for mathematical reasoning
         math_patterns = [
-            r'=',
-            r'\d+\s*[+\-*/]\s*\d+',
-            r'therefore',
-            r'thus',
-            r'hence',
+            r"=",
+            r"\d+\s*[+\-*/]\s*\d+",
+            r"therefore",
+            r"thus",
+            r"hence",
         ]
         if any(re.search(p, state, re.IGNORECASE) for p in math_patterns):
             score += 0.25
@@ -406,11 +410,11 @@ class ProcessEvaluator(Evaluator):
 
         # Check for verification/checking
         verify_patterns = [
-            r'[Ll]et.?s (check|verify)',
-            r'[Cc]heck:',
-            r'[Vv]erif',
-            r'[Cc]onfirm',
-            r'[Dd]ouble.?check',
+            r"[Ll]et.?s (check|verify)",
+            r"[Cc]heck:",
+            r"[Vv]erif",
+            r"[Cc]onfirm",
+            r"[Dd]ouble.?check",
         ]
         if any(re.search(p, state) for p in verify_patterns):
             score += 0.25
@@ -418,11 +422,11 @@ class ProcessEvaluator(Evaluator):
 
         # Check for logical structure
         logic_patterns = [
-            r'[Bb]ecause',
-            r'[Ss]ince',
-            r'[Tt]herefore',
-            r'[Ii]f.*then',
-            r'[Gg]iven that',
+            r"[Bb]ecause",
+            r"[Ss]ince",
+            r"[Tt]herefore",
+            r"[Ii]f.*then",
+            r"[Gg]iven that",
         ]
         if any(re.search(p, state) for p in logic_patterns):
             score += 0.25
@@ -443,8 +447,7 @@ class ProcessEvaluator(Evaluator):
             is_correct = None
 
         total_score = (
-            self.answer_weight * answer_score +
-            self.process_weight * process_score
+            self.answer_weight * answer_score + self.process_weight * process_score
         )
 
         reasoning = f"Process: {process_score:.2f} ({', '.join(process_reasons) or 'minimal structure'})"

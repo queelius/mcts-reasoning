@@ -18,7 +18,7 @@ import re
 from .terminal import TerminalDetector, MarkerTerminalDetector
 
 if TYPE_CHECKING:
-    from .terminal import TerminalCheck
+    pass
 
 
 # Marker that signals a complete answer (default)
@@ -28,6 +28,7 @@ ANSWER_MARKER = "ANSWER:"
 @dataclass
 class Continuation:
     """A single reasoning continuation."""
+
     text: str
     is_terminal: bool
     answer: Optional[str] = None  # Extracted answer if terminal
@@ -142,11 +143,14 @@ Format your response as:
             state="{state}",
             terminal_instruction=terminal_instruction,
         )
-        self.diverse_prompt_template = diverse_prompt_template or self.DEFAULT_DIVERSE_PROMPT_TEMPLATE.format(
-            question="{question}",
-            state="{state}",
-            n="{n}",
-            terminal_instruction=terminal_instruction,
+        self.diverse_prompt_template = (
+            diverse_prompt_template
+            or self.DEFAULT_DIVERSE_PROMPT_TEMPLATE.format(
+                question="{question}",
+                state="{state}",
+                n="{n}",
+                terminal_instruction=terminal_instruction,
+            )
         )
 
     def generate(self, question: str, state: str, n: int = 1) -> List[Continuation]:
@@ -175,7 +179,9 @@ Format your response as:
             answer=self.extract_answer(response),
         )
 
-    def _generate_diverse(self, question: str, state: str, n: int) -> List[Continuation]:
+    def _generate_diverse(
+        self, question: str, state: str, n: int
+    ) -> List[Continuation]:
         """Generate n diverse continuations."""
         prompt = self.diverse_prompt_template.format(
             question=question,
@@ -199,12 +205,14 @@ Format your response as:
 
         return continuations[:n]
 
-    def _parse_diverse_response(self, response: str, base_state: str) -> List[Continuation]:
+    def _parse_diverse_response(
+        self, response: str, base_state: str
+    ) -> List[Continuation]:
         """Parse a diverse response into separate continuations."""
         continuations = []
 
         # Split by continuation markers
-        parts = re.split(r'---\s*CONTINUATION\s*\d+\s*---', response)
+        parts = re.split(r"---\s*CONTINUATION\s*\d+\s*---", response)
 
         for part in parts:
             part = part.strip()
@@ -212,11 +220,13 @@ Format your response as:
                 continue
 
             new_state = f"{base_state}\n\n{part}"
-            continuations.append(Continuation(
-                text=new_state,
-                is_terminal=self.is_terminal(part),
-                answer=self.extract_answer(part),
-            ))
+            continuations.append(
+                Continuation(
+                    text=new_state,
+                    is_terminal=self.is_terminal(part),
+                    answer=self.extract_answer(part),
+                )
+            )
 
         return continuations
 
@@ -259,10 +269,12 @@ class MockGenerator(Generator):
             self.call_count += 1
 
             new_state = f"{state}\n\n{response}"
-            continuations.append(Continuation(
-                text=new_state,
-                is_terminal=self.is_terminal(response),
-                answer=self.extract_answer(response),
-            ))
+            continuations.append(
+                Continuation(
+                    text=new_state,
+                    is_terminal=self.is_terminal(response),
+                    answer=self.extract_answer(response),
+                )
+            )
 
         return continuations

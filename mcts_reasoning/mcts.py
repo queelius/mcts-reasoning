@@ -10,21 +10,22 @@ Implements the spec from paper/main.tex with:
 - Terminal-only evaluation for cost efficiency
 """
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 import random
 import json
 from pathlib import Path
 
 from .node import Node
-from .generator import Generator, Continuation
-from .evaluator import Evaluator, Evaluation
-from .actions import Action, ActionSpace, DefaultActionSpace
+from .generator import Generator
+from .evaluator import Evaluator
+from .actions import ActionSpace, DefaultActionSpace
 
 
 @dataclass
 class SearchResult:
     """Result of MCTS search."""
+
     best_answer: Optional[str]
     confidence: float
     root: Node
@@ -244,7 +245,10 @@ class MCTS:
         # Check if this continuation is terminal
         is_terminal = False
         answer = None
-        if hasattr(node, '_continuation_info') and next_state in node._continuation_info:
+        if (
+            hasattr(node, "_continuation_info")
+            and next_state in node._continuation_info
+        ):
             is_terminal, answer = node._continuation_info[next_state]
 
         # Create child node
@@ -324,12 +328,14 @@ class MCTS:
         )
 
         # Record this terminal state
-        self.terminal_states.append({
-            "state": node.state,
-            "answer": node.answer,
-            "score": evaluation.score,
-            "depth": node.depth,
-        })
+        self.terminal_states.append(
+            {
+                "state": node.state,
+                "answer": node.answer,
+                "score": evaluation.score,
+                "depth": node.depth,
+            }
+        )
 
         return evaluation.score
 
@@ -352,6 +358,7 @@ class MCTS:
 
     def _get_best_leaf_answer(self) -> tuple:
         """Fallback: get answer from best leaf node."""
+
         def find_best_leaf(node: Node) -> Node:
             if not node.children:
                 return node
@@ -375,7 +382,7 @@ class MCTS:
         def visualize(node: Node, prefix: str = "", is_last: bool = True):
             # Node representation
             marker = "└── " if is_last else "├── "
-            state_preview = node.state.split('\n')[-1][:40]  # Last line, truncated
+            state_preview = node.state.split("\n")[-1][:40]  # Last line, truncated
             if node.is_terminal:
                 state_preview = f"[TERMINAL: {node.answer}]"
 
@@ -530,7 +537,9 @@ class MCTS:
             result = mcts.continue_search(simulations=50)
         """
         if self.root is None:
-            raise ValueError("Cannot continue search without existing tree. Use search() first.")
+            raise ValueError(
+                "Cannot continue search without existing tree. Use search() first."
+            )
 
         # Run additional simulations
         for _ in range(simulations):

@@ -12,7 +12,6 @@ This abstraction allows extensions like:
 - VERIFY: Ask LLM to verify current reasoning
 """
 
-from abc import ABC, abstractmethod
 from typing import List, Optional, Protocol, runtime_checkable, TYPE_CHECKING
 from dataclasses import dataclass
 import re
@@ -24,6 +23,7 @@ if TYPE_CHECKING:
 @dataclass
 class ActionResult:
     """Result of applying an action to a state."""
+
     new_state: str
     is_terminal: bool
     answer: Optional[str] = None
@@ -160,12 +160,12 @@ Your next step:"""
 
     def _extract_answer(self, text: str) -> Optional[str]:
         """Extract answer from text containing ANSWER: marker."""
-        match = re.search(rf'{self.ANSWER_MARKER}\s*(.+?)(?:\n\n|$)', text, re.DOTALL)
+        match = re.search(rf"{self.ANSWER_MARKER}\s*(.+?)(?:\n\n|$)", text, re.DOTALL)
         if match:
             return match.group(1).strip()
         idx = text.find(self.ANSWER_MARKER)
         if idx >= 0:
-            return text[idx + len(self.ANSWER_MARKER):].strip()
+            return text[idx + len(self.ANSWER_MARKER) :].strip()
         return None
 
 
@@ -231,6 +231,7 @@ class DefaultActionSpace:
 # EXTENSIONS (documented but not part of canonical implementation)
 # See paper Section 8 (Extensions)
 # =============================================================================
+
 
 class CompressAction:
     """
@@ -353,7 +354,9 @@ class ExtendedActionSpace:
 
         actions: List[Action] = [self.continue_action]
 
-        if self.compress_action is not None and self.compress_action.is_available(state):
+        if self.compress_action is not None and self.compress_action.is_available(
+            state
+        ):
             actions.append(self.compress_action)
 
         return actions

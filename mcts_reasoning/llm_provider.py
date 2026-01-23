@@ -4,9 +4,8 @@ LLM Provider adapter for v2 MCTS.
 Bridges the existing LLM providers to the v2 Generator/Evaluator interfaces.
 """
 
-from typing import Optional
-from .generator import Generator, LLMGenerator, Continuation
-from .evaluator import Evaluator, LLMEvaluator
+from .generator import LLMGenerator
+from .evaluator import LLMEvaluator
 
 
 class LLMAdapter:
@@ -25,7 +24,9 @@ class LLMAdapter:
         """
         self.provider = provider
 
-    def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 500) -> str:
+    def generate(
+        self, prompt: str, temperature: float = 0.7, max_tokens: int = 500
+    ) -> str:
         """Generate text from the LLM."""
         return self.provider.generate(
             prompt,
@@ -34,7 +35,9 @@ class LLMAdapter:
         )
 
 
-def create_generator(llm_provider, temperature: float = 0.7, max_tokens: int = 500) -> LLMGenerator:
+def create_generator(
+    llm_provider, temperature: float = 0.7, max_tokens: int = 500
+) -> LLMGenerator:
     """
     Create an LLMGenerator from an existing provider.
 

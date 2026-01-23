@@ -12,8 +12,10 @@ from enum import Enum
 # These enums define the compositional action space for guided reasoning.
 # Used by CompositionalRAGStore to recommend reasoning approaches.
 
+
 class CognitiveOperation(Enum):
     """ω: High-level reasoning operations"""
+
     DECOMPOSE = "decompose"
     ANALYZE = "analyze"
     SYNTHESIZE = "synthesize"
@@ -29,6 +31,7 @@ class CognitiveOperation(Enum):
 
 class FocusAspect(Enum):
     """φ: What aspect to focus on"""
+
     STRUCTURE = "structure"
     DETAILS = "details"
     ASSUMPTIONS = "assumptions"
@@ -47,6 +50,7 @@ class FocusAspect(Enum):
 
 class ReasoningStyle(Enum):
     """σ: How to approach the reasoning"""
+
     SYSTEMATIC = "systematic"
     INTUITIVE = "intuitive"
     FORMAL = "formal"
@@ -57,6 +61,7 @@ class ReasoningStyle(Enum):
 
 class ConnectionType(Enum):
     """κ: How to connect to previous reasoning"""
+
     CONTINUE = "continue"
     CONTRAST = "contrast"
     ELABORATE = "elaborate"
@@ -73,6 +78,7 @@ class ConnectionType(Enum):
 
 class OutputFormat(Enum):
     """τ: How to structure the output"""
+
     LIST = "list"
     STEPS = "steps"
     COMPARISON = "comparison"

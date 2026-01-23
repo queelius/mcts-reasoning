@@ -78,19 +78,19 @@ class MCPClientManager:
                      Config dict should have 'command' key (list of strings)
         """
         for name, cfg in configs.items():
-            self.add_server(ServerConfig(
-                name=name,
-                command=cfg.get("command", []),
-                env=cfg.get("env", {}),
-                args=cfg.get("args", []),
-            ))
+            self.add_server(
+                ServerConfig(
+                    name=name,
+                    command=cfg.get("command", []),
+                    env=cfg.get("env", {}),
+                    args=cfg.get("args", []),
+                )
+            )
 
     async def start(self) -> None:
         """Start all configured servers and discover tools."""
         if not HAS_MCP:
-            raise ImportError(
-                "MCP SDK not installed. Install with: pip install mcp"
-            )
+            raise ImportError("MCP SDK not installed. Install with: pip install mcp")
 
         # Create exit stack to manage context manager lifecycles
         self._exit_stack = AsyncExitStack()
@@ -130,8 +130,7 @@ class MCPClientManager:
             # Discover tools
             tools_response = await session.list_tools()
             tools = [
-                create_tool_from_mcp(tool.model_dump())
-                for tool in tools_response.tools
+                create_tool_from_mcp(tool.model_dump()) for tool in tools_response.tools
             ]
 
             # Register tools
@@ -141,9 +140,7 @@ class MCPClientManager:
                 executor=self._create_executor(name),
             )
 
-            logger.info(
-                f"Server {name}: discovered {len(tools)} tools"
-            )
+            logger.info(f"Server {name}: discovered {len(tools)} tools")
 
         except Exception as e:
             logger.error(f"Failed to start server {name}: {e}")
@@ -304,10 +301,12 @@ class MockMCPClientManager(MCPClientManager):
         arguments: Dict[str, Any],
     ) -> ToolResult:
         """Execute mock tool call."""
-        self._call_history.append({
-            "tool": tool_name,
-            "arguments": arguments,
-        })
+        self._call_history.append(
+            {
+                "tool": tool_name,
+                "arguments": arguments,
+            }
+        )
 
         if tool_name not in self._mock_responses:
             return ToolResult(

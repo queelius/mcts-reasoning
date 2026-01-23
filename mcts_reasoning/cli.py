@@ -17,15 +17,12 @@ Environment variables:
 import argparse
 import json
 import sys
-from typing import Optional
 
 from .mcts import MCTS, SearchResult
 from .generator import LLMGenerator
 from .evaluator import (
     NumericEvaluator,
     ProcessEvaluator,
-    LLMEvaluator,
-    MockEvaluator,
 )
 from .sampling import PathSampler
 from .compositional.providers import get_llm, MockLLMProvider
@@ -66,21 +63,24 @@ Examples:
     )
 
     parser.add_argument(
-        "-q", "--question",
+        "-q",
+        "--question",
         dest="question_flag",
         help="Question to solve (alternative to positional arg)",
     )
 
     # Provider settings
     parser.add_argument(
-        "-p", "--provider",
+        "-p",
+        "--provider",
         choices=["openai", "anthropic", "ollama", "mock"],
         default=None,
         help="LLM provider (default: auto-detect)",
     )
 
     parser.add_argument(
-        "-m", "--model",
+        "-m",
+        "--model",
         default=None,
         help="Model name (provider-specific)",
     )
@@ -100,28 +100,32 @@ Examples:
 
     # Search settings
     parser.add_argument(
-        "-n", "--simulations",
+        "-n",
+        "--simulations",
         type=int,
         default=10,
         help="Number of MCTS simulations (default: 10)",
     )
 
     parser.add_argument(
-        "-d", "--max-depth",
+        "-d",
+        "--max-depth",
         type=int,
         default=5,
         help="Maximum rollout depth (default: 5)",
     )
 
     parser.add_argument(
-        "-b", "--branching",
+        "-b",
+        "--branching",
         type=int,
         default=3,
         help="Maximum children per node (default: 3)",
     )
 
     parser.add_argument(
-        "-c", "--exploration",
+        "-c",
+        "--exploration",
         type=float,
         default=1.414,
         help="UCB1 exploration constant (default: 1.414)",
@@ -129,7 +133,8 @@ Examples:
 
     # Evaluation settings
     parser.add_argument(
-        "-a", "--answer",
+        "-a",
+        "--answer",
         type=float,
         default=None,
         help="Ground truth numeric answer (for evaluation)",
@@ -137,7 +142,8 @@ Examples:
 
     # Output settings
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Verbose output (show tree structure)",
     )
@@ -210,15 +216,14 @@ def get_provider(args):
         if not llm.is_available():
             _print_mock_warning(
                 f"{llm.get_provider_name()} not available",
-                "Check your API keys or server connection"
+                "Check your API keys or server connection",
             )
             return MockLLMProvider()
         return llm
 
     except Exception as e:
         _print_mock_warning(
-            f"Could not initialize provider: {e}",
-            "Check your configuration"
+            f"Could not initialize provider: {e}", "Check your configuration"
         )
         return MockLLMProvider()
 
@@ -406,7 +411,9 @@ def print_results(output: dict, result: SearchResult, args):
         print()
         print("Answer Distribution:")
         for answer, info in output["answer_distribution"].items():
-            print(f"  {answer}: {info['count']} occurrences (avg value: {info['avg_value']:.2f})")
+            print(
+                f"  {answer}: {info['count']} occurrences (avg value: {info['avg_value']:.2f})"
+            )
 
     # Sampled paths
     if args.sample > 0 and "sampled_paths" in output:
@@ -414,7 +421,9 @@ def print_results(output: dict, result: SearchResult, args):
         strategy = output.get("sample_strategy", "diverse")
         print(f"Sampled Paths ({len(output['sampled_paths'])} {strategy}):")
         for i, path in enumerate(output["sampled_paths"], 1):
-            print(f"\n  Path {i} (answer: {path['answer']}, value: {path['value']:.2f}):")
+            print(
+                f"\n  Path {i} (answer: {path['answer']}, value: {path['value']:.2f}):"
+            )
             for j, step in enumerate(path["steps"][:3], 1):
                 step_preview = step[:100].replace("\n", " ")
                 print(f"    Step {j}: {step_preview}...")
@@ -441,7 +450,9 @@ def _print_tree(node, depth=0, max_depth=3, prefix=""):
         print(f"Root (visits={visits}, value={value:.2f})")
     else:
         state_preview = node.state[-40:].replace("\n", " ")
-        print(f"{prefix}├── ...{state_preview} (v={visits}, val={value:.2f}){terminal}{answer}")
+        print(
+            f"{prefix}├── ...{state_preview} (v={visits}, val={value:.2f}){terminal}{answer}"
+        )
 
     for i, child in enumerate(node.children):
         is_last = i == len(node.children) - 1
@@ -469,7 +480,8 @@ def main():
         # JSON output - exclude non-serializable fields
         json_output = {k: v for k, v in output.items() if k != "stats"}
         json_output["stats"] = {
-            k: v for k, v in output["stats"].items()
+            k: v
+            for k, v in output["stats"].items()
             if k not in ("best_answer",)  # Already in output
         }
         print(json.dumps(json_output, indent=2))

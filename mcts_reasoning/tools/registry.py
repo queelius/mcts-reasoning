@@ -25,8 +25,12 @@ class MCPToolRegistry:
     """
 
     tools: Dict[str, ToolDefinition] = field(default_factory=dict)
-    tool_servers: Dict[str, str] = field(default_factory=dict)  # tool_name -> server_name
-    _executors: Dict[str, Callable] = field(default_factory=dict)  # server_name -> executor
+    tool_servers: Dict[str, str] = field(
+        default_factory=dict
+    )  # tool_name -> server_name
+    _executors: Dict[str, Callable] = field(
+        default_factory=dict
+    )  # server_name -> executor
 
     def register_tool(
         self,
@@ -64,8 +68,7 @@ class MCPToolRegistry:
     def unregister_server(self, server_name: str) -> None:
         """Remove all tools from a server."""
         tools_to_remove = [
-            name for name, server in self.tool_servers.items()
-            if server == server_name
+            name for name, server in self.tool_servers.items() if server == server_name
         ]
         for name in tools_to_remove:
             del self.tools[name]
@@ -140,9 +143,9 @@ class MCPToolRegistry:
     def _format_json(self, tools: List[ToolDefinition]) -> str:
         """Format tools as JSON."""
         import json
+
         return json.dumps(
-            {"tools": [tool.to_json_schema() for tool in tools]},
-            indent=2
+            {"tools": [tool.to_json_schema() for tool in tools]}, indent=2
         )
 
     def get_tool_use_instruction(self, fmt: ToolFormat = ToolFormat.XML) -> str:

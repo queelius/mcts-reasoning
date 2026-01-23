@@ -7,7 +7,6 @@ Terminal detection is separate from action generation because:
 3. Enables pluggable completion strategies (marker, LLM-judge, confidence)
 """
 
-from abc import ABC, abstractmethod
 from typing import Optional, Protocol, runtime_checkable
 from dataclasses import dataclass
 import re
@@ -16,6 +15,7 @@ import re
 @dataclass
 class TerminalCheck:
     """Result of checking if a state is terminal."""
+
     is_terminal: bool
     answer: Optional[str] = None
     confidence: float = 1.0  # For probabilistic detectors
@@ -78,7 +78,7 @@ class MarkerTerminalDetector:
     def _extract_answer(self, text: str) -> Optional[str]:
         """Extract answer from text containing the marker."""
         # Try to find structured answer
-        pattern = rf'{re.escape(self.marker)}\s*(.+?)(?:\n\n|$)'
+        pattern = rf"{re.escape(self.marker)}\s*(.+?)(?:\n\n|$)"
         match = re.search(pattern, text, re.DOTALL)
         if match:
             return match.group(1).strip()
@@ -86,13 +86,15 @@ class MarkerTerminalDetector:
         # Fallback: everything after marker
         idx = text.find(self.marker)
         if idx >= 0:
-            return text[idx + len(self.marker):].strip()
+            return text[idx + len(self.marker) :].strip()
 
         return None
 
     def format_instruction(self) -> str:
         """Instruction for marker-based completion."""
-        return f"When you reach a final answer, clearly state: {self.marker} <your answer>"
+        return (
+            f"When you reach a final answer, clearly state: {self.marker} <your answer>"
+        )
 
 
 class BoxedTerminalDetector:
@@ -105,7 +107,7 @@ class BoxedTerminalDetector:
     def check(self, state: str) -> TerminalCheck:
         """Check if state contains a boxed answer."""
         # Match \boxed{...} allowing nested braces
-        match = re.search(r'\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}', state)
+        match = re.search(r"\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}", state)
         if not match:
             return TerminalCheck(is_terminal=False)
 
@@ -155,6 +157,7 @@ class MultiMarkerTerminalDetector:
 # EXTENSIONS (for future consideration)
 # =============================================================================
 
+
 class LLMJudgeTerminalDetector:
     """
     Use LLM to judge if reasoning is complete.
@@ -203,7 +206,7 @@ CONFIDENCE: <0.0-1.0>"""
 
     def _extract_confidence(self, response: str) -> float:
         """Extract confidence score from response."""
-        match = re.search(r'CONFIDENCE:\s*([\d.]+)', response)
+        match = re.search(r"CONFIDENCE:\s*([\d.]+)", response)
         if match:
             try:
                 return float(match.group(1))
@@ -213,7 +216,7 @@ CONFIDENCE: <0.0-1.0>"""
 
     def _extract_answer(self, response: str) -> Optional[str]:
         """Extract answer from judge response."""
-        match = re.search(r'ANSWER:\s*(.+?)(?:\n|$)', response)
+        match = re.search(r"ANSWER:\s*(.+?)(?:\n|$)", response)
         if match:
             answer = match.group(1).strip()
             if answer.lower() != "none":

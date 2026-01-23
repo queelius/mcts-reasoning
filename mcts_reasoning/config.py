@@ -5,7 +5,6 @@ Handles loading and saving configuration from ~/.mcts-reasoning/config.json
 """
 
 import json
-import os
 from pathlib import Path
 from typing import Dict, Any, Optional
 import logging
@@ -20,31 +19,21 @@ class Config:
         "default_provider": "mock",
         "default_model": "default",
         "providers": {
-            "openai": {
-                "model": "gpt-4",
-                "temperature": 0.7
-            },
-            "anthropic": {
-                "model": "claude-3-5-sonnet-20241022",
-                "temperature": 0.7
-            },
+            "openai": {"model": "gpt-4", "temperature": 0.7},
+            "anthropic": {"model": "claude-3-5-sonnet-20241022", "temperature": 0.7},
             "ollama": {
                 "model": "llama2",
                 "base_url": None,  # Will use localhost if None
-                "temperature": 0.7
-            }
+                "temperature": 0.7,
+            },
         },
-        "tui": {
-            "use_rich": True,
-            "save_history": True,
-            "max_history": 100
-        },
+        "tui": {"use_rich": True, "save_history": True, "max_history": 100},
         "mcts": {
             "exploration_constant": 1.414,
             "max_rollout_depth": 5,
-            "use_compositional": True
+            "use_compositional": True,
         },
-        "recent_models": []
+        "recent_models": [],
     }
 
     def __init__(self, config_dir: Optional[Path] = None):
@@ -74,10 +63,12 @@ class Config:
         # Load from file if it exists
         if self.config_file.exists():
             try:
-                with open(self.config_file, 'r') as f:
+                with open(self.config_file, "r") as f:
                     loaded_config = json.load(f)
                     # Merge with defaults (in case new keys were added)
-                    self._config = self._merge_configs(self.DEFAULT_CONFIG.copy(), loaded_config)
+                    self._config = self._merge_configs(
+                        self.DEFAULT_CONFIG.copy(), loaded_config
+                    )
                     logger.info(f"Loaded config from {self.config_file}")
             except Exception as e:
                 logger.warning(f"Failed to load config from {self.config_file}: {e}")
@@ -103,7 +94,7 @@ class Config:
 
         try:
             self.config_dir.mkdir(parents=True, exist_ok=True)
-            with open(self.config_file, 'w') as f:
+            with open(self.config_file, "w") as f:
                 json.dump(self._config, f, indent=2)
             logger.info(f"Saved config to {self.config_file}")
             return True
@@ -125,7 +116,7 @@ class Config:
         config = self.load()
 
         # Support dot notation
-        keys = key.split('.')
+        keys = key.split(".")
         value = config
         for k in keys:
             if isinstance(value, dict) and k in value:
@@ -150,7 +141,7 @@ class Config:
         config = self.load()
 
         # Support dot notation
-        keys = key.split('.')
+        keys = key.split(".")
         current = config
         for k in keys[:-1]:
             if k not in current:
@@ -177,7 +168,9 @@ class Config:
         config = self.load()
         return config.get("providers", {}).get(provider, {})
 
-    def set_provider_config(self, provider: str, config_dict: Dict[str, Any], save: bool = True) -> bool:
+    def set_provider_config(
+        self, provider: str, config_dict: Dict[str, Any], save: bool = True
+    ) -> bool:
         """
         Set configuration for a specific provider.
 
@@ -219,7 +212,11 @@ class Config:
         entry = {"provider": provider, "model": model}
 
         # Remove if already exists
-        recent = [r for r in recent if not (r.get("provider") == provider and r.get("model") == model)]
+        recent = [
+            r
+            for r in recent
+            if not (r.get("provider") == provider and r.get("model") == model)
+        ]
 
         # Add to front
         recent.insert(0, entry)
@@ -261,7 +258,11 @@ class Config:
         result = base.copy()
 
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = Config._merge_configs(result[key], value)
             else:
                 result[key] = value

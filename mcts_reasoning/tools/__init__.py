@@ -70,11 +70,14 @@ from .native import (
     supports_native_function_calling,
 )
 
+
 # RAG Server (lazy import to avoid requiring mcp)
 def create_rag_server(*args, **kwargs):
     """Create an MCP server exposing RAG functionality."""
     from .rag_server import create_rag_server as _create
+
     return _create(*args, **kwargs)
+
 
 __all__ = [
     # Formats

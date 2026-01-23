@@ -7,7 +7,7 @@ Handles parsing tool calls from LLM output and executing them via MCP.
 import re
 import json
 import logging
-from typing import List, Optional, Callable, Dict, Any, Union
+from typing import List, Optional, Callable, Dict, Any
 from dataclasses import dataclass, field
 
 from .formats import ToolFormat, ToolCall, ToolResult
@@ -50,32 +50,26 @@ class ToolCallParser:
     # XML pattern: <tool_call name="...">...</tool_call> or <tool name="...">...</tool>
     XML_TOOL_PATTERN = re.compile(
         r'<tool(?:_call|_use)?\s+name=["\']([^"\']+)["\']>(.*?)</tool(?:_call|_use)?>',
-        re.DOTALL | re.IGNORECASE
+        re.DOTALL | re.IGNORECASE,
     )
 
     # Alternative XML: <function_call name="..."> or <use_tool name="...">
     XML_ALT_PATTERN = re.compile(
         r'<(?:function_call|use_tool|invoke)\s+name=["\']([^"\']+)["\']>(.*?)</(?:function_call|use_tool|invoke)>',
-        re.DOTALL | re.IGNORECASE
+        re.DOTALL | re.IGNORECASE,
     )
 
     # XML parameter pattern: <param_name>value</param_name>
-    XML_PARAM_PATTERN = re.compile(
-        r'<([a-zA-Z_][a-zA-Z0-9_]*)>(.*?)</\1>',
-        re.DOTALL
-    )
+    XML_PARAM_PATTERN = re.compile(r"<([a-zA-Z_][a-zA-Z0-9_]*)>(.*?)</\1>", re.DOTALL)
 
     # JSON pattern: {"tool": "...", "arguments": {...}} or {"name": "...", "input": {...}}
     JSON_TOOL_PATTERN = re.compile(
         r'\{[^{}]*"(?:tool|name)"\s*:\s*"([^"]+)"[^{}]*"(?:arguments|input|parameters)"\s*:\s*(\{[^{}]*\})[^{}]*\}',
-        re.DOTALL
+        re.DOTALL,
     )
 
     # Code block pattern for extracting JSON from markdown
-    CODE_BLOCK_PATTERN = re.compile(
-        r'```(?:json)?\s*(\{.*?\})\s*```',
-        re.DOTALL
-    )
+    CODE_BLOCK_PATTERN = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 
     def parse(self, text: str, fmt: ToolFormat = ToolFormat.XML) -> List[ToolCall]:
         """
@@ -192,10 +186,7 @@ class ToolCallParser:
             return None
 
         arguments = (
-            data.get("arguments") or
-            data.get("input") or
-            data.get("parameters") or
-            {}
+            data.get("arguments") or data.get("input") or data.get("parameters") or {}
         )
 
         return ToolCall(name=name, arguments=arguments)
@@ -203,11 +194,11 @@ class ToolCallParser:
     def remove_tool_calls(self, text: str, fmt: ToolFormat = ToolFormat.XML) -> str:
         """Remove tool call markup from text, returning the remaining content."""
         if fmt == ToolFormat.XML:
-            text = self.XML_TOOL_PATTERN.sub('', text)
-            text = self.XML_ALT_PATTERN.sub('', text)
+            text = self.XML_TOOL_PATTERN.sub("", text)
+            text = self.XML_ALT_PATTERN.sub("", text)
         elif fmt == ToolFormat.JSON:
-            text = self.JSON_TOOL_PATTERN.sub('', text)
-            text = self.CODE_BLOCK_PATTERN.sub('', text)
+            text = self.JSON_TOOL_PATTERN.sub("", text)
+            text = self.CODE_BLOCK_PATTERN.sub("", text)
         return text.strip()
 
 

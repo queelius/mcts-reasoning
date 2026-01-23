@@ -68,7 +68,7 @@ class Node:
         exploration (low visits relative to parent).
         """
         if self.visits == 0:
-            return float('inf')  # Unvisited nodes have highest priority
+            return float("inf")  # Unvisited nodes have highest priority
 
         if self.parent is None or self.parent.visits == 0:
             return self.average_value
@@ -101,7 +101,9 @@ class Node:
         self._continuations = continuations
         self._continuation_index = 0
 
-    def add_child(self, state: str, is_terminal: bool = False, answer: Optional[str] = None) -> Node:
+    def add_child(
+        self, state: str, is_terminal: bool = False, answer: Optional[str] = None
+    ) -> Node:
         """Add a child node with the given state."""
         child = Node(
             state=state,
@@ -159,7 +161,7 @@ class Node:
             # Continuation cache for resuming
             "_continuations": self._continuations,
             "_continuation_index": self._continuation_index,
-            "_continuation_info": getattr(self, '_continuation_info', None),
+            "_continuation_info": getattr(self, "_continuation_info", None),
             # Recursively serialize children
             "children": [child.to_dict() for child in self.children],
         }

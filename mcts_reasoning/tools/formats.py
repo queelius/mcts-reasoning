@@ -34,7 +34,9 @@ class ToolDefinition:
             param_type = param_info.get("type", "string")
             param_desc = param_info.get("description", "")
             required_marker = " (required)" if param_name in self.required else ""
-            params_desc.append(f"    <{param_name}>{param_type}: {param_desc}{required_marker}</{param_name}>")
+            params_desc.append(
+                f"    <{param_name}>{param_type}: {param_desc}{required_marker}</{param_name}>"
+            )
 
         params_str = "\n".join(params_desc) if params_desc else "    (no parameters)"
 
@@ -54,7 +56,7 @@ class ToolDefinition:
                 "type": "object",
                 "properties": self.parameters,
                 "required": self.required,
-            }
+            },
         }
 
     def to_function_schema(self) -> Dict[str, Any]:
@@ -68,8 +70,8 @@ class ToolDefinition:
                     "type": "object",
                     "properties": self.parameters,
                     "required": self.required,
-                }
-            }
+                },
+            },
         }
 
 

@@ -20,7 +20,7 @@ Tools provided:
 
 import json
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +65,7 @@ def create_rag_server(
         FastMCP server instance
     """
     if not HAS_FASTMCP:
-        raise ImportError(
-            "FastMCP not available. Install with: pip install mcp"
-        )
+        raise ImportError("FastMCP not available. Install with: pip install mcp")
 
     # Initialize stores
     _solution_store = solution_store or SolutionRAGStore()
@@ -137,14 +135,16 @@ def create_rag_server(
         guidance_list = _compositional_store.retrieve(query, k=1)
 
         if not guidance_list:
-            return json.dumps({
-                "message": "No specific guidance found for this problem type.",
-                "default_approach": {
-                    "operation": "decompose",
-                    "focus": "structure",
-                    "style": "systematic",
+            return json.dumps(
+                {
+                    "message": "No specific guidance found for this problem type.",
+                    "default_approach": {
+                        "operation": "decompose",
+                        "focus": "structure",
+                        "style": "systematic",
+                    },
                 }
-            })
+            )
 
         guidance = guidance_list[0]  # Best match
 
@@ -197,15 +197,15 @@ def create_rag_server(
         weights = _compositional_store.get_recommended_weights(query)
 
         if not weights:
-            return json.dumps({
-                "message": "No specific weights found. Using uniform sampling."
-            })
+            return json.dumps(
+                {"message": "No specific weights found. Using uniform sampling."}
+            )
 
         # Convert enum keys to strings for JSON serialization
         serializable = {}
         for dimension, dim_weights in weights.items():
             serializable[dimension] = {
-                (k.value if hasattr(k, 'value') else str(k)): v
+                (k.value if hasattr(k, "value") else str(k)): v
                 for k, v in dim_weights.items()
             }
 
@@ -259,11 +259,13 @@ def create_rag_server(
         # Get guidance patterns
         patterns = []
         for guidance in _compositional_store.guidance:
-            patterns.append({
-                "pattern": guidance.problem_pattern,
-                "domain": guidance.domain,
-                "keywords": guidance.problem_keywords[:5],  # First 5 keywords
-            })
+            patterns.append(
+                {
+                    "pattern": guidance.problem_pattern,
+                    "domain": guidance.domain,
+                    "keywords": guidance.problem_keywords[:5],  # First 5 keywords
+                }
+            )
 
         result = {
             "solution_store": {
@@ -285,78 +287,98 @@ def _add_default_guidance(store: CompositionalRAGStore) -> None:
     """Add default compositional guidance patterns."""
 
     # Math problems
-    store.add_guidance(CompositionalGuidance(
-        problem_pattern="algebraic equations",
-        problem_keywords=["solve", "equation", "x", "variable", "algebra"],
-        recommended_operations=[
-            CognitiveOperation.DECOMPOSE,
-            CognitiveOperation.ANALYZE,
-            CognitiveOperation.VERIFY,
-        ],
-        recommended_focuses=[FocusAspect.STRUCTURE, FocusAspect.SOLUTION],
-        recommended_styles=[ReasoningStyle.SYSTEMATIC, ReasoningStyle.FORMAL],
-        recommended_connections=[ConnectionType.THEREFORE, ConnectionType.BUILDING_ON],
-        recommended_formats=[OutputFormat.STEPS, OutputFormat.MATHEMATICAL],
-        domain="math",
-    ))
+    store.add_guidance(
+        CompositionalGuidance(
+            problem_pattern="algebraic equations",
+            problem_keywords=["solve", "equation", "x", "variable", "algebra"],
+            recommended_operations=[
+                CognitiveOperation.DECOMPOSE,
+                CognitiveOperation.ANALYZE,
+                CognitiveOperation.VERIFY,
+            ],
+            recommended_focuses=[FocusAspect.STRUCTURE, FocusAspect.SOLUTION],
+            recommended_styles=[ReasoningStyle.SYSTEMATIC, ReasoningStyle.FORMAL],
+            recommended_connections=[
+                ConnectionType.THEREFORE,
+                ConnectionType.BUILDING_ON,
+            ],
+            recommended_formats=[OutputFormat.STEPS, OutputFormat.MATHEMATICAL],
+            domain="math",
+        )
+    )
 
-    store.add_guidance(CompositionalGuidance(
-        problem_pattern="arithmetic calculations",
-        problem_keywords=["calculate", "sum", "product", "add", "multiply", "divide"],
-        recommended_operations=[
-            CognitiveOperation.DECOMPOSE,
-            CognitiveOperation.VERIFY,
-        ],
-        recommended_focuses=[FocusAspect.DETAILS, FocusAspect.CORRECTNESS],
-        recommended_styles=[ReasoningStyle.SYSTEMATIC],
-        recommended_formats=[OutputFormat.STEPS],
-        domain="math",
-    ))
+    store.add_guidance(
+        CompositionalGuidance(
+            problem_pattern="arithmetic calculations",
+            problem_keywords=[
+                "calculate",
+                "sum",
+                "product",
+                "add",
+                "multiply",
+                "divide",
+            ],
+            recommended_operations=[
+                CognitiveOperation.DECOMPOSE,
+                CognitiveOperation.VERIFY,
+            ],
+            recommended_focuses=[FocusAspect.DETAILS, FocusAspect.CORRECTNESS],
+            recommended_styles=[ReasoningStyle.SYSTEMATIC],
+            recommended_formats=[OutputFormat.STEPS],
+            domain="math",
+        )
+    )
 
     # Logic problems
-    store.add_guidance(CompositionalGuidance(
-        problem_pattern="logical deduction",
-        problem_keywords=["if", "then", "therefore", "implies", "logic", "deduce"],
-        recommended_operations=[
-            CognitiveOperation.ANALYZE,
-            CognitiveOperation.SYNTHESIZE,
-            CognitiveOperation.VERIFY,
-        ],
-        recommended_focuses=[FocusAspect.ASSUMPTIONS, FocusAspect.STRUCTURE],
-        recommended_styles=[ReasoningStyle.FORMAL, ReasoningStyle.CRITICAL],
-        recommended_connections=[ConnectionType.THEREFORE, ConnectionType.HOWEVER],
-        recommended_formats=[OutputFormat.STEPS, OutputFormat.EXPLANATION],
-        domain="logic",
-    ))
+    store.add_guidance(
+        CompositionalGuidance(
+            problem_pattern="logical deduction",
+            problem_keywords=["if", "then", "therefore", "implies", "logic", "deduce"],
+            recommended_operations=[
+                CognitiveOperation.ANALYZE,
+                CognitiveOperation.SYNTHESIZE,
+                CognitiveOperation.VERIFY,
+            ],
+            recommended_focuses=[FocusAspect.ASSUMPTIONS, FocusAspect.STRUCTURE],
+            recommended_styles=[ReasoningStyle.FORMAL, ReasoningStyle.CRITICAL],
+            recommended_connections=[ConnectionType.THEREFORE, ConnectionType.HOWEVER],
+            recommended_formats=[OutputFormat.STEPS, OutputFormat.EXPLANATION],
+            domain="logic",
+        )
+    )
 
     # Coding problems
-    store.add_guidance(CompositionalGuidance(
-        problem_pattern="algorithm design",
-        problem_keywords=["algorithm", "code", "function", "implement", "program"],
-        recommended_operations=[
-            CognitiveOperation.DECOMPOSE,
-            CognitiveOperation.GENERATE,
-            CognitiveOperation.REFINE,
-        ],
-        recommended_focuses=[FocusAspect.STRUCTURE, FocusAspect.EFFICIENCY],
-        recommended_styles=[ReasoningStyle.SYSTEMATIC, ReasoningStyle.CREATIVE],
-        recommended_formats=[OutputFormat.STEPS, OutputFormat.CODE],
-        domain="coding",
-    ))
+    store.add_guidance(
+        CompositionalGuidance(
+            problem_pattern="algorithm design",
+            problem_keywords=["algorithm", "code", "function", "implement", "program"],
+            recommended_operations=[
+                CognitiveOperation.DECOMPOSE,
+                CognitiveOperation.GENERATE,
+                CognitiveOperation.REFINE,
+            ],
+            recommended_focuses=[FocusAspect.STRUCTURE, FocusAspect.EFFICIENCY],
+            recommended_styles=[ReasoningStyle.SYSTEMATIC, ReasoningStyle.CREATIVE],
+            recommended_formats=[OutputFormat.STEPS, OutputFormat.CODE],
+            domain="coding",
+        )
+    )
 
     # General problem solving
-    store.add_guidance(CompositionalGuidance(
-        problem_pattern="general problem",
-        problem_keywords=["problem", "solve", "find", "determine", "what", "how"],
-        recommended_operations=[
-            CognitiveOperation.DECOMPOSE,
-            CognitiveOperation.ANALYZE,
-        ],
-        recommended_focuses=[FocusAspect.STRUCTURE, FocusAspect.GOAL],
-        recommended_styles=[ReasoningStyle.SYSTEMATIC],
-        recommended_formats=[OutputFormat.STEPS],
-        domain="general",
-    ))
+    store.add_guidance(
+        CompositionalGuidance(
+            problem_pattern="general problem",
+            problem_keywords=["problem", "solve", "find", "determine", "what", "how"],
+            recommended_operations=[
+                CognitiveOperation.DECOMPOSE,
+                CognitiveOperation.ANALYZE,
+            ],
+            recommended_focuses=[FocusAspect.STRUCTURE, FocusAspect.GOAL],
+            recommended_styles=[ReasoningStyle.SYSTEMATIC],
+            recommended_formats=[OutputFormat.STEPS],
+            domain="general",
+        )
+    )
 
 
 # Main entry point for running as MCP server
@@ -373,4 +395,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

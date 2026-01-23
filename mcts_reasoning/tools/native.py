@@ -6,10 +6,10 @@ This offers better reliability and lower latency compared to parsing.
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Tuple, Protocol, runtime_checkable
+from typing import List, Optional, Tuple, Protocol, runtime_checkable
 from dataclasses import dataclass
 
-from .formats import ToolDefinition, ToolCall, ToolResult
+from .formats import ToolDefinition, ToolCall
 
 logger = logging.getLogger(__name__)
 
@@ -137,16 +137,19 @@ class OpenAINativeWrapper:
             if message.tool_calls:
                 for tc in message.tool_calls:
                     import json
+
                     try:
                         arguments = json.loads(tc.function.arguments)
                     except json.JSONDecodeError:
                         arguments = {}
 
-                    tool_calls.append(ToolCall(
-                        name=tc.function.name,
-                        arguments=arguments,
-                        call_id=tc.id,
-                    ))
+                    tool_calls.append(
+                        ToolCall(
+                            name=tc.function.name,
+                            arguments=arguments,
+                            call_id=tc.id,
+                        )
+                    )
 
             return text, tool_calls
 
@@ -154,7 +157,9 @@ class OpenAINativeWrapper:
             logger.error(f"OpenAI native tool call failed: {e}")
             raise RuntimeError(f"OpenAI generation with tools failed: {e}")
 
-    def generate(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7
+    ) -> str:
         """Delegate to base provider for non-tool generation."""
         return self.provider.generate(prompt, max_tokens, temperature)
 
@@ -220,15 +225,17 @@ class AnthropicNativeWrapper:
         # Convert tools to Anthropic format
         anthropic_tools = []
         for tool in tools:
-            anthropic_tools.append({
-                "name": tool.name,
-                "description": tool.description,
-                "input_schema": {
-                    "type": "object",
-                    "properties": tool.parameters,
-                    "required": tool.required,
+            anthropic_tools.append(
+                {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "input_schema": {
+                        "type": "object",
+                        "properties": tool.parameters,
+                        "required": tool.required,
+                    },
                 }
-            })
+            )
 
         try:
             kwargs = {
@@ -251,11 +258,13 @@ class AnthropicNativeWrapper:
                 if block.type == "text":
                     text_parts.append(block.text)
                 elif block.type == "tool_use":
-                    tool_calls.append(ToolCall(
-                        name=block.name,
-                        arguments=block.input,
-                        call_id=block.id,
-                    ))
+                    tool_calls.append(
+                        ToolCall(
+                            name=block.name,
+                            arguments=block.input,
+                            call_id=block.id,
+                        )
+                    )
 
             text = "\n".join(text_parts)
             return text, tool_calls
@@ -264,7 +273,9 @@ class AnthropicNativeWrapper:
             logger.error(f"Anthropic native tool use failed: {e}")
             raise RuntimeError(f"Anthropic generation with tools failed: {e}")
 
-    def generate(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7
+    ) -> str:
         """Delegate to base provider for non-tool generation."""
         return self.provider.generate(prompt, max_tokens, temperature)
 
@@ -308,7 +319,12 @@ def supports_native_function_calling(provider) -> bool:
         return provider.supports_native_tools()
 
     provider_name = provider.get_provider_name().lower()
-    return "openai" in provider_name or "anthropic" in provider_name or "gpt" in provider_name or "claude" in provider_name
+    return (
+        "openai" in provider_name
+        or "anthropic" in provider_name
+        or "gpt" in provider_name
+        or "claude" in provider_name
+    )
 
 
 __all__ = [

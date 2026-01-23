@@ -11,7 +11,7 @@ from typing import List, Optional, Any
 from ..generator import Generator, Continuation
 from ..terminal import TerminalDetector
 from .context import ToolContext
-from .formats import ToolCall, ToolResult
+from .formats import ToolResult
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,8 @@ class ToolAwareGenerator(Generator):
         if native_provider is not None and use_native:
             try:
                 from .native import NativeFunctionCallProvider
-                if hasattr(native_provider, 'supports_native_tools'):
+
+                if hasattr(native_provider, "supports_native_tools"):
                     self._native_available = native_provider.supports_native_tools()
             except ImportError:
                 pass
@@ -125,7 +126,7 @@ class ToolAwareGenerator(Generator):
 
             # Check for tool calls in the new content
             # Extract just the new content (what was added to the state)
-            new_content = continuation.text[len(current_state):].strip()
+            new_content = continuation.text[len(current_state) :].strip()
 
             # Process any tool calls
             result = self.tool_context.process_response(new_content)
@@ -204,19 +205,25 @@ class ToolAwareGenerator(Generator):
             results = []
             for call in tool_calls:
                 try:
-                    result_value = self.tool_context._execute_tool(call.name, call.arguments)
-                    results.append(ToolResult(
-                        call_id=call.call_id,
-                        name=call.name,
-                        result=result_value,
-                    ))
+                    result_value = self.tool_context._execute_tool(
+                        call.name, call.arguments
+                    )
+                    results.append(
+                        ToolResult(
+                            call_id=call.call_id,
+                            name=call.name,
+                            result=result_value,
+                        )
+                    )
                 except Exception as e:
-                    results.append(ToolResult(
-                        call_id=call.call_id,
-                        name=call.name,
-                        result=None,
-                        error=str(e),
-                    ))
+                    results.append(
+                        ToolResult(
+                            call_id=call.call_id,
+                            name=call.name,
+                            result=None,
+                            error=str(e),
+                        )
+                    )
 
             # Build augmented state
             exec_result = ToolExecutionResult(

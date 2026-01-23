@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 # ========== Base Provider Interface ==========
 
+
 class LLMProvider(ABC):
     """
     Unified LLM provider interface.
@@ -26,7 +27,9 @@ class LLMProvider(ABC):
     """
 
     @abstractmethod
-    def generate(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7
+    ) -> str:
         """
         Generate text from prompt.
 
@@ -55,7 +58,7 @@ class LLMProvider(ABC):
         try:
             self.generate("test", max_tokens=1, temperature=0.0)
             return True
-        except:
+        except Exception:
             return False
 
     @classmethod
@@ -78,9 +81,9 @@ class LLMProvider(ABC):
                 - provider_specific info
         """
         return {
-            'available': False,
-            'error': f'{cls.__name__} does not support endpoint probing',
-            'models': []
+            "available": False,
+            "error": f"{cls.__name__} does not support endpoint probing",
+            "models": [],
         }
 
     def list_models(self) -> List[Dict[str, Any]]:
@@ -107,6 +110,7 @@ class LLMProvider(ABC):
 
 # ========== Concrete Providers ==========
 
+
 class MockLLMProvider(LLMProvider):
     """Mock LLM provider for testing without API calls."""
 
@@ -121,7 +125,9 @@ class MockLLMProvider(LLMProvider):
         self.call_count = 0
         self.last_prompt = None
 
-    def generate(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7
+    ) -> str:
         """Generate mock response."""
         self.call_count += 1
         self.last_prompt = prompt
@@ -160,7 +166,12 @@ class MockLLMProvider(LLMProvider):
 class OpenAIProvider(LLMProvider):
     """OpenAI GPT provider."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4", base_url: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: str = "gpt-4",
+        base_url: Optional[str] = None,
+    ):
         """
         Initialize OpenAI provider.
 
@@ -179,15 +190,20 @@ class OpenAIProvider(LLMProvider):
         if self._client is None:
             try:
                 import openai
+
                 kwargs = {"api_key": self.api_key}
                 if self.base_url:
                     kwargs["base_url"] = self.base_url
                 self._client = openai.OpenAI(**kwargs)
             except ImportError:
-                raise ImportError("openai package not installed. Install with: pip install openai")
+                raise ImportError(
+                    "openai package not installed. Install with: pip install openai"
+                )
         return self._client
 
-    def generate(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7
+    ) -> str:
         """Generate using OpenAI."""
         client = self._get_client()
 
@@ -196,7 +212,7 @@ class OpenAIProvider(LLMProvider):
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_tokens,
-                temperature=temperature
+                temperature=temperature,
             )
             return response.choices[0].message.content
         except Exception as e:
@@ -212,7 +228,9 @@ class OpenAIProvider(LLMProvider):
 class AnthropicProvider(LLMProvider):
     """Anthropic Claude provider."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "claude-3-5-sonnet-20241022"):
+    def __init__(
+        self, api_key: Optional[str] = None, model: str = "claude-3-5-sonnet-20241022"
+    ):
         """
         Initialize Anthropic provider.
 
@@ -229,12 +247,17 @@ class AnthropicProvider(LLMProvider):
         if self._client is None:
             try:
                 import anthropic
+
                 self._client = anthropic.Anthropic(api_key=self.api_key)
             except ImportError:
-                raise ImportError("anthropic package not installed. Install with: pip install anthropic")
+                raise ImportError(
+                    "anthropic package not installed. Install with: pip install anthropic"
+                )
         return self._client
 
-    def generate(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7
+    ) -> str:
         """Generate using Claude."""
         client = self._get_client()
 
@@ -243,7 +266,7 @@ class AnthropicProvider(LLMProvider):
                 model=self.model,
                 max_tokens=max_tokens,
                 temperature=temperature,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
             return response.content[0].text
         except Exception as e:
@@ -276,29 +299,44 @@ class OllamaProvider(LLMProvider):
                 - base_url: normalized endpoint URL
                 - error: error message if not available
         """
-        timeout = kwargs.get('timeout', 3.0)
+        timeout = kwargs.get("timeout", 3.0)
 
         try:
             import requests
-            endpoint_url = endpoint_url.rstrip('/')
+
+            endpoint_url = endpoint_url.rstrip("/")
             response = requests.get(f"{endpoint_url}/api/tags", timeout=timeout)
             response.raise_for_status()
             data = response.json()
-            models = [m['name'] for m in data.get('models', [])]
+            models = [m["name"] for m in data.get("models", [])]
             return {
-                'available': True,
-                'models': models,
-                'model_count': len(models),
-                'base_url': endpoint_url
+                "available": True,
+                "models": models,
+                "model_count": len(models),
+                "base_url": endpoint_url,
             }
         except requests.exceptions.Timeout:
-            return {'available': False, 'error': f'Connection timeout to {endpoint_url}', 'models': []}
+            return {
+                "available": False,
+                "error": f"Connection timeout to {endpoint_url}",
+                "models": [],
+            }
         except requests.exceptions.ConnectionError:
-            return {'available': False, 'error': f'Connection refused by {endpoint_url}', 'models': []}
+            return {
+                "available": False,
+                "error": f"Connection refused by {endpoint_url}",
+                "models": [],
+            }
         except Exception as e:
-            return {'available': False, 'error': str(e), 'models': []}
+            return {"available": False, "error": str(e), "models": []}
 
-    def __init__(self, model: str = None, host: str = None, port: int = None, base_url: str = None):
+    def __init__(
+        self,
+        model: str = None,
+        host: str = None,
+        port: int = None,
+        base_url: str = None,
+    ):
         """
         Initialize Ollama provider.
 
@@ -319,9 +357,10 @@ class OllamaProvider(LLMProvider):
 
         # Set base_url from either direct param, env var, or construct from host/port
         if base_url:
-            self.base_url = base_url.rstrip('/')
+            self.base_url = base_url.rstrip("/")
             # Extract host and port from base_url for reference
             from urllib.parse import urlparse
+
             parsed = urlparse(self.base_url)
             self.host = parsed.hostname or "unknown"
             self.port = parsed.port or 11434
@@ -339,14 +378,20 @@ class OllamaProvider(LLMProvider):
         if self._session is None:
             try:
                 import requests
+
                 self._session = requests.Session()
             except ImportError:
-                raise ImportError("requests package not installed. Install with: pip install requests")
+                raise ImportError(
+                    "requests package not installed. Install with: pip install requests"
+                )
         return self._session
 
-    def generate(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7
+    ) -> str:
         """Generate using Ollama."""
         import requests
+
         session = self._get_session()
 
         try:
@@ -356,11 +401,8 @@ class OllamaProvider(LLMProvider):
                     "model": self.model,
                     "prompt": prompt,
                     "stream": False,
-                    "options": {
-                        "num_predict": max_tokens,
-                        "temperature": temperature
-                    }
-                }
+                    "options": {"num_predict": max_tokens, "temperature": temperature},
+                },
             )
             response.raise_for_status()
             return response.json()["response"]
@@ -388,7 +430,7 @@ class OllamaProvider(LLMProvider):
             session = self._get_session()
             response = session.get(f"{self.base_url}/api/tags", timeout=2)
             return response.status_code == 200
-        except:
+        except Exception:
             return False
 
     def list_models(self) -> List[Dict[str, Any]]:
@@ -422,9 +464,7 @@ class OllamaProvider(LLMProvider):
         try:
             session = self._get_session()
             response = session.post(
-                f"{self.base_url}/api/show",
-                json={"name": model},
-                timeout=5
+                f"{self.base_url}/api/show", json={"name": model}, timeout=5
             )
             response.raise_for_status()
             return response.json()
@@ -434,6 +474,7 @@ class OllamaProvider(LLMProvider):
 
 
 # ========== Factory and Utility Functions ==========
+
 
 class ProviderFactory:
     """Factory for creating LLM providers."""
@@ -451,15 +492,17 @@ class ProviderFactory:
             LLMProvider instance
         """
         providers = {
-            'openai': OpenAIProvider,
-            'anthropic': AnthropicProvider,
-            'ollama': OllamaProvider,
-            'mock': MockLLMProvider
+            "openai": OpenAIProvider,
+            "anthropic": AnthropicProvider,
+            "ollama": OllamaProvider,
+            "mock": MockLLMProvider,
         }
 
         provider_lower = provider.lower()
         if provider_lower not in providers:
-            raise ValueError(f"Unknown provider: {provider}. Choose from: {list(providers.keys())}")
+            raise ValueError(
+                f"Unknown provider: {provider}. Choose from: {list(providers.keys())}"
+            )
 
         return providers[provider_lower](**kwargs)
 
@@ -497,7 +540,7 @@ class ProviderFactory:
             if ollama.is_available():
                 logger.info("Detected Ollama server, using Ollama provider")
                 return ollama
-        except:
+        except Exception:
             pass
 
         logger.warning("No LLM provider configured, using MockLLMProvider")
@@ -563,20 +606,17 @@ def test_provider(provider: LLMProvider) -> bool:
 
 __all__ = [
     # Base class
-    'LLMProvider',
-
+    "LLMProvider",
     # Providers
-    'OpenAIProvider',
-    'AnthropicProvider',
-    'OllamaProvider',
-    'MockLLMProvider',
-
+    "OpenAIProvider",
+    "AnthropicProvider",
+    "OllamaProvider",
+    "MockLLMProvider",
     # Factory
-    'ProviderFactory',
-    'get_llm',
-
+    "ProviderFactory",
+    "get_llm",
     # Utilities
-    'test_provider',
+    "test_provider",
 ]
 
 

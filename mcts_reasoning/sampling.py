@@ -21,8 +21,8 @@ Example usage:
     terminals = sampler.get_terminals()
 """
 
-from dataclasses import dataclass, field
-from typing import List, Optional, Set, Callable
+from dataclasses import dataclass
+from typing import List, Optional, Set
 from enum import Enum
 
 from .node import Node
@@ -30,20 +30,22 @@ from .node import Node
 
 class SamplingStrategy(Enum):
     """Available sampling strategies."""
-    VALUE = "value"       # Order by average value
-    VISITS = "visits"     # Order by visit count
-    DIVERSE = "diverse"   # Maximize path diversity
-    TOPK = "topk"         # Top-k by terminal score
+
+    VALUE = "value"  # Order by average value
+    VISITS = "visits"  # Order by visit count
+    DIVERSE = "diverse"  # Maximize path diversity
+    TOPK = "topk"  # Top-k by terminal score
 
 
 @dataclass
 class SampledPath:
     """A sampled reasoning path from the tree."""
+
     nodes: List[Node]
     terminal: Optional[Node]  # Terminal node if path reaches one
-    value: float              # Average value of terminal or leaf
-    visits: int               # Visit count of terminal or leaf
-    answer: Optional[str]     # Extracted answer if terminal
+    value: float  # Average value of terminal or leaf
+    visits: int  # Visit count of terminal or leaf
+    answer: Optional[str]  # Extracted answer if terminal
 
     @property
     def depth(self) -> int:
@@ -67,7 +69,7 @@ class SampledPath:
             if i == 0:
                 continue  # Skip root
             prev_state = self.nodes[i - 1].state
-            step = node.state[len(prev_state):].strip()
+            step = node.state[len(prev_state) :].strip()
             if step:
                 result.append(step)
         return result
@@ -326,6 +328,7 @@ class PathSampler:
 
         # Find most common answer
         from collections import Counter
+
         counter = Counter(a for a in answers if a is not None)
         if not counter:
             return 0.0
@@ -380,6 +383,7 @@ class PathSampler:
 
         # Count votes
         from collections import Counter
+
         votes = Counter()
         weighted_votes = {}
 
@@ -407,7 +411,9 @@ class PathSampler:
             winner = max(weighted_votes.keys(), key=lambda a: weighted_votes[a])
             # Confidence is normalized weighted vote
             total_weight = sum(weighted_votes.values())
-            confidence = weighted_votes[winner] / total_weight if total_weight > 0 else 0.0
+            confidence = (
+                weighted_votes[winner] / total_weight if total_weight > 0 else 0.0
+            )
         else:
             winner = votes.most_common(1)[0][0]
             confidence = votes[winner] / total_votes
