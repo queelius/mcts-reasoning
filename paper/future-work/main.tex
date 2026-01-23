@@ -1,0 +1,536 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage[margin=1in]{geometry}
+
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{property}{Property}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{remark}{Remark}[section]
+
+% Custom commands
+\newcommand{\statespace}{\mathcal{S}}
+\newcommand{\actionspace}{\mathcal{A}}
+\newcommand{\nodeset}{\mathcal{N}}
+\newcommand{\tree}{\mathcal{T}}
+\newcommand{\generator}{\mathcal{G}}
+\newcommand{\evaluator}{\mathcal{E}}
+\newcommand{\visits}{\nu}
+\newcommand{\val}{v}
+\newcommand{\ucb}{\text{UCB1}}
+
+\title{Extended Action Spaces for MCTS-Based LLM Reasoning:\\A Research Roadmap}
+\author{Working Draft}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This working paper explores research directions for extending Monte Carlo Tree Search (MCTS) applied to Large Language Model reasoning. While the canonical MCTS-Reasoning specification uses only the \textsc{Continue} action, richer action spaces may improve reasoning efficiency and quality. We discuss state management actions (\textsc{Compress}, \textsc{Verify}, \textsc{Backtrack}), problem decomposition patterns, graph-based reasoning structures, and algorithm variants. This document serves as a living roadmap for future development rather than a specification of implemented functionality.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%==============================================================================
+\section{Introduction}
+%==============================================================================
+
+The canonical MCTS-Reasoning specification \cite{mcts-reasoning-spec} defines a single action: \textsc{Continue}, which prompts the LLM to generate the next reasoning step. While simple and effective, this minimal action space limits the search algorithm's ability to manage complex reasoning patterns.
+
+\subsection{Motivation}
+
+Several limitations of the single-action approach motivate richer action spaces:
+
+\begin{enumerate}
+    \item \textbf{Unbounded State Growth}: Reasoning traces accumulate text without bound, eventually exceeding context limits
+    \item \textbf{No Explicit Verification}: Self-checking happens only if the LLM spontaneously includes it
+    \item \textbf{Implicit Backtracking}: Poor paths are deprioritized by UCB1, but never explicitly abandoned
+    \item \textbf{Sequential Decomposition}: Complex problems must be solved step-by-step within a single path
+\end{enumerate}
+
+\subsection{Scope of This Document}
+
+This working paper sketches potential extensions without claiming they are implemented or fully specified. The goal is to:
+\begin{itemize}
+    \item Document promising research directions
+    \item Compare with related work in structured reasoning
+    \item Identify open questions requiring further investigation
+    \item Guide future development priorities
+\end{itemize}
+
+%==============================================================================
+\section{Related Work}
+%==============================================================================
+
+Recent work has explored various approaches to structured reasoning with LLMs.
+
+\subsection{Tree of Thoughts}
+
+Yao et al.\ \cite{yao2023} introduced Tree of Thoughts (ToT), which explores multiple reasoning paths through deliberate problem decomposition. Key differences from MCTS-Reasoning:
+\begin{itemize}
+    \item ToT uses breadth-first or depth-first search rather than MCTS
+    \item Evaluation can occur at intermediate states, not just terminal states
+    \item ``Thoughts'' are explicitly structured rather than free-form continuations
+\end{itemize}
+
+\subsection{Graph of Thoughts}
+
+Besta et al.\ \cite{besta2023} extend ToT to graph structures (GoT), allowing:
+\begin{itemize}
+    \item Aggregation of multiple reasoning paths
+    \item Refinement loops that revisit earlier thoughts
+    \item Non-linear reasoning topologies
+\end{itemize}
+
+GoT demonstrates that tree structures may be insufficient for complex reasoning, motivating our discussion of graph-based extensions in Section~\ref{sec:beyond-trees}.
+
+\subsection{Reasoning via Planning}
+
+Hao et al.\ \cite{hao2023} apply MCTS to reasoning with an explicit world model:
+\begin{itemize}
+    \item States are structured representations, not just text
+    \item Actions include domain-specific operators
+    \item Rewards come from a learned value function
+\end{itemize}
+
+This approach trades generality for domain-specific efficiency.
+
+\subsection{Self-Consistency}
+
+Wang et al.\ \cite{wang2023} demonstrate that sampling multiple reasoning paths and voting among answers improves reliability. The canonical MCTS-Reasoning already implements self-consistency via \texttt{PathSampler}, but deeper integration with the search process remains unexplored.
+
+%==============================================================================
+\section{State Management Actions}
+\label{sec:state-management}
+%==============================================================================
+
+State management actions help control reasoning trace length and quality.
+
+\subsection{Compress Action}
+
+When reasoning traces become long, the \textsc{Compress} action summarizes the trace into a more compact representation:
+
+\[
+\textsc{Compress}(s) = \text{LLM}_{\text{summarize}}(s)
+\]
+
+\subsubsection{Action Space Extension}
+
+\[
+\actionspace(s) = \begin{cases}
+    \{\textsc{Continue}, \textsc{Compress}\} & \text{if } |s| > \text{threshold} \\
+    \{\textsc{Continue}\} & \text{otherwise}
+\end{cases}
+\]
+
+\subsubsection{Design Considerations}
+
+\begin{itemize}
+    \item \textbf{Information Loss}: Compression inevitably loses detail; when is this acceptable?
+    \item \textbf{Threshold Selection}: Fixed threshold vs.\ adaptive (based on problem complexity)?
+    \item \textbf{Compression Quality}: How to ensure key insights are preserved?
+    \item \textbf{Backpropagation}: Should compressed states receive different value updates?
+\end{itemize}
+
+\subsubsection{Implementation Sketch}
+
+The \texttt{ExtendedActionSpace} class in the canonical implementation provides a prototype:
+\begin{verbatim}
+action_space = ExtendedActionSpace(
+    generator=generator,
+    llm=llm,
+    compress_threshold=2000  # characters
+)
+\end{verbatim}
+
+\begin{remark}[Partial Implementation]
+While \texttt{ExtendedActionSpace} and \texttt{CompressAction} exist in the codebase, they are not extensively tested and the action selection policy (when to compress vs.\ continue) remains simplistic.
+\end{remark}
+
+\subsection{Verify Action}
+
+The \textsc{Verify} action asks the LLM to check the current reasoning before continuing:
+
+\[
+\textsc{Verify}(s) = s \oplus \text{LLM}_{\text{verify}}(s)
+\]
+
+The verification might:
+\begin{itemize}
+    \item Confirm the reasoning is correct (continue normally)
+    \item Identify errors (potentially triggering backtrack)
+    \item Suggest corrections (modify the state)
+\end{itemize}
+
+\subsubsection{Open Questions}
+
+\begin{itemize}
+    \item When should verification be triggered? (Every $k$ steps? When confidence drops?)
+    \item How should verification failure affect UCB1 values?
+    \item Should verification results influence sibling nodes?
+\end{itemize}
+
+\subsection{Backtrack Action}
+
+The \textsc{Backtrack} action explicitly marks a reasoning path as unpromising:
+
+\[
+\textsc{Backtrack}(s) = \text{TERMINAL}_{\text{failed}}
+\]
+
+Unlike natural search abandonment (where UCB1 simply deprioritizes low-value nodes), explicit backtracking:
+\begin{itemize}
+    \item Immediately terminates exploration of this branch
+    \item Can propagate negative signal to parent nodes
+    \item Frees resources for more promising alternatives
+\end{itemize}
+
+\subsubsection{Triggering Conditions}
+
+Backtracking might be appropriate when:
+\begin{itemize}
+    \item The LLM explicitly states the approach won't work
+    \item Verification repeatedly fails
+    \item Resource limits (depth, tokens) are reached
+    \item A contradiction is detected
+\end{itemize}
+
+%==============================================================================
+\section{Problem Decomposition}
+\label{sec:decomposition}
+%==============================================================================
+
+Complex problems often benefit from decomposition into subproblems. This section sketches how MCTS might support explicit decomposition.
+
+\subsection{Decompose Action}
+
+A \textsc{Decompose} action splits the current problem into independent subproblems:
+
+\[
+\textsc{Decompose}(s) = \{s_1, s_2, \ldots, s_k\}
+\]
+
+where each $s_i$ is a subproblem state that can be solved independently.
+
+\subsubsection{Structural Implications}
+
+Decomposition fundamentally changes the search structure:
+\begin{itemize}
+    \item The node has multiple ``children'' that must \emph{all} be solved (AND node)
+    \item Standard MCTS children represent \emph{alternatives} (OR node)
+    \item Combining solutions requires an \textsc{Aggregate} operation
+\end{itemize}
+
+This creates an AND-OR tree or DAG structure, not a simple OR tree.
+
+\subsection{Recursive MCTS}
+
+One approach: run independent MCTS searches for each subproblem:
+
+\begin{algorithm}[H]
+\caption{Recursive MCTS for Decomposition (Sketch)}
+\begin{algorithmic}[1]
+\Require State $s$ to decompose
+\Ensure Combined solution
+\Procedure{SolveWithDecomposition}{$s$}
+    \If{$\textsc{IsSimple}(s)$}
+        \State \Return $\textsc{MCTS}(s)$ \Comment{Base case: standard MCTS}
+    \EndIf
+    \State $\{s_1, \ldots, s_k\} \gets \textsc{Decompose}(s)$
+    \For{$i = 1$ \textbf{to} $k$}
+        \State $\text{result}_i \gets \textsc{SolveWithDecomposition}(s_i)$ \Comment{Recursive}
+    \EndFor
+    \State \Return $\textsc{Aggregate}(\text{result}_1, \ldots, \text{result}_k)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Open Questions}
+
+\begin{enumerate}
+    \item \textbf{Backpropagation}: How should values from subproblem MCTS searches propagate to the decomposition node?
+    \item \textbf{Resource Allocation}: How many simulations for each subproblem?
+    \item \textbf{Failure Handling}: What if one subproblem cannot be solved?
+    \item \textbf{Decomposition Quality}: How to evaluate whether a decomposition is good?
+    \item \textbf{When to Decompose}: How does the search decide between \textsc{Continue} and \textsc{Decompose}?
+\end{enumerate}
+
+\subsection{Aggregation}
+
+Combining subproblem solutions is non-trivial:
+\begin{itemize}
+    \item Simple concatenation may miss interactions
+    \item The aggregation step itself may require reasoning
+    \item Inconsistencies between subproblem solutions must be resolved
+\end{itemize}
+
+An \textsc{Aggregate} action might be another LLM call:
+\[
+\textsc{Aggregate}(r_1, \ldots, r_k) = \text{LLM}_{\text{combine}}(r_1, \ldots, r_k, s_{\text{original}})
+\]
+
+%==============================================================================
+\section{Beyond Trees: Graph-Based Reasoning}
+\label{sec:beyond-trees}
+%==============================================================================
+
+The tree structure of MCTS imposes fundamental constraints on reasoning patterns. Certain operations naturally suggest non-tree structures.
+
+\subsection{Limitations of Tree Structure}
+
+Trees enforce:
+\begin{itemize}
+    \item \textbf{Single Parent}: Each state has exactly one predecessor
+    \item \textbf{No Cycles}: Cannot revisit earlier states
+    \item \textbf{Independent Branches}: No information sharing across paths
+\end{itemize}
+
+These constraints conflict with natural reasoning patterns:
+
+\subsubsection{Problem Decomposition}
+
+Splitting a problem into independent subproblems, solving each separately, and combining results creates a DAG structure where the ``combine'' node has multiple parents (the solved subproblems).
+
+\subsubsection{Critique-Revision Cycles}
+
+Evaluating a solution, identifying issues, and refining creates potential cycles that trees cannot represent. In a tree, we can only approximate this by continuing forward.
+
+\subsubsection{Cross-Path Information Sharing}
+
+Using insights discovered in one reasoning path to inform another requires edges between branches---impossible in a tree.
+
+\subsection{Directed Acyclic Graphs (DAGs)}
+
+DAGs relax the single-parent constraint while maintaining acyclicity:
+\begin{itemize}
+    \item Multiple paths can converge to the same insight
+    \item Decomposition and aggregation are naturally represented
+    \item Backpropagation becomes more complex (multiple paths to root)
+\end{itemize}
+
+\subsubsection{DAG Backpropagation}
+
+With multiple parents, value updates must handle:
+\begin{itemize}
+    \item Credit assignment: which parent gets credit for a good outcome?
+    \item Visit counting: how to count visits with multiple paths?
+    \item Convergence: ensuring values stabilize despite cycles in the update graph
+\end{itemize}
+
+\subsection{Hypergraph Structures}
+
+Hypergraphs generalize graphs by allowing edges to connect more than two nodes:
+\begin{itemize}
+    \item A \textsc{Decompose} action creates a hyperedge from one node to multiple children
+    \item An \textsc{Aggregate} action creates a hyperedge from multiple nodes to one
+    \item Standard \textsc{Continue} remains a binary edge
+\end{itemize}
+
+This provides a unified representation for all action types but requires:
+\begin{itemize}
+    \item Generalized UCB1 for hyperedge selection
+    \item Synchronization semantics (when are all subproblems ``ready''?)
+    \item More complex backpropagation algorithms
+\end{itemize}
+
+\begin{remark}[Natural Decomposition within MCTS]
+Note that the LLM within a \textsc{Continue} action can naturally perform soft versions of these operations: reasoning about subproblems sequentially within a single path, self-critiquing before continuing, or reconsidering earlier steps. The tree structure captures \emph{alternative} reasoning paths, while complex reasoning \emph{within} a path remains expressible through the continuation mechanism.
+
+Graph structures become necessary only when we want the \emph{search algorithm} to explicitly manage decomposition, aggregation, and cross-path communication.
+\end{remark}
+
+%==============================================================================
+\section{Algorithm Variants}
+%==============================================================================
+
+Several MCTS variants may improve performance for LLM reasoning.
+
+\subsection{Progressive Widening}
+
+Instead of a fixed branching factor $B$, progressive widening adjusts $B$ based on visit count:
+\[
+B(n) = \lceil k \cdot \visits(n)^\alpha \rceil
+\]
+where $k, \alpha$ are parameters. This allows:
+\begin{itemize}
+    \item Early exploration with few children
+    \item More alternatives for promising nodes
+    \item Adaptive resource allocation
+\end{itemize}
+
+\subsection{RAVE (Rapid Action Value Estimation)}
+
+RAVE shares value information across the tree based on action similarity. For LLM reasoning, this might mean:
+\begin{itemize}
+    \item Similar reasoning patterns are valued similarly
+    \item Requires defining ``action similarity'' for text continuations
+    \item May help with sparse rewards
+\end{itemize}
+
+\subsection{Parallel MCTS}
+
+Parallelization strategies for MCTS:
+\begin{itemize}
+    \item \textbf{Root Parallelization}: Run independent trees, combine results
+    \item \textbf{Leaf Parallelization}: Parallel rollouts from same node
+    \item \textbf{Tree Parallelization}: Concurrent tree modifications with virtual loss
+\end{itemize}
+
+For LLM reasoning, root parallelization is simplest and naturally combines with self-consistency voting.
+
+\subsection{Learned Components}
+
+\subsubsection{Value Networks}
+
+Learn to evaluate intermediate states:
+\[
+V(s) = \text{Network}(s)
+\]
+This allows evaluation before reaching terminal states, potentially accelerating search. Challenges:
+\begin{itemize}
+    \item Training data: which intermediate states are ``good''?
+    \item Generalization: will the value network transfer across problem types?
+    \item Integration: how to combine learned values with terminal evaluations?
+\end{itemize}
+
+\subsubsection{Policy Networks}
+
+Learn to prioritize actions/continuations:
+\[
+P(a | s) = \text{Network}(s, a)
+\]
+This guides expansion toward promising regions. Challenges:
+\begin{itemize}
+    \item The action space is infinite (all possible text continuations)
+    \item Must integrate with LLM generation, not replace it
+    \item May limit exploration if policy is overconfident
+\end{itemize}
+
+\subsection{Beam Search Hybrid}
+
+Combine MCTS exploration with beam search efficiency:
+\begin{itemize}
+    \item Use beam search for rapid generation of candidates
+    \item Use MCTS for deep exploration of promising candidates
+    \item Maintain beam-width top nodes, but allow UCB1 selection within beam
+\end{itemize}
+
+%==============================================================================
+\section{Open Questions}
+%==============================================================================
+
+This section collects fundamental questions requiring further investigation.
+
+\subsection{Action Selection}
+
+\begin{enumerate}
+    \item How should the search algorithm choose between \textsc{Continue}, \textsc{Compress}, \textsc{Verify}, and \textsc{Decompose}?
+    \item Should action selection be learned or heuristic?
+    \item How do we balance action space richness against search efficiency?
+\end{enumerate}
+
+\subsection{Decomposition}
+
+\begin{enumerate}
+    \item How should backpropagation work from recursive MCTS searches?
+    \item What determines whether decomposition improves or harms performance?
+    \item How to detect when decomposition is appropriate?
+    \item How to aggregate solutions with conflicting assumptions?
+\end{enumerate}
+
+\subsection{Graph Structures}
+
+\begin{enumerate}
+    \item When are graph structures worth the added complexity?
+    \item How to extend UCB1 for DAG or hypergraph structures?
+    \item What synchronization semantics for multi-parent aggregation?
+    \item How to prevent cycles in revision/critique patterns?
+\end{enumerate}
+
+\subsection{Learning}
+
+\begin{enumerate}
+    \item What training signal for intermediate state value estimation?
+    \item How to learn action selection policies over infinite action spaces?
+    \item Can value/policy networks transfer across reasoning domains?
+    \item How much training data is needed for reasonable performance?
+\end{enumerate}
+
+\subsection{Evaluation}
+
+\begin{enumerate}
+    \item What benchmarks best test extended action spaces?
+    \item How to measure the benefit of decomposition vs.\ continued reasoning?
+    \item What metrics capture reasoning quality beyond answer correctness?
+\end{enumerate}
+
+%==============================================================================
+\section{Conclusion}
+%==============================================================================
+
+This working paper sketches research directions for extending MCTS-based LLM reasoning beyond the canonical single-action specification. Key themes include:
+
+\begin{enumerate}
+    \item \textbf{State Management}: Actions like \textsc{Compress}, \textsc{Verify}, and \textsc{Backtrack} help manage reasoning trace length and quality
+    \item \textbf{Problem Decomposition}: Explicit \textsc{Decompose} and \textsc{Aggregate} actions may handle complex problems more efficiently than sequential reasoning
+    \item \textbf{Beyond Trees}: DAG and hypergraph structures can represent reasoning patterns that trees cannot
+    \item \textbf{Algorithm Variants}: Progressive widening, parallel MCTS, and learned components offer performance improvements
+\end{enumerate}
+
+These ideas remain research directions rather than implemented features. The canonical MCTS-Reasoning specification provides a solid foundation; the extensions described here represent potential future evolution as understanding of LLM reasoning deepens.
+
+%==============================================================================
+% References
+%==============================================================================
+\bibliographystyle{plain}
+\begin{thebibliography}{9}
+
+\bibitem{mcts-reasoning-spec}
+MCTS-Reasoning Technical Report v0.5.
+\textit{Canonical Specification of Monte Carlo Tree Search for LLM Reasoning}.
+
+\bibitem{yao2023}
+Yao, S., et al. (2023).
+Tree of thoughts: Deliberate problem solving with large language models.
+\textit{arXiv preprint arXiv:2305.10601}.
+
+\bibitem{besta2023}
+Besta, M., et al. (2023).
+Graph of thoughts: Solving elaborate problems with large language models.
+\textit{arXiv preprint arXiv:2308.09687}.
+
+\bibitem{hao2023}
+Hao, S., et al. (2023).
+Reasoning with language model is planning with world model.
+\textit{arXiv preprint arXiv:2305.14992}.
+
+\bibitem{wang2023}
+Wang, X., et al. (2023).
+Self-consistency improves chain of thought reasoning in language models.
+\textit{ICLR 2023}.
+
+\bibitem{kocsis2006}
+Kocsis, L., \& Szepesv{\'a}ri, C. (2006).
+Bandit based monte-carlo planning.
+\textit{European Conference on Machine Learning}, 282--293.
+
+\bibitem{browne2012}
+Browne, C. B., et al. (2012).
+A survey of monte carlo tree search methods.
+\textit{IEEE Transactions on Computational Intelligence and AI in Games}, 4(1), 1--43.
+
+\end{thebibliography}
+
+\end{document}

@@ -29,7 +29,7 @@
 \newcommand{\ucb}{\text{UCB1}}
 
 \title{MCTS-Reasoning: A Canonical Specification of\\Monte Carlo Tree Search for LLM Reasoning}
-\author{Technical Report v0.5.1}
+\author{Technical Report v0.5.2}
 \date{\today}
 
 \begin{document}
@@ -172,7 +172,7 @@ The \emph{action space} $\actionspace(s)$ is the set of actions available at sta
 \end{definition}
 
 \begin{remark}[State-Dependent Actions]
-In standard MCTS for games, different positions have different legal moves. Similarly, different reasoning states may have different available actions. The canonical implementation uses only \textsc{Continue}, but extensions (Section~\ref{sec:extensions}) may include additional actions such as \textsc{Compress} for long traces.
+In standard MCTS for games, different positions have different legal moves. Similarly, different reasoning states may have different available actions. The canonical implementation uses only \textsc{Continue}, but the \texttt{ExtendedActionSpace} class allows additional actions such as \textsc{Compress} for long traces.
 \end{remark}
 
 \begin{definition}[Node]
@@ -535,76 +535,18 @@ The search tree contains at most $O(KD)$ nodes, each storing a state string. Wit
 \end{property}
 
 %==============================================================================
-\section{Extensions}
-\label{sec:extensions}
+\section{Additional Capabilities}
+\label{sec:capabilities}
 %==============================================================================
 
-The following extensions are under consideration for future versions:
-
-\subsection{Extended Action Spaces}
-
-The canonical implementation uses only the \textsc{Continue} action. Extended action spaces may include:
-
-\begin{itemize}
-    \item \textbf{Compress}: When the reasoning trace exceeds a threshold length, the \textsc{Compress} action summarizes the trace into a more compact representation. Subsequent reasoning continues from the compressed state, reducing context length while preserving key insights.
-    \[
-    \actionspace(s) = \begin{cases}
-        \{\textsc{Continue}, \textsc{Compress}\} & \text{if } |s| > \text{threshold} \\
-        \{\textsc{Continue}\} & \text{otherwise}
-    \end{cases}
-    \]
-
-    \item \textbf{Verify}: Ask the LLM to verify the current reasoning before continuing
-
-    \item \textbf{ToolCall}: Invoke external tools via Model Context Protocol (MCP).
-          \emph{Implemented in v0.5 via \texttt{ToolAwareGenerator} and \texttt{ToolContext}.}
-
-    \item \textbf{Backtrack}: Explicitly mark a reasoning path as unpromising
-\end{itemize}
-
-\subsection{Algorithm Variants}
-
-\begin{itemize}
-    \item \textbf{Progressive Widening}: Dynamically adjust $B$ based on visit count
-    \item \textbf{RAVE}: Rapid Action Value Estimation for faster convergence
-    \item \textbf{Parallel MCTS}: Root parallelization or tree parallelization
-    \item \textbf{Value Networks}: Learned evaluation functions for intermediate states
-    \item \textbf{Policy Networks}: Learned action selection to guide expansion
-    \item \textbf{Self-Consistency Integration}: Aggregate across multiple terminal states
-    \item \textbf{Beam Search Hybrid}: Combine MCTS exploration with beam search
-\end{itemize}
-
-\subsection{Beyond Trees: Graph-Based Reasoning}
-
-The tree structure of MCTS imposes fundamental constraints on reasoning patterns. Certain operations naturally suggest non-tree structures:
-
-\begin{itemize}
-    \item \textbf{Problem Decomposition}: Splitting a problem into independent subproblems, solving each separately, and combining results creates a DAG structure where the ``combine'' node has multiple parents.
-
-    \item \textbf{Critique-Revision Cycles}: Evaluating a solution, identifying issues, and refining creates potential cycles that trees cannot represent.
-
-    \item \textbf{Cross-Path Information Sharing}: Using insights from one reasoning path to inform another requires edges between branches.
-\end{itemize}
-
-These patterns require \emph{graph-based} or \emph{hypergraph-based} search with:
-\begin{itemize}
-    \item Multiple edge types (continuation, decomposition, aggregation, critique)
-    \item Generalized propagation beyond simple backpropagation
-    \item Synchronization semantics for subproblem completion
-\end{itemize}
-
-Such extensions are outside the scope of this tree-based MCTS specification but represent promising directions for future work on structured reasoning.
-
-\begin{remark}[Natural Decomposition within MCTS]
-Note that the LLM within a \textsc{Continue} action can naturally perform soft versions of these operations: reasoning about subproblems sequentially within a single path, self-critiquing before continuing, or reconsidering earlier steps. The tree structure captures \emph{alternative} reasoning paths, while complex reasoning \emph{within} a path remains expressible through the continuation mechanism.
-\end{remark}
+This section describes additional capabilities implemented in the canonical MCTS-Reasoning system.
 
 %------------------------------------------------------------------------------
-\subsection{MCP Tool Integration (Implemented)}
+\subsection{Tool-Augmented Reasoning (MCP)}
 \label{subsec:mcp-tools}
 %------------------------------------------------------------------------------
 
-Version 0.5 introduces tool-augmented reasoning via the Model Context Protocol (MCP):
+Tool-augmented reasoning is supported via the Model Context Protocol (MCP):
 
 \begin{itemize}
     \item \textbf{ToolAwareGenerator}: Wraps any Generator with tool support, intercepting tool calls in LLM output and executing them before continuing generation.
@@ -622,11 +564,11 @@ Tools are invoked during reasoning steps via XML or JSON format:
 Results are injected back into the state, allowing the LLM to continue reasoning with tool outputs.
 
 %------------------------------------------------------------------------------
-\subsection{Sampling and Self-Consistency (Implemented)}
+\subsection{Path Sampling and Self-Consistency}
 \label{subsec:sampling}
 %------------------------------------------------------------------------------
 
-Beyond extracting the single best answer, version 0.5 provides path sampling strategies for analyzing the search tree:
+Beyond extracting the single best answer, path sampling strategies support analysis of the search tree:
 
 \begin{itemize}
     \item \textbf{Value-based}: Sample paths with highest average values
@@ -649,7 +591,7 @@ answer, confidence = sampler.majority_vote()
 \end{verbatim}
 
 %------------------------------------------------------------------------------
-\subsection{Tree Serialization (Implemented)}
+\subsection{Tree Serialization and Continuation}
 \label{subsec:serialization}
 %------------------------------------------------------------------------------
 
@@ -690,9 +632,12 @@ This report establishes a canonical specification for MCTS applied to LLM reason
     \item \textbf{Precise specification} of the four MCTS phases with pseudocode
     \item \textbf{Clear interfaces} for Generator and Evaluator components
     \item \textbf{Explicit documentation} of design choices (tree-building rollouts, terminal-only evaluation, bounded branching)
+    \item \textbf{Practical capabilities} including tool integration, path sampling, and tree serialization
 \end{enumerate}
 
 The specification serves as a reference for implementation, ensuring the algorithm is authentically represented while being appropriately adapted for language model reasoning tasks.
+
+Future research directions---including extended action spaces (e.g., \textsc{Compress}, \textsc{Verify}), algorithm variants (parallel MCTS, learned value functions), and graph-based reasoning structures---are discussed in a companion working paper on research directions for MCTS-based LLM reasoning.
 
 %==============================================================================
 % References
@@ -844,28 +789,5 @@ RAG stores & \texttt{compositional/rag.py} \\
 \bottomrule
 \end{tabular}
 \end{center}
-
-\subsection{Debugging Tips}
-
-\textbf{No Terminal States Found:}
-\begin{itemize}
-    \item Increase \texttt{max\_rollout\_depth}
-    \item Check terminal detector configuration
-    \item Verify LLM generates ``ANSWER:'' markers
-\end{itemize}
-
-\textbf{Low Confidence:}
-\begin{itemize}
-    \item Increase simulation count
-    \item Use ProcessEvaluator for reasoning quality assessment
-    \item Check answer consistency with \texttt{PathSampler.consistency\_score()}
-\end{itemize}
-
-\textbf{LLM Provider Issues:}
-\begin{itemize}
-    \item Ollama: Test with \texttt{curl http://localhost:11434/api/tags}
-    \item Check API keys in environment variables
-    \item Use \texttt{MockLLMProvider} for isolated testing
-\end{itemize}
 
 \end{document}

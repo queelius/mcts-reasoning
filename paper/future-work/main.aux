@@ -1,0 +1,71 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{mcts-reasoning-spec}
+\citation{yao2023}
+\citation{besta2023}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{3}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Motivation}{3}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Scope of This Document}{3}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{3}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Tree of Thoughts}{3}{subsection.2.1}\protected@file@percent }
+\citation{hao2023}
+\citation{wang2023}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Graph of Thoughts}{4}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Reasoning via Planning}{4}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Self-Consistency}{4}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}State Management Actions}{4}{section.3}\protected@file@percent }
+\newlabel{sec:state-management}{{3}{4}{State Management Actions}{section.3}{}}
+\newlabel{sec:state-management@cref}{{[section][3][]3}{[1][4][]4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Compress Action}{4}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}Action Space Extension}{4}{subsubsection.3.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.2}Design Considerations}{4}{subsubsection.3.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.3}Implementation Sketch}{5}{subsubsection.3.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Verify Action}{5}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}Open Questions}{5}{subsubsection.3.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Backtrack Action}{5}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}Triggering Conditions}{5}{subsubsection.3.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Problem Decomposition}{6}{section.4}\protected@file@percent }
+\newlabel{sec:decomposition}{{4}{6}{Problem Decomposition}{section.4}{}}
+\newlabel{sec:decomposition@cref}{{[section][4][]4}{[1][5][]6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Decompose Action}{6}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.1}Structural Implications}{6}{subsubsection.4.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Recursive MCTS}{6}{subsection.4.2}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Recursive MCTS for Decomposition (Sketch)}}{6}{algorithm.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.1}Open Questions}{6}{subsubsection.4.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Aggregation}{7}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Beyond Trees: Graph-Based Reasoning}{7}{section.5}\protected@file@percent }
+\newlabel{sec:beyond-trees}{{5}{7}{Beyond Trees: Graph-Based Reasoning}{section.5}{}}
+\newlabel{sec:beyond-trees@cref}{{[section][5][]5}{[1][7][]7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Limitations of Tree Structure}{7}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.1}Problem Decomposition}{7}{subsubsection.5.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.2}Critique-Revision Cycles}{7}{subsubsection.5.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.3}Cross-Path Information Sharing}{7}{subsubsection.5.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Directed Acyclic Graphs (DAGs)}{7}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.1}DAG Backpropagation}{8}{subsubsection.5.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Hypergraph Structures}{8}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Algorithm Variants}{8}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Progressive Widening}{8}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}RAVE (Rapid Action Value Estimation)}{9}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Parallel MCTS}{9}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Learned Components}{9}{subsection.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.4.1}Value Networks}{9}{subsubsection.6.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.4.2}Policy Networks}{9}{subsubsection.6.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Beam Search Hybrid}{9}{subsection.6.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Open Questions}{10}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Action Selection}{10}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Decomposition}{10}{subsection.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Graph Structures}{10}{subsection.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Learning}{10}{subsection.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}Evaluation}{10}{subsection.7.5}\protected@file@percent }
+\bibstyle{plain}
+\bibcite{mcts-reasoning-spec}{1}
+\bibcite{yao2023}{2}
+\bibcite{besta2023}{3}
+\bibcite{hao2023}{4}
+\bibcite{wang2023}{5}
+\bibcite{kocsis2006}{6}
+\bibcite{browne2012}{7}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusion}{11}{section.8}\protected@file@percent }
+\gdef \@abspage@last{11}

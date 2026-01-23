@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 MCTS-Reasoning is a canonical Monte Carlo Tree Search implementation for LLM-based step-by-step reasoning. It explores multiple reasoning paths to find high-quality solutions.
 
-**Version**: 0.5.0
+**Version**: 0.5.2
 
 **Core Value Proposition:**
 - LLMs often make reasoning errors in a single pass

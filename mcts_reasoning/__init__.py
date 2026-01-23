@@ -5,7 +5,7 @@ A clean implementation of MCTS for systematic reasoning with LLMs.
 Separates Search (MCTS), Generator (LLM), and Evaluator (Judge) concerns.
 """
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 # Core MCTS components
 from .node import Node
