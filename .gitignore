@@ -48,6 +48,7 @@ tests/fixtures/*.json
 !benchmarks/*.json
 !tests/conftest.py
 !mcts_reasoning.egg-info/*.json
+!.zenodo.json
 
 # MkDocs
 site/

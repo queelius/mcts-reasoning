@@ -1,0 +1,39 @@
+{
+  "title": "MCTS-Reasoning: Monte Carlo Tree Search for LLM Reasoning",
+  "description": "A canonical Monte Carlo Tree Search implementation for LLM-based step-by-step reasoning. Explores multiple reasoning paths to find high-quality solutions using UCB1 exploration-exploitation balance, tree-building rollouts, and optional MCP tool integration.",
+  "creators": [
+    {
+      "name": "Towell, Alex",
+      "affiliation": "Independent Researcher",
+      "orcid": "0000-0002-7351-8183"
+    }
+  ],
+  "keywords": [
+    "monte-carlo-tree-search",
+    "mcts",
+    "large-language-models",
+    "llm",
+    "reasoning",
+    "artificial-intelligence",
+    "chain-of-thought",
+    "tree-search",
+    "model-context-protocol",
+    "tool-use"
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "programming_language": "Python",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/queelius/mcts-reasoning",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ],
+  "references": [
+    "Kocsis, L., & Szepesvári, C. (2006). Bandit based monte-carlo planning. ECML.",
+    "Wei, J., et al. (2022). Chain-of-Thought Prompting Elicits Reasoning in Large Language Models. NeurIPS.",
+    "Yao, S., et al. (2023). Tree of Thoughts: Deliberate Problem Solving with Large Language Models."
+  ]
+}

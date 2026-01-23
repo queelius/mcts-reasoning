@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+title: "MCTS-Reasoning: Monte Carlo Tree Search for LLM Reasoning"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: Towell
+    given-names: Alex
+    email: lex@metafunctor.com
+    orcid: "https://orcid.org/0000-0002-7351-8183"
+repository-code: "https://github.com/queelius/mcts-reasoning"
+url: "https://github.com/queelius/mcts-reasoning"
+abstract: >-
+  A canonical Monte Carlo Tree Search implementation for LLM-based
+  step-by-step reasoning. MCTS-Reasoning explores multiple reasoning
+  paths to find high-quality solutions, using UCB1 for exploration-exploitation
+  balance and tree-building rollouts for comprehensive search.
+keywords:
+  - monte-carlo-tree-search
+  - mcts
+  - llm
+  - large-language-models
+  - reasoning
+  - artificial-intelligence
+  - machine-learning
+  - chain-of-thought
+  - tree-search
+  - mcp
+  - tool-use
+license: MIT
+version: 0.5.0
+date-released: "2025-01-22"

@@ -333,11 +333,25 @@ MIT License
 
 ## Citation
 
+If you use MCTS-Reasoning in your research, please cite it:
+
 ```bibtex
-@software{mcts_reasoning,
-  title = {MCTS-Reasoning: Monte Carlo Tree Search for LLM Reasoning},
-  author = {Towell, Alex},
-  year = {2024},
-  url = {https://github.com/queelius/mcts-reasoning}
+@software{towell2025mcts,
+  author       = {Towell, Alex},
+  title        = {{MCTS-Reasoning}: {Monte Carlo Tree Search} for {LLM} Reasoning},
+  year         = {2025},
+  version      = {0.5.0},
+  publisher    = {GitHub},
+  url          = {https://github.com/queelius/mcts-reasoning}
 }
 ```
+
+This repository includes a `CITATION.cff` file for automatic citation in GitHub and other platforms.
+
+## Acknowledgments
+
+This work builds on foundational research in Monte Carlo Tree Search and LLM reasoning:
+
+- Kocsis & Szepesvári (2006) - UCB1 for tree search
+- Wei et al. (2022) - Chain-of-Thought prompting
+- Yao et al. (2023) - Tree of Thoughts
