@@ -29,7 +29,7 @@
 \newcommand{\ucb}{\text{UCB1}}
 
 \title{MCTS-Reasoning: A Canonical Specification of\\Monte Carlo Tree Search for LLM Reasoning}
-\author{Technical Report v0.4}
+\author{Technical Report v0.5.1}
 \date{\today}
 
 \begin{document}
@@ -556,7 +556,8 @@ The canonical implementation uses only the \textsc{Continue} action. Extended ac
 
     \item \textbf{Verify}: Ask the LLM to verify the current reasoning before continuing
 
-    \item \textbf{ToolCall}: Invoke external tools (calculator, search, code execution)
+    \item \textbf{ToolCall}: Invoke external tools via Model Context Protocol (MCP).
+          \emph{Implemented in v0.5 via \texttt{ToolAwareGenerator} and \texttt{ToolContext}.}
 
     \item \textbf{Backtrack}: Explicitly mark a reasoning path as unpromising
 \end{itemize}
@@ -597,6 +598,86 @@ Such extensions are outside the scope of this tree-based MCTS specification but 
 \begin{remark}[Natural Decomposition within MCTS]
 Note that the LLM within a \textsc{Continue} action can naturally perform soft versions of these operations: reasoning about subproblems sequentially within a single path, self-critiquing before continuing, or reconsidering earlier steps. The tree structure captures \emph{alternative} reasoning paths, while complex reasoning \emph{within} a path remains expressible through the continuation mechanism.
 \end{remark}
+
+%------------------------------------------------------------------------------
+\subsection{MCP Tool Integration (Implemented)}
+\label{subsec:mcp-tools}
+%------------------------------------------------------------------------------
+
+Version 0.5 introduces tool-augmented reasoning via the Model Context Protocol (MCP):
+
+\begin{itemize}
+    \item \textbf{ToolAwareGenerator}: Wraps any Generator with tool support, intercepting tool calls in LLM output and executing them before continuing generation.
+    \item \textbf{ToolContext}: Manages MCP server connections, tool discovery, and execution. Provides a unified interface for tool invocation.
+    \item \textbf{Native Function Calling}: Direct API integration for OpenAI and Anthropic providers, using their native tool-use APIs for improved reliability.
+    \item \textbf{RAG Server}: Built-in MCP server for retrieval-augmented guidance, exposing tools for retrieving similar examples and domain-specific guidance.
+\end{itemize}
+
+Tools are invoked during reasoning steps via XML or JSON format:
+\begin{verbatim}
+<tool_call name="calculator">
+  <expression>15 * 7 + 23</expression>
+</tool_call>
+\end{verbatim}
+Results are injected back into the state, allowing the LLM to continue reasoning with tool outputs.
+
+%------------------------------------------------------------------------------
+\subsection{Sampling and Self-Consistency (Implemented)}
+\label{subsec:sampling}
+%------------------------------------------------------------------------------
+
+Beyond extracting the single best answer, version 0.5 provides path sampling strategies for analyzing the search tree:
+
+\begin{itemize}
+    \item \textbf{Value-based}: Sample paths with highest average values
+    \item \textbf{Visit-based}: Sample most frequently visited paths (robust to noise)
+    \item \textbf{Diverse}: Maximize answer diversity across samples
+    \item \textbf{Top-$k$}: Sample $k$ best paths by specified criterion
+\end{itemize}
+
+Self-consistency voting aggregates across multiple terminal states to improve answer reliability:
+\begin{itemize}
+    \item \textbf{Majority vote}: $\arg\max_a |\{p : \text{answer}(p) = a\}|$ --- simple count of each answer
+    \item \textbf{Weighted vote}: $\arg\max_a \sum_{p : \text{answer}(p) = a} \bar{\val}(p)$ --- answers weighted by path values
+\end{itemize}
+
+The \texttt{PathSampler} class provides these operations:
+\begin{verbatim}
+sampler = PathSampler(result.root)
+paths = sampler.sample(n=5, strategy="diverse")
+answer, confidence = sampler.majority_vote()
+\end{verbatim}
+
+%------------------------------------------------------------------------------
+\subsection{Tree Serialization (Implemented)}
+\label{subsec:serialization}
+%------------------------------------------------------------------------------
+
+Search trees can be serialized to JSON and resumed, enabling:
+\begin{itemize}
+    \item Incremental search (add more simulations to existing tree)
+    \item Tree inspection and debugging
+    \item Checkpointing long-running searches
+    \item Sharing trees between sessions
+\end{itemize}
+
+The operations are:
+\begin{itemize}
+    \item $\textsc{Save}(\tree, \text{path})$: Serialize tree structure, visit counts, values, and terminal states to JSON
+    \item $\textsc{Load}(\text{path}, \generator, \evaluator) \rightarrow \tree$: Restore tree from file, reconnecting to new Generator/Evaluator instances
+    \item $\textsc{ContinueSearch}(K)$: Add $K$ more simulations to the loaded tree
+\end{itemize}
+
+Example usage:
+\begin{verbatim}
+# Save after initial search
+result = mcts.search("What is 2+2?", simulations=50)
+mcts.save("tree.json")
+
+# Later: load and continue
+mcts = MCTS.load("tree.json", generator, evaluator)
+result = mcts.continue_search(simulations=50)  # Now 100 total
+\end{verbatim}
 
 %==============================================================================
 \section{Conclusion}
@@ -650,5 +731,141 @@ Reasoning with language model is planning with world model.
 \textit{arXiv preprint arXiv:2305.14992}.
 
 \end{thebibliography}
+
+%==============================================================================
+\appendix
+\section{Implementation Notes}
+\label{app:implementation}
+%==============================================================================
+
+This appendix provides practical implementation details for the canonical MCTS-Reasoning system.
+
+\subsection{State Lifecycle}
+
+States are accumulated text strings. The transition from initial to terminal state follows this pattern:
+
+\begin{verbatim}
+Initial State (root):
+  "Question: What is 15*7+23?
+   Let me solve this step by step."
+          |
+    [CONTINUE action]
+          v
+Child State:
+  "Question: What is 15*7+23?
+   Let me solve this step by step.
+   Step 1: First, calculate 15*7 = 105"
+          |
+    [CONTINUE action]
+          v
+Terminal State:
+  "Question: What is 15*7+23?
+   ...
+   Step 2: Then add 23: 105 + 23 = 128
+   ANSWER: 128"
+\end{verbatim}
+
+\textbf{Key Properties:}
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Property & Status & Notes \\
+\midrule
+Well-defined & Yes & Strings with clear semantics \\
+Markov & Yes & Generator sees only current state \\
+Traceable & Yes & Parent pointers reconstruct full path \\
+Bounded & No & States grow unboundedly (limitation) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{UCB1 Visualization}
+
+The UCB1 formula balances exploration and exploitation:
+
+\begin{verbatim}
+UCB1 = average_value + c * sqrt(ln(parent_visits) / visits)
+       -------------   ------------------------------------
+       EXPLOITATION              EXPLORATION
+\end{verbatim}
+
+\begin{itemize}
+    \item Unvisited nodes have UCB1 $= +\infty$ (highest priority)
+    \item High-value, low-visit nodes are attractive (explore more)
+    \item High-value, high-visit nodes are reliable (exploit)
+    \item Low-value nodes are deprioritized regardless of visits
+\end{itemize}
+
+Default exploration constant: $c = \sqrt{2} \approx 1.414$. Higher values encourage exploration; lower values favor exploitation.
+
+\subsection{Evaluator Comparison}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Evaluator & Scoring Method & Best For \\
+\midrule
+NumericEvaluator & Compare to ground truth with tolerance & Math problems \\
+GroundTruthEvaluator & Exact/partial string match & Known answers \\
+ProcessEvaluator & Heuristic scoring of reasoning quality & Open-ended \\
+LLMEvaluator & LLM-as-judge (0--1 score) & Subjective quality \\
+CompositeEvaluator & Weighted combination & Multiple criteria \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{NumericEvaluator Scoring:}
+\begin{itemize}
+    \item Exact match (within tolerance): 1.0
+    \item Within 10\% relative error: 0.8
+    \item Within 50\% relative error: 0.5
+    \item Beyond 50\% error: 0.0
+\end{itemize}
+
+\subsection{Code Location Reference}
+
+Primary implementation files in the \texttt{mcts\_reasoning/} package:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Component & File \\
+\midrule
+Node (UCB1, tree structure) & \texttt{node.py} \\
+MCTS (search algorithm) & \texttt{mcts.py} \\
+Generator (LLM continuation) & \texttt{generator.py} \\
+Evaluator (terminal scoring) & \texttt{evaluator.py} \\
+Terminal detection & \texttt{terminal.py} \\
+Actions (Continue, Compress) & \texttt{actions.py} \\
+Path sampling & \texttt{sampling.py} \\
+MCP tool integration & \texttt{tools/} \\
+LLM providers & \texttt{compositional/providers.py} \\
+RAG stores & \texttt{compositional/rag.py} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Debugging Tips}
+
+\textbf{No Terminal States Found:}
+\begin{itemize}
+    \item Increase \texttt{max\_rollout\_depth}
+    \item Check terminal detector configuration
+    \item Verify LLM generates ``ANSWER:'' markers
+\end{itemize}
+
+\textbf{Low Confidence:}
+\begin{itemize}
+    \item Increase simulation count
+    \item Use ProcessEvaluator for reasoning quality assessment
+    \item Check answer consistency with \texttt{PathSampler.consistency\_score()}
+\end{itemize}
+
+\textbf{LLM Provider Issues:}
+\begin{itemize}
+    \item Ollama: Test with \texttt{curl http://localhost:11434/api/tags}
+    \item Check API keys in environment variables
+    \item Use \texttt{MockLLMProvider} for isolated testing
+\end{itemize}
 
 \end{document}

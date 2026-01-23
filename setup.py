@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="mcts-reasoning",
-    version="0.5.0",
+    version="0.5.1",
     author="Alex Towell",
     author_email="lex@metafunctor.com",
     description="Monte Carlo Tree Search for LLM-based reasoning",

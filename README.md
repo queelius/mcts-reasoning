@@ -339,8 +339,8 @@ If you use MCTS-Reasoning in your research, please cite it:
 @software{towell2025mcts,
   author       = {Towell, Alex},
   title        = {{MCTS-Reasoning}: {Monte Carlo Tree Search} for {LLM} Reasoning},
-  year         = {2025},
-  version      = {0.5.0},
+  year         = {2026},
+  version      = {0.5.1},
   publisher    = {GitHub},
   url          = {https://github.com/queelius/mcts-reasoning}
 }
