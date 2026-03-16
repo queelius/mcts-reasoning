@@ -2,10 +2,20 @@
 """
 MCTS-Reasoning CLI: Run Monte Carlo Tree Search reasoning from the command line.
 
+Subcommands:
+    search   -- Run MCTS search on a question
+    explore  -- Run MCTS and show the full reasoning tree
+    bench    -- Run benchmark comparison (baseline vs MCTS)
+
 Usage:
-    mcts-reason "What is 2+2?"
-    mcts-reason "Solve: 15*7+23" --simulations 20 --provider ollama
+    mcts-reason search "What is 2+2?"
+    mcts-reason search "Solve: 15*7+23" --simulations 20 --provider ollama
+    mcts-reason explore "Hard problem" --simulations 30 --json
+    mcts-reason bench --benchmark arithmetic --simulations 10,20
     mcts-reason --help
+
+Backward compatibility:
+    mcts-reason "What is 2+2?"   (treated as 'search')
 
 Environment variables:
     LLM_PROVIDER: Default provider (openai, anthropic, ollama, mock)
@@ -14,479 +24,282 @@ Environment variables:
     ANTHROPIC_API_KEY: Anthropic API key
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import sys
 
-from .mcts import MCTS, SearchResult
-from .generator import LLMGenerator
-from .evaluator import (
-    NumericEvaluator,
-    ProcessEvaluator,
-)
-from .sampling import PathSampler
-from .compositional.providers import get_llm, MockLLMProvider
-
 
 def create_parser() -> argparse.ArgumentParser:
-    """Create argument parser."""
+    """Create the argument parser with search/explore/bench subcommands."""
     parser = argparse.ArgumentParser(
         prog="mcts-reason",
-        description="Run MCTS-based reasoning on a question",
+        description="MCTS for LLM reasoning",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  mcts-reason "What is 2+2?"
-  mcts-reason "Solve: 15*7+23" --answer 128
-  mcts-reason "Explain photosynthesis" --simulations 20
-
-  # Specify provider and model
-  mcts-reason "Complex problem" --provider ollama --model llama3.2
-  mcts-reason "Question" --provider openai --model gpt-4
-
-  # Remote Ollama server
-  mcts-reason "Question" --base-url http://192.168.0.225:11434 --model llama3.2
-
-  # Save/load search tree
-  mcts-reason "Hard problem" --simulations 50 --save tree.json
-  mcts-reason "Hard problem" --load tree.json --simulations 50
-
-  # Self-consistency voting
-  mcts-reason "What is 5*6?" --simulations 20 --vote majority
-        """,
+        epilog=(
+            "Examples:\n"
+            '  mcts-reason search "What is 2+2?"\n'
+            '  mcts-reason search "15*7+23" --simulations 20 --provider ollama\n'
+            '  mcts-reason explore "Hard problem" --simulations 30 --json\n'
+            "  mcts-reason bench --benchmark arithmetic --simulations 10,20\n"
+        ),
     )
 
-    parser.add_argument(
-        "question",
-        nargs="?",
-        help="Question to solve (or use --question)",
-    )
+    subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
-    parser.add_argument(
-        "-q",
-        "--question",
-        dest="question_flag",
-        help="Question to solve (alternative to positional arg)",
+    # -----------------------------------------------------------------
+    # search
+    # -----------------------------------------------------------------
+    search_p = subparsers.add_parser(
+        "search",
+        help="Run MCTS search on a question",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-
-    # Provider settings
-    parser.add_argument(
-        "-p",
+    search_p.add_argument("question", help="The question to solve")
+    search_p.add_argument(
         "--provider",
-        choices=["openai", "anthropic", "ollama", "mock"],
         default=None,
-        help="LLM provider (default: auto-detect)",
+        help="LLM provider (openai, anthropic, ollama, mock; default: auto-detect)",
     )
-
-    parser.add_argument(
-        "-m",
-        "--model",
-        default=None,
-        help="Model name (provider-specific)",
+    search_p.add_argument("--model", default=None, help="Model name")
+    search_p.add_argument(
+        "--simulations", type=int, default=10, help="Number of simulations (default: 10)"
     )
-
-    parser.add_argument(
-        "--base-url",
-        default=None,
-        help="Provider base URL (overrides env var). For Ollama or OpenAI-compatible APIs",
-    )
-
-    parser.add_argument(
-        "--temperature",
-        type=float,
-        default=0.7,
-        help="Sampling temperature (default: 0.7)",
-    )
-
-    # Search settings
-    parser.add_argument(
-        "-n",
-        "--simulations",
-        type=int,
-        default=10,
-        help="Number of MCTS simulations (default: 10)",
-    )
-
-    parser.add_argument(
-        "-d",
-        "--max-depth",
-        type=int,
-        default=5,
-        help="Maximum rollout depth (default: 5)",
-    )
-
-    parser.add_argument(
-        "-b",
-        "--branching",
-        type=int,
-        default=3,
-        help="Maximum children per node (default: 3)",
-    )
-
-    parser.add_argument(
-        "-c",
+    search_p.add_argument(
         "--exploration",
         type=float,
         default=1.414,
         help="UCB1 exploration constant (default: 1.414)",
     )
-
-    # Evaluation settings
-    parser.add_argument(
-        "-a",
-        "--answer",
-        type=float,
+    search_p.add_argument("--json", action="store_true", help="JSON output")
+    search_p.add_argument(
+        "--base-url",
         default=None,
-        help="Ground truth numeric answer (for evaluation)",
+        help="Provider base URL (for Ollama or OpenAI-compatible APIs)",
+    )
+    search_p.add_argument(
+        "--save", default=None, metavar="FILE", help="Save search state to file"
     )
 
-    # Output settings
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Verbose output (show tree structure)",
+    # -----------------------------------------------------------------
+    # explore
+    # -----------------------------------------------------------------
+    explore_p = subparsers.add_parser(
+        "explore",
+        help="Run MCTS and show the full reasoning tree",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    explore_p.add_argument("question", help="The question to explore")
+    explore_p.add_argument("--provider", default=None)
+    explore_p.add_argument("--model", default=None)
+    explore_p.add_argument("--simulations", type=int, default=10)
+    explore_p.add_argument("--json", action="store_true", help="JSON output (default)")
+    explore_p.add_argument("--base-url", default=None)
 
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output results as JSON",
+    # -----------------------------------------------------------------
+    # bench
+    # -----------------------------------------------------------------
+    bench_p = subparsers.add_parser(
+        "bench",
+        help="Run benchmark comparison (baseline vs MCTS)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-
-    parser.add_argument(
-        "--sample",
-        type=int,
-        default=0,
-        metavar="N",
-        help="Sample N paths from tree",
+    bench_p.add_argument(
+        "--benchmark",
+        default="knights",
+        help="Benchmark name (knights, arithmetic; default: knights)",
     )
-
-    parser.add_argument(
-        "--sample-strategy",
-        choices=["value", "visits", "diverse", "topk"],
-        default="diverse",
-        help="Sampling strategy (default: diverse)",
+    bench_p.add_argument("--provider", default=None)
+    bench_p.add_argument("--model", default=None)
+    bench_p.add_argument(
+        "--simulations",
+        default="10",
+        help="Comma-separated simulation counts (default: 10)",
     )
-
-    parser.add_argument(
-        "--consistency",
-        action="store_true",
-        help="Show answer consistency score",
+    bench_p.add_argument(
+        "--format",
+        choices=["table", "json", "csv"],
+        default="table",
+        help="Output format (default: table)",
     )
-
-    # Serialization options
-    parser.add_argument(
-        "--save",
-        metavar="FILE",
-        help="Save search tree to file after search",
-    )
-
-    parser.add_argument(
-        "--load",
-        metavar="FILE",
-        help="Load search tree from file and continue search",
-    )
-
-    parser.add_argument(
-        "--vote",
-        choices=["majority", "weighted"],
+    bench_p.add_argument(
+        "--output",
         default=None,
-        help="Use self-consistency voting instead of best answer",
+        metavar="FILE",
+        help="Output file (required for csv format)",
     )
+    bench_p.add_argument("--base-url", default=None)
 
     return parser
 
 
-def get_provider(args):
-    """Get LLM provider based on args."""
-    try:
-        kwargs = {}
-        if args.model:
-            kwargs["model"] = args.model
-        if args.base_url:
-            kwargs["base_url"] = args.base_url
-
-        if args.provider:
-            llm = get_llm(args.provider, **kwargs)
-        else:
-            llm = get_llm(**kwargs)
-
-        # Check availability
-        if not llm.is_available():
-            _print_mock_warning(
-                f"{llm.get_provider_name()} not available",
-                "Check your API keys or server connection",
-            )
-            return MockLLMProvider()
-        return llm
-
-    except Exception as e:
-        _print_mock_warning(
-            f"Could not initialize provider: {e}", "Check your configuration"
-        )
-        return MockLLMProvider()
+# ---------------------------------------------------------------------------
+# Subcommand handlers
+# ---------------------------------------------------------------------------
 
 
-def _print_mock_warning(reason: str, suggestion: str):
-    """Print a prominent warning about mock provider fallback."""
-    print("", file=sys.stderr)
-    print("=" * 60, file=sys.stderr)
-    print("WARNING: USING MOCK PROVIDER - RESULTS ARE NOT REAL", file=sys.stderr)
-    print("=" * 60, file=sys.stderr)
-    print(f"Reason: {reason}", file=sys.stderr)
-    print(f"Suggestion: {suggestion}", file=sys.stderr)
-    print("", file=sys.stderr)
-    print("The mock provider returns predetermined responses.", file=sys.stderr)
-    print("To use a real LLM, set environment variables:", file=sys.stderr)
-    print("  - OPENAI_API_KEY for OpenAI", file=sys.stderr)
-    print("  - ANTHROPIC_API_KEY for Anthropic", file=sys.stderr)
-    print("  - Or start Ollama: ollama serve", file=sys.stderr)
-    print("=" * 60, file=sys.stderr)
-    print("", file=sys.stderr)
+def _handle_search(args) -> None:
+    from .server.tools import mcts_search_impl
 
-
-def get_evaluator(args, llm):
-    """Get evaluator based on args."""
-    if args.answer is not None:
-        # Use numeric evaluator with ground truth
-        return ProcessEvaluator(
-            answer_evaluator=NumericEvaluator(
-                ground_truth=args.answer,
-                rel_tol=0.01,
-            ),
-            answer_weight=0.7,
-            process_weight=0.3,
-        )
-    else:
-        # Use process evaluator only
-        return ProcessEvaluator()
-
-
-def run_search(args, question: str) -> dict:
-    """Run MCTS search and return results dict."""
-    # Get provider
-    llm = get_provider(args)
-
-    # Create generator and evaluator
-    generator = LLMGenerator(
-        provider=llm,
-        temperature=args.temperature,
-        max_tokens=500,
+    provider_name = args.provider or "auto"
+    result = mcts_search_impl(
+        args.question,
+        provider_name,
+        args.model,
+        args.simulations,
+        args.exploration,
     )
-    evaluator = get_evaluator(args, llm)
 
-    # Load existing tree or create new MCTS
-    if args.load:
-        try:
-            mcts = MCTS.load(args.load, generator, evaluator)
-            print(f"Loaded tree from {args.load}", file=sys.stderr)
-            # Continue search with additional simulations
-            result = mcts.continue_search(simulations=args.simulations)
-        except FileNotFoundError:
-            print(f"Error: File not found: {args.load}", file=sys.stderr)
-            sys.exit(1)
-        except Exception as e:
-            print(f"Error loading tree: {e}", file=sys.stderr)
-            sys.exit(1)
+    if args.json or "error" in result:
+        print(json.dumps(result, indent=2))
     else:
-        # Create new MCTS
-        mcts = MCTS(
-            generator=generator,
-            evaluator=evaluator,
-            exploration_constant=args.exploration,
-            max_children_per_node=args.branching,
-            max_rollout_depth=args.max_depth,
-        )
-
-        # Run search
-        result = mcts.search(
-            question=question,
-            simulations=args.simulations,
-        )
-
-    # Save tree if requested
-    if args.save:
-        mcts.save(args.save)
-        print(f"Saved tree to {args.save}", file=sys.stderr)
-
-    # Use self-consistency voting if requested
-    if args.vote:
-        sampler = PathSampler(result.root)
-        if args.vote == "majority":
-            vote_answer, vote_confidence = sampler.majority_vote()
-        else:  # weighted
-            vote_answer, vote_confidence = sampler.weighted_vote()
-        best_answer = vote_answer
-        confidence = vote_confidence
-    else:
-        best_answer = result.best_answer
-        confidence = result.confidence
-
-    # Build results dict
-    output = {
-        "question": question,
-        "answer": best_answer,
-        "confidence": confidence,
-        "simulations": result.simulations,
-        "terminal_states": len(result.terminal_states),
-        "stats": result.stats,
-        "provider": llm.get_provider_name(),
-    }
-
-    # Add voting info if used
-    if args.vote:
-        output["voting_method"] = args.vote
-        output["mcts_best_answer"] = result.best_answer
-
-    # Add ground truth comparison if provided
-    if args.answer is not None:
-        output["ground_truth"] = args.answer
-        try:
-            predicted = float(result.best_answer.replace("$", "").replace(",", ""))
-            output["correct"] = abs(predicted - args.answer) < 0.01 * abs(args.answer)
-        except (ValueError, TypeError, AttributeError):
-            output["correct"] = False
-
-    # Add sampling results if requested
-    if args.sample > 0:
-        sampler = PathSampler(result.root)
-        paths = sampler.sample(n=args.sample, strategy=args.sample_strategy)
-        output["sample_strategy"] = args.sample_strategy
-        output["sampled_paths"] = [
-            {
-                "answer": p.answer,
-                "value": p.value,
-                "steps": p.steps,
-            }
-            for p in paths
-        ]
-
-    # Add consistency if requested
-    if args.consistency:
-        sampler = PathSampler(result.root)
-        output["consistency"] = sampler.consistency_score()
-        output["answer_distribution"] = {
-            str(k): {"count": v["count"], "avg_value": v["avg_value"]}
-            for k, v in sampler.get_answer_distribution().items()
-        }
-
-    return output, result
+        if result.get("answer"):
+            print(f"Answer: {result['answer']}")
+            print(f"Confidence: {result.get('confidence', 0):.1%}")
+            print(f"Simulations: {result['simulations']}")
+            print(f"Terminal states: {result['terminal_states']}")
+            print(f"Tree nodes: {result['tree_nodes']}")
+        else:
+            print("No answer found.")
+            print(json.dumps(result, indent=2))
 
 
-def print_results(output: dict, result: SearchResult, args):
-    """Print results in human-readable format."""
-    print("=" * 60)
-    print("MCTS-Reasoning Results")
-    print("=" * 60)
-    print(f"Question: {output['question']}")
-    print(f"Provider: {output['provider']}")
-    print()
-    print(f"Best Answer: {output['answer']}")
-    print(f"Confidence: {output['confidence']:.1%}")
-    if output.get("voting_method"):
-        print(f"Voting Method: {output['voting_method']}")
-        if output.get("mcts_best_answer") != output["answer"]:
-            print(f"MCTS Best Answer: {output['mcts_best_answer']}")
-    print(f"Simulations: {output['simulations']}")
-    print(f"Terminal States: {output['terminal_states']}")
+def _handle_explore(args) -> None:
+    from .server.tools import mcts_explore_impl
 
-    if "ground_truth" in output:
-        status = "CORRECT" if output.get("correct") else "INCORRECT"
-        print(f"Ground Truth: {output['ground_truth']} ({status})")
-
-    if "consistency" in output:
-        print(f"Consistency: {output['consistency']:.1%}")
-
-    # Tree stats
-    if args.verbose:
-        print()
-        print("Tree Statistics:")
-        stats = output["stats"]
-        print(f"  Total nodes: {stats['total_nodes']}")
-        print(f"  Max depth: {stats['max_depth']}")
-
-    # Answer distribution
-    if args.consistency and "answer_distribution" in output:
-        print()
-        print("Answer Distribution:")
-        for answer, info in output["answer_distribution"].items():
-            print(
-                f"  {answer}: {info['count']} occurrences (avg value: {info['avg_value']:.2f})"
-            )
-
-    # Sampled paths
-    if args.sample > 0 and "sampled_paths" in output:
-        print()
-        strategy = output.get("sample_strategy", "diverse")
-        print(f"Sampled Paths ({len(output['sampled_paths'])} {strategy}):")
-        for i, path in enumerate(output["sampled_paths"], 1):
-            print(
-                f"\n  Path {i} (answer: {path['answer']}, value: {path['value']:.2f}):"
-            )
-            for j, step in enumerate(path["steps"][:3], 1):
-                step_preview = step[:100].replace("\n", " ")
-                print(f"    Step {j}: {step_preview}...")
-
-    # Verbose tree visualization
-    if args.verbose:
-        print()
-        print("Tree Structure (top 3 levels):")
-        print("-" * 40)
-        _print_tree(result.root, max_depth=3)
+    provider_name = args.provider or "auto"
+    result = mcts_explore_impl(
+        args.question,
+        provider_name,
+        args.model,
+        args.simulations,
+    )
+    print(json.dumps(result, indent=2))
 
 
-def _print_tree(node, depth=0, max_depth=3, prefix=""):
-    """Print tree structure."""
-    if depth > max_depth:
-        return
+def _handle_bench(args) -> None:
+    from .server.tools import mcts_bench_impl
 
-    visits = node.visits
-    value = node.average_value
-    terminal = "T" if node.is_terminal else ""
-    answer = f" [{node.answer}]" if node.answer else ""
+    provider_name = args.provider or "auto"
+    sim_list = [int(s.strip()) for s in args.simulations.split(",")]
+    result = mcts_bench_impl(args.benchmark, provider_name, args.model, sim_list)
 
-    if depth == 0:
-        print(f"Root (visits={visits}, value={value:.2f})")
-    else:
-        state_preview = node.state[-40:].replace("\n", " ")
-        print(
-            f"{prefix}├── ...{state_preview} (v={visits}, val={value:.2f}){terminal}{answer}"
-        )
-
-    for i, child in enumerate(node.children):
-        is_last = i == len(node.children) - 1
-        child_prefix = prefix + ("    " if is_last else "│   ")
-        _print_tree(child, depth + 1, max_depth, child_prefix)
-
-
-def main():
-    """Main entry point."""
-    parser = create_parser()
-    args = parser.parse_args()
-
-    # Get question from args
-    question = args.question or args.question_flag
-    if not question:
-        parser.print_help()
-        print("\nError: Question is required", file=sys.stderr)
+    if "error" in result:
+        print(json.dumps(result, indent=2), file=sys.stderr)
         sys.exit(1)
 
-    # Run search
-    output, result = run_search(args, question)
+    fmt = args.format
 
-    # Output results
-    if args.json:
-        # JSON output - exclude non-serializable fields
-        json_output = {k: v for k, v in output.items() if k != "stats"}
-        json_output["stats"] = {
-            k: v
-            for k, v in output["stats"].items()
-            if k not in ("best_answer",)  # Already in output
-        }
-        print(json.dumps(json_output, indent=2))
+    if fmt == "json":
+        print(json.dumps(result, indent=2))
+
+    elif fmt == "csv":
+        if not args.output:
+            print("Error: --output is required for csv format", file=sys.stderr)
+            sys.exit(1)
+        _write_bench_csv(result, args.output)
+        print(f"Results written to {args.output}")
+
     else:
-        print_results(output, result, args)
+        # table (default)
+        _print_bench_table(result)
+
+
+def _print_bench_table(data: dict) -> None:
+    """Render a plain-text comparison table from a bench report dict."""
+    print(f"Benchmark: {data['benchmark_name']}")
+    sep = "-" * 65
+    print(sep)
+    row = "{:<30} {:>5} {:>10} {:>11} {:>13}"
+    print(row.format("Solver", "N", "Accuracy", "Avg Score", "Avg Time (s)"))
+    print(sep)
+    for solver_name, solver_data in data.get("solvers", {}).items():
+        n = solver_data["n"]
+        acc = solver_data["accuracy"]
+        results = solver_data.get("results", [])
+        avg_score = sum(r["score"] for r in results) / n if n else 0.0
+        avg_time = sum(r["time_seconds"] for r in results) / n if n else 0.0
+        print(
+            row.format(
+                solver_name[:30],
+                n,
+                f"{acc:.1%}",
+                f"{avg_score:.3f}",
+                f"{avg_time:.3f}",
+            )
+        )
+    print(sep)
+
+
+def _write_bench_csv(data: dict, path: str) -> None:
+    """Write per-problem benchmark results to a CSV file."""
+    import csv
+
+    fieldnames = [
+        "solver",
+        "question",
+        "ground_truth",
+        "domain",
+        "difficulty",
+        "answer",
+        "correct",
+        "score",
+        "time_seconds",
+    ]
+    with open(path, "w", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
+        writer.writeheader()
+        for solver_name, solver_data in data.get("solvers", {}).items():
+            for result in solver_data.get("results", []):
+                writer.writerow(
+                    {
+                        "solver": solver_name,
+                        "question": result.get("question", ""),
+                        "ground_truth": result.get("ground_truth", ""),
+                        "domain": result.get("domain", ""),
+                        "difficulty": result.get("difficulty", ""),
+                        "answer": result.get("answer", ""),
+                        "correct": result.get("correct", ""),
+                        "score": result.get("score", ""),
+                        "time_seconds": result.get("time_seconds", ""),
+                    }
+                )
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+
+def main() -> None:
+    """Main entry point for the mcts-reason CLI."""
+    parser = create_parser()
+
+    # Backward compat: if the first positional arg is not a known subcommand,
+    # treat the invocation as ``mcts-reason search <question>``.
+    # We must do this *before* parse_args() because argparse will reject
+    # unknown subcommand names.
+    known_commands = {"search", "explore", "bench", "--help", "-h"}
+    if len(sys.argv) > 1 and sys.argv[1] not in known_commands:
+        sys.argv.insert(1, "search")
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        return
+
+    handlers = {
+        "search": _handle_search,
+        "explore": _handle_explore,
+        "bench": _handle_bench,
+    }
+    handler = handlers.get(args.command)
+    if handler:
+        handler(args)
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":
