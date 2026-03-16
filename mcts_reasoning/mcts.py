@@ -30,6 +30,7 @@ from .types import SearchState, State
 # Legacy SearchResult -- kept for backward compatibility with test_v2 etc.
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class SearchResult:
     """Result of MCTS search (legacy wrapper around SearchState)."""
@@ -132,7 +133,9 @@ class MCTS:
     # Simulation loop
     # ------------------------------------------------------------------
 
-    def _run_simulations(self, search_state: SearchState, simulations: int) -> SearchState:
+    def _run_simulations(
+        self, search_state: SearchState, simulations: int
+    ) -> SearchState:
         base = search_state.simulations_run
         for sim in range(simulations):
             self._simulate(search_state, base + sim + 1)
@@ -141,7 +144,9 @@ class MCTS:
 
     def _simulate(self, state: SearchState, sim_number: int) -> None:
         # 1. SELECT: UCB1 traversal to expandable leaf
-        node = self._select(state.root, state.exploration_constant, state.max_children_per_node)
+        node = self._select(
+            state.root, state.exploration_constant, state.max_children_per_node
+        )
         self._fire_callback(sim_number, "select", node, state)
 
         # 2. EXPAND: generate continuation, add child
@@ -153,21 +158,27 @@ class MCTS:
 
         # 3. ROLLOUT: keep generating until terminal or max depth
         rollout_node = self._rollout(
-            state.question, node,
-            state.max_children_per_node, state.max_rollout_depth,
+            state.question,
+            node,
+            state.max_children_per_node,
+            state.max_rollout_depth,
         )
         self._fire_callback(sim_number, "rollout", rollout_node, state)
 
         # 4. BACKPROP: evaluate if terminal, propagate score
         if rollout_node.is_terminal and rollout_node.answer:
             evaluation = self.evaluator.evaluate(
-                state.question, str(rollout_node.state), rollout_node.answer,
+                state.question,
+                str(rollout_node.state),
+                rollout_node.answer,
             )
-            state.terminal_states.append({
-                "answer": rollout_node.answer,
-                "score": evaluation.score,
-                "state": str(rollout_node.state)[:200],
-            })
+            state.terminal_states.append(
+                {
+                    "answer": rollout_node.answer,
+                    "score": evaluation.score,
+                    "state": str(rollout_node.state)[:200],
+                }
+            )
             self._backpropagate(rollout_node, evaluation.score)
         else:
             self._backpropagate(rollout_node, 0.0)
@@ -216,7 +227,11 @@ class MCTS:
         return child
 
     def _rollout(
-        self, question: str, node: Node, max_children: int, max_depth: int,
+        self,
+        question: str,
+        node: Node,
+        max_children: int,
+        max_depth: int,
     ) -> Node:
         """Tree-building rollout: generate until terminal or *max_depth* (iterative)."""
         current = node
@@ -256,7 +271,11 @@ class MCTS:
             current = current.parent
 
     def _fire_callback(
-        self, sim_number: int, phase: str, node: Node, state: SearchState,
+        self,
+        sim_number: int,
+        phase: str,
+        node: Node,
+        state: SearchState,
     ) -> None:
         if self.on_simulation is not None:
             self.on_simulation(sim_number, phase, node, state)

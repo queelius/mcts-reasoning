@@ -98,9 +98,7 @@ class ValueSampling(SamplingStrategy):
 
     def sample(self, root: Node, n: int) -> list[SampledPath]:
         terminals = _find_terminals(root)
-        sorted_nodes = sorted(
-            terminals, key=lambda nd: nd.average_value, reverse=True
-        )
+        sorted_nodes = sorted(terminals, key=lambda nd: nd.average_value, reverse=True)
         return [_node_to_sampled_path(nd) for nd in sorted_nodes[:n]]
 
 
@@ -109,9 +107,7 @@ class VisitSampling(SamplingStrategy):
 
     def sample(self, root: Node, n: int) -> list[SampledPath]:
         terminals = _find_terminals(root)
-        sorted_nodes = sorted(
-            terminals, key=lambda nd: nd.visits, reverse=True
-        )
+        sorted_nodes = sorted(terminals, key=lambda nd: nd.visits, reverse=True)
         return [_node_to_sampled_path(nd) for nd in sorted_nodes[:n]]
 
 
@@ -120,9 +116,7 @@ class TopKSampling(SamplingStrategy):
 
     def sample(self, root: Node, n: int) -> list[SampledPath]:
         terminals = _find_terminals(root)
-        sorted_nodes = sorted(
-            terminals, key=lambda nd: nd.average_value, reverse=True
-        )
+        sorted_nodes = sorted(terminals, key=lambda nd: nd.average_value, reverse=True)
         return [_node_to_sampled_path(nd) for nd in sorted_nodes[:n]]
 
 
@@ -279,7 +273,9 @@ class PathSampler:
         """
         resolved = _resolve_strategy(strategy) if strategy else self.strategy
 
-        if include_non_terminal and isinstance(resolved, (ValueSampling, VisitSampling)):
+        if include_non_terminal and isinstance(
+            resolved, (ValueSampling, VisitSampling)
+        ):
             return self._sample_with_non_terminal(n, resolved)
 
         return resolved.sample(self.root, n)

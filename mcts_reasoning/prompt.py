@@ -174,9 +174,7 @@ class FewShotPrompt(PromptStrategy):
             solution_text = (
                 ex.reasoning + "\n" + ex.solution if ex.reasoning else ex.solution
             )
-            example_messages.append(
-                Message(role="assistant", content=solution_text)
-            )
+            example_messages.append(Message(role="assistant", content=solution_text))
 
         return example_messages + base_messages
 

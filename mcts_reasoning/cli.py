@@ -64,7 +64,10 @@ def create_parser() -> argparse.ArgumentParser:
     )
     search_p.add_argument("--model", default=None, help="Model name")
     search_p.add_argument(
-        "--simulations", type=int, default=10, help="Number of simulations (default: 10)"
+        "--simulations",
+        type=int,
+        default=10,
+        help="Number of simulations (default: 10)",
     )
     search_p.add_argument(
         "--exploration",

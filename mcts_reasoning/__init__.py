@@ -1,149 +1,102 @@
-"""
-MCTS-Reasoning: Monte Carlo Tree Search for LLM-based reasoning.
+"""Composable Monte Carlo Tree Search for LLM reasoning."""
 
-A clean implementation of MCTS for systematic reasoning with LLMs.
-Separates Search (MCTS), Generator (LLM), and Evaluator (Judge) concerns.
-"""
+__version__ = "0.6.0"
 
-__version__ = "0.6.0-dev"
-
-# Core MCTS components
+from .types import (
+    Message,
+    State,
+    extend_state,
+    SearchState,
+    Continuation,
+    Evaluation,
+    TerminalCheck,
+    SampledPath,
+    ConsensusResult,
+)
 from .node import Node
-from .mcts import MCTS, SearchResult
-
-# Terminal detection
+from .mcts import MCTS
+from .generator import Generator, LLMGenerator
+from .evaluator import (
+    Evaluator,
+    GroundTruthEvaluator,
+    NumericEvaluator,
+    LLMEvaluator,
+    ProcessEvaluator,
+    CompositeEvaluator,
+)
 from .terminal import (
-    TerminalDetector,
     MarkerTerminalDetector,
     BoxedTerminalDetector,
     MultiMarkerTerminalDetector,
 )
-
-# Generator interface and implementations
-from .generator import (
-    Generator,
-    LLMGenerator,
-    MockGenerator,
-    ANSWER_MARKER,
-)
-
-# Evaluator interface and implementations
-from .evaluator import (
-    Evaluator,
-    LLMEvaluator,
-    MockEvaluator,
-    GroundTruthEvaluator,
-    NumericEvaluator,
-    ProcessEvaluator,
-    CompositeEvaluator,
-)
-
-# Prompt strategies
 from .prompt import (
     PromptStrategy,
     StepByStepPrompt,
     FewShotPrompt,
-    Example,
     ExampleSource,
+    Example,
     StaticExampleSource,
 )
-
-# Sampling strategies
 from .sampling import (
-    PathSampler,
     SamplingStrategy,
     ValueSampling,
     VisitSampling,
     DiverseSampling,
     TopKSampling,
+    PathSampler,
 )
-
-# Consensus strategies
-from .consensus import (
-    ConsensusStrategy,
-    MajorityVote,
-    WeightedVote,
-)
-
-# Providers
-from .providers import (
-    LLMProvider,
-    OpenAIProvider,
-    AnthropicProvider,
-    OllamaProvider,
-    detect_provider,
-    get_provider,
-)
-
-# Core types
-from .types import (
-    State,
-    Message,
-    Continuation,
-    Evaluation,
-    TerminalCheck,
-    SampledPath,
-    SearchState,
-    ConsensusResult,
-    extend_state,
-)
+from .consensus import ConsensusStrategy, MajorityVote, WeightedVote
+from .providers import get_provider, detect_provider
 
 __all__ = [
+    # Version
+    "__version__",
+    # Types
+    "Message",
+    "State",
+    "extend_state",
+    "SearchState",
+    "Continuation",
+    "Evaluation",
+    "TerminalCheck",
+    "SampledPath",
+    "ConsensusResult",
     # Core MCTS
     "Node",
     "MCTS",
-    "SearchResult",
-    # Terminal Detection
-    "TerminalDetector",
-    "TerminalCheck",
-    "MarkerTerminalDetector",
-    "BoxedTerminalDetector",
-    "MultiMarkerTerminalDetector",
     # Generator
     "Generator",
     "LLMGenerator",
-    "MockGenerator",
-    "ANSWER_MARKER",
     # Evaluator
     "Evaluator",
-    "LLMEvaluator",
-    "MockEvaluator",
     "GroundTruthEvaluator",
     "NumericEvaluator",
+    "LLMEvaluator",
     "ProcessEvaluator",
     "CompositeEvaluator",
-    "Evaluation",
+    # Terminal Detection
+    "MarkerTerminalDetector",
+    "BoxedTerminalDetector",
+    "MultiMarkerTerminalDetector",
     # Prompt
     "PromptStrategy",
     "StepByStepPrompt",
     "FewShotPrompt",
-    "Example",
     "ExampleSource",
+    "Example",
     "StaticExampleSource",
     # Sampling
-    "PathSampler",
     "SamplingStrategy",
     "ValueSampling",
     "VisitSampling",
     "DiverseSampling",
     "TopKSampling",
+    "PathSampler",
     # Consensus
     "ConsensusStrategy",
     "MajorityVote",
     "WeightedVote",
     # Providers
-    "LLMProvider",
-    "OpenAIProvider",
-    "AnthropicProvider",
-    "OllamaProvider",
-    "detect_provider",
     "get_provider",
-    # Types
-    "State",
-    "Message",
-    "Continuation",
-    "SampledPath",
-    "SearchState",
-    "ConsensusResult",
-    "extend_state",
+    "detect_provider",
 ]

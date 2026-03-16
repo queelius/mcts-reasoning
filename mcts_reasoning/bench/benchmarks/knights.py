@@ -48,20 +48,14 @@ _PROBLEMS: list[Problem] = [
         metadata={"verified": True},
     ),
     Problem(
-        question=(
-            "A says: 'Both of us are knaves.' "
-            "What are A and B?"
-        ),
+        question=("A says: 'Both of us are knaves.' " "What are A and B?"),
         ground_truth="A is a knave, B is a knight",
         domain="logic",
         difficulty="easy",
         metadata={"verified": True},
     ),
     Problem(
-        question=(
-            "A says: 'At least one of us is a knave.' "
-            "What are A and B?"
-        ),
+        question=("A says: 'At least one of us is a knave.' " "What are A and B?"),
         ground_truth="A is a knight, B is a knave",
         domain="logic",
         difficulty="easy",

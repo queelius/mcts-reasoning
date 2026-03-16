@@ -37,6 +37,7 @@ class ArithmeticChains(Benchmark):
 # triple.  Ground truth is pre-computed to avoid any code-execution concerns.
 # ---------------------------------------------------------------------------
 
+
 def _p(description: str, ground_truth: int, difficulty: str) -> Problem:
     """Convenience constructor for an arithmetic Problem."""
     return Problem(

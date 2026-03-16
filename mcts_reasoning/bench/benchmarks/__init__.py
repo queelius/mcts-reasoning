@@ -37,9 +37,7 @@ def get_benchmark(name: str):
         cls = _REGISTRY[name]
     except KeyError:
         available = ", ".join(sorted(_REGISTRY))
-        raise KeyError(
-            f"Unknown benchmark {name!r}. Available: {available}"
-        ) from None
+        raise KeyError(f"Unknown benchmark {name!r}. Available: {available}") from None
     return cls()
 
 

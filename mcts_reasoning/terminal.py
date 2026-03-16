@@ -10,7 +10,7 @@ Terminal detection is separate from action generation because:
 from typing import Optional, Protocol, runtime_checkable
 import re
 
-from .types import State, TerminalCheck
+from .types import TerminalCheck
 
 
 @runtime_checkable

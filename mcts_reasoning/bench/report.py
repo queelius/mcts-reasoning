@@ -10,7 +10,6 @@ from __future__ import annotations
 import csv
 import json
 from dataclasses import dataclass, field
-from typing import Optional
 
 from .solver import SolverResult
 from .benchmark import Problem
@@ -25,9 +24,7 @@ class BenchReport:
     """
 
     benchmark_name: str
-    results: dict[str, list[tuple[Problem, SolverResult]]] = field(
-        default_factory=dict
-    )
+    results: dict[str, list[tuple[Problem, SolverResult]]] = field(default_factory=dict)
 
     # ------------------------------------------------------------------
     # Accuracy helpers
@@ -46,9 +43,7 @@ class BenchReport:
         domains: dict[str, list[bool]] = {}
         for problem, result in pairs:
             domains.setdefault(problem.domain, []).append(result.correct)
-        return {
-            domain: sum(flags) / len(flags) for domain, flags in domains.items()
-        }
+        return {domain: sum(flags) / len(flags) for domain, flags in domains.items()}
 
     def accuracy_by_difficulty(self, solver: str) -> dict[str, float]:
         """Per-difficulty accuracy fractions."""
@@ -56,9 +51,7 @@ class BenchReport:
         buckets: dict[str, list[bool]] = {}
         for problem, result in pairs:
             buckets.setdefault(problem.difficulty, []).append(result.correct)
-        return {
-            diff: sum(flags) / len(flags) for diff, flags in buckets.items()
-        }
+        return {diff: sum(flags) / len(flags) for diff, flags in buckets.items()}
 
     def lift(self, baseline: str, experimental: str) -> float:
         """

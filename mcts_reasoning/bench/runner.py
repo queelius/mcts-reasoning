@@ -7,8 +7,13 @@ solver.  Returns a BenchReport ready for analysis.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from .benchmark import Benchmark
 from .solver import Solver
+
+if TYPE_CHECKING:
+    from .report import BenchReport
 
 
 class BenchRunner:

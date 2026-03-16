@@ -46,7 +46,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Callable
 import re
 
-from .types import State, Evaluation
+from .types import Evaluation
 
 
 class Evaluator(ABC):
