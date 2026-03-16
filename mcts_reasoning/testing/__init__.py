@@ -6,10 +6,11 @@ Provides mock implementations of core interfaces for deterministic testing.
 
 from __future__ import annotations
 
-from ..types import Continuation, Evaluation, State, extend_state
+from ..types import Continuation, Evaluation, Message, State, extend_state
+from ..providers.base import LLMProvider
 
 
-class MockLLMProvider:
+class MockLLMProvider(LLMProvider):
     """Mock LLM provider for testing."""
 
     def __init__(self, responses: list[str] | None = None):
@@ -19,7 +20,7 @@ class MockLLMProvider:
 
     def generate(
         self,
-        messages: list | str,
+        messages: list[Message] | list | str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> str:

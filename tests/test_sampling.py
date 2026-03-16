@@ -1,240 +1,214 @@
-"""Tests for sampling strategies."""
+"""Tests for sampling strategies and PathSampler facade."""
 
 import pytest
 from mcts_reasoning.node import Node
-from mcts_reasoning.sampling import PathSampler, SampledPath, SamplingStrategy
+from mcts_reasoning.sampling import (
+    PathSampler,
+    SamplingStrategy,
+    ValueSampling,
+    VisitSampling,
+    DiverseSampling,
+    TopKSampling,
+)
+from mcts_reasoning.types import SampledPath
 
 
-class TestSampledPath:
-    """Tests for SampledPath dataclass."""
-
-    def test_path_depth(self):
-        """Test depth calculation."""
-        root = Node(state="Question")
-        child1 = root.add_child(state="Question\nStep 1")
-        child2 = child1.add_child(state="Question\nStep 1\nStep 2")
-
-        path = SampledPath(
-            nodes=[root, child1, child2],
-            terminal=None,
-            value=0.5,
-            visits=1,
-            answer=None,
-        )
-        assert path.depth == 2  # Two steps from root
-
-    def test_path_steps(self):
-        """Test step extraction."""
-        root = Node(state="What is 2+2?")
-        child1 = root.add_child(state="What is 2+2?\nStep 1: Add the numbers.")
-        child2 = child1.add_child(
-            state="What is 2+2?\nStep 1: Add the numbers.\nStep 2: 2+2=4"
-        )
-
-        path = SampledPath(
-            nodes=[root, child1, child2],
-            terminal=None,
-            value=0.5,
-            visits=1,
-            answer=None,
-        )
-
-        steps = path.steps
-        assert len(steps) == 2
-        assert "Step 1" in steps[0]
-        assert "Step 2" in steps[1]
-
-    def test_path_reasoning(self):
-        """Test full reasoning trace."""
-        root = Node(state="Question")
-        child = root.add_child(
-            state="Question\nReasoning trace...\nANSWER: 42",
-            is_terminal=True,
-            answer="42",
-        )
-
-        path = SampledPath(
-            nodes=[root, child],
-            terminal=child,
-            value=1.0,
-            visits=5,
-            answer="42",
-        )
-
-        assert "ANSWER: 42" in path.reasoning
-        assert path.answer == "42"
+# ---------------------------------------------------------------------------
+# Helper: build a test tree using add_child with proper value/visits
+# ---------------------------------------------------------------------------
 
 
-class TestPathSampler:
-    """Tests for PathSampler."""
+def _create_test_tree() -> Node:
+    """Create a test tree with three terminal nodes at varying quality.
 
-    def _create_test_tree(self):
-        """Create a test tree with terminal nodes."""
-        root = Node(state="What is 2+2?")
+    Tree structure:
+        root
+        ├── p1_step1 (visits=10, value=8.0)
+        │   └── p1_terminal "4" (visits=8, value=7.2 → avg 0.9)
+        ├── p2_step1 (visits=5, value=3.0)
+        │   └── p2_terminal "4" (visits=4, value=2.8 → avg 0.7)
+        └── p3_step1 (visits=2, value=0.6)
+            └── p3_terminal "5" (visits=1, value=0.2 → avg 0.2)
+    """
+    root = Node(state="What is 2+2?")
 
-        # Path 1: High value, correct answer
-        p1_step1 = root.add_child(state="What is 2+2?\nLet me calculate...")
-        p1_step1.visits = 10
-        p1_step1._total_value = 8.0
+    # Path 1: high value, correct
+    p1_step1 = root.add_child(
+        state="What is 2+2?\nLet me calculate...",
+        value=8.0,
+        visits=10,
+    )
+    p1_step1.add_child(
+        state="What is 2+2?\nLet me calculate...\n2+2=4\nANSWER: 4",
+        is_terminal=True,
+        answer="4",
+        value=7.2,
+        visits=8,
+    )
 
-        p1_terminal = p1_step1.add_child(
-            state="What is 2+2?\nLet me calculate...\n2+2=4\nANSWER: 4",
-            is_terminal=True,
-            answer="4",
-        )
-        p1_terminal.visits = 8
-        p1_terminal._total_value = 7.2  # avg 0.9
+    # Path 2: medium value, correct
+    p2_step1 = root.add_child(
+        state="What is 2+2?\nThinking step by step...",
+        value=3.0,
+        visits=5,
+    )
+    p2_step1.add_child(
+        state="What is 2+2?\nThinking step by step...\nThe sum is 4.\nANSWER: 4",
+        is_terminal=True,
+        answer="4",
+        value=2.8,
+        visits=4,
+    )
 
-        # Path 2: Medium value, correct answer
-        p2_step1 = root.add_child(state="What is 2+2?\nThinking step by step...")
-        p2_step1.visits = 5
-        p2_step1._total_value = 3.0
+    # Path 3: low value, wrong
+    p3_step1 = root.add_child(
+        state="What is 2+2?\nI'll guess...",
+        value=0.6,
+        visits=2,
+    )
+    p3_step1.add_child(
+        state="What is 2+2?\nI'll guess...\nMaybe 5?\nANSWER: 5",
+        is_terminal=True,
+        answer="5",
+        value=0.2,
+        visits=1,
+    )
 
-        p2_terminal = p2_step1.add_child(
-            state="What is 2+2?\nThinking step by step...\nThe sum is 4.\nANSWER: 4",
-            is_terminal=True,
-            answer="4",
-        )
-        p2_terminal.visits = 4
-        p2_terminal._total_value = 2.8  # avg 0.7
+    return root
 
-        # Path 3: Low value, wrong answer
-        p3_step1 = root.add_child(state="What is 2+2?\nI'll guess...")
-        p3_step1.visits = 2
-        p3_step1._total_value = 0.6
 
-        p3_terminal = p3_step1.add_child(
-            state="What is 2+2?\nI'll guess...\nMaybe 5?\nANSWER: 5",
-            is_terminal=True,
-            answer="5",
-        )
-        p3_terminal.visits = 1
-        p3_terminal._total_value = 0.2  # avg 0.2
+class TestValueSampling:
+    """Tests for ValueSampling strategy."""
 
-        return root
-
-    def test_get_terminals(self):
-        """Test finding terminal nodes."""
-        root = self._create_test_tree()
-        sampler = PathSampler(root)
-
-        terminals = sampler.get_terminals()
-        assert len(terminals) == 3
-        assert all(t.is_terminal for t in terminals)
-
-    def test_sample_by_value(self):
-        """Test value-based sampling."""
-        root = self._create_test_tree()
-        sampler = PathSampler(root)
-
-        paths = sampler.sample(n=3, strategy="value")
+    def test_returns_highest_value(self):
+        root = _create_test_tree()
+        strategy = ValueSampling()
+        paths = strategy.sample(root, n=3)
 
         assert len(paths) == 3
-        # Should be ordered by value (descending)
+        # Sorted by average_value descending
         assert paths[0].value >= paths[1].value >= paths[2].value
-        # Highest value should be the correct answer path
+        # Highest value terminal has answer "4" (avg 0.9)
         assert paths[0].answer == "4"
 
-    def test_sample_by_visits(self):
-        """Test visit-based sampling."""
-        root = self._create_test_tree()
-        sampler = PathSampler(root)
+    def test_returns_fewer_when_not_enough(self):
+        root = _create_test_tree()
+        paths = ValueSampling().sample(root, n=10)
+        assert len(paths) == 3
 
-        paths = sampler.sample(n=3, strategy="visits")
+
+class TestVisitSampling:
+    """Tests for VisitSampling strategy."""
+
+    def test_returns_most_visited(self):
+        root = _create_test_tree()
+        paths = VisitSampling().sample(root, n=3)
 
         assert len(paths) == 3
-        # Should be ordered by visits (descending)
         assert paths[0].visits >= paths[1].visits >= paths[2].visits
+        # Most visited terminal has 8 visits
+        assert paths[0].visits == 8
 
-    def test_sample_topk(self):
-        """Test top-k sampling."""
-        root = self._create_test_tree()
-        sampler = PathSampler(root)
 
-        paths = sampler.sample(n=2, strategy="topk")
+class TestDiverseSampling:
+    """Tests for DiverseSampling strategy."""
+
+    def test_returns_different_answers(self):
+        root = _create_test_tree()
+        paths = DiverseSampling().sample(root, n=3)
+
+        assert len(paths) == 3
+        answers = [p.answer for p in paths]
+        assert "4" in answers
+        assert "5" in answers
+
+    def test_empty_tree(self):
+        root = Node(state="Q")
+        root.add_child(state="Q\nStep 1")  # Non-terminal
+        paths = DiverseSampling().sample(root, n=5)
+        assert len(paths) == 0
+
+
+class TestTopKSampling:
+    """Tests for TopKSampling strategy."""
+
+    def test_topk(self):
+        root = _create_test_tree()
+        paths = TopKSampling().sample(root, n=2)
 
         assert len(paths) == 2
-        # Top 2 should both be correct answer
+        # Top 2 by value should both be answer "4"
         assert paths[0].answer == "4"
         assert paths[1].answer == "4"
 
-    def test_sample_diverse(self):
-        """Test diverse sampling."""
-        root = self._create_test_tree()
+
+class TestPathSampler:
+    """Tests for PathSampler facade."""
+
+    def test_facade_default_strategy(self):
+        root = _create_test_tree()
         sampler = PathSampler(root)
-
-        paths = sampler.sample(n=3, strategy="diverse")
-
+        paths = sampler.sample(n=3)
         assert len(paths) == 3
-        # All three paths should be included (they're all different)
-        answers = [p.answer for p in paths]
-        assert "4" in answers  # Correct answer included
-        assert "5" in answers  # Wrong answer included for diversity
+        # Default is ValueSampling
+        assert paths[0].value >= paths[1].value
 
-    def test_sample_fewer_than_requested(self):
-        """Test when requesting more paths than available."""
-        root = self._create_test_tree()
+    def test_facade_string_strategy(self):
+        root = _create_test_tree()
         sampler = PathSampler(root)
+        paths = sampler.sample(n=3, strategy="visits")
+        assert paths[0].visits >= paths[1].visits
 
-        paths = sampler.sample(n=10, strategy="value")
+    def test_facade_abc_strategy_override(self):
+        root = _create_test_tree()
+        sampler = PathSampler(root, strategy=VisitSampling())
+        paths = sampler.sample(n=3)
+        assert paths[0].visits >= paths[1].visits
 
-        # Should return all available (3), not 10
-        assert len(paths) == 3
-
-    def test_get_answer_distribution(self):
-        """Test answer distribution calculation."""
-        root = self._create_test_tree()
+    def test_answer_distribution(self):
+        root = _create_test_tree()
         sampler = PathSampler(root)
-
         dist = sampler.get_answer_distribution()
 
         assert "4" in dist
         assert "5" in dist
-        assert dist["4"]["count"] == 2  # Two paths with answer 4
-        assert dist["5"]["count"] == 1  # One path with answer 5
+        assert dist["4"]["count"] == 2
+        assert dist["5"]["count"] == 1
 
     def test_consistency_score(self):
-        """Test consistency score calculation."""
-        root = self._create_test_tree()
+        root = _create_test_tree()
         sampler = PathSampler(root)
-
         score = sampler.consistency_score()
-
-        # 2 out of 3 have same answer (4)
+        # 2 out of 3 have answer "4"
         assert score == pytest.approx(2 / 3)
 
     def test_consistency_score_all_same(self):
-        """Test consistency when all answers match."""
         root = Node(state="Q")
         for i in range(3):
-            child = root.add_child(
+            root.add_child(
                 state=f"Q\nPath {i}\nANSWER: 42",
                 is_terminal=True,
                 answer="42",
+                value=0.8,
+                visits=1,
             )
-            child.visits = 1
-            child._total_value = 0.8
-
         sampler = PathSampler(root)
         assert sampler.consistency_score() == 1.0
 
     def test_empty_tree(self):
-        """Test with tree containing no terminals."""
         root = Node(state="Q")
         root.add_child(state="Q\nStep 1")  # Non-terminal
-
         sampler = PathSampler(root)
-
         assert len(sampler.get_terminals()) == 0
         assert len(sampler.sample(n=5, strategy="value")) == 0
 
     def test_include_non_terminal(self):
-        """Test including non-terminal leaves in sampling."""
         root = Node(state="Q")
-        leaf = root.add_child(state="Q\nPartial reasoning")
-        leaf.visits = 5
-        leaf._total_value = 3.0
-
+        root.add_child(
+            state="Q\nPartial reasoning",
+            value=3.0,
+            visits=5,
+        )
         sampler = PathSampler(root)
 
         # Without non-terminal: empty
@@ -244,84 +218,91 @@ class TestPathSampler:
         # With non-terminal: includes leaf
         paths = sampler.sample(n=5, strategy="value", include_non_terminal=True)
         assert len(paths) == 1
-        assert paths[0].terminal is None
+        assert paths[0].answer is None
+
+    def test_get_terminals(self):
+        root = _create_test_tree()
+        sampler = PathSampler(root)
+        terminals = sampler.get_terminals()
+        assert len(terminals) == 3
+        assert all(t.is_terminal for t in terminals)
 
 
-class TestSamplingStrategy:
-    """Tests for SamplingStrategy enum."""
+class TestSamplingStrategyABC:
+    """Tests for SamplingStrategy ABC."""
 
-    def test_strategy_values(self):
-        """Test strategy enum values."""
-        assert SamplingStrategy.VALUE.value == "value"
-        assert SamplingStrategy.VISITS.value == "visits"
-        assert SamplingStrategy.DIVERSE.value == "diverse"
-        assert SamplingStrategy.TOPK.value == "topk"
+    def test_cannot_instantiate(self):
+        with pytest.raises(TypeError):
+            SamplingStrategy()  # type: ignore[abstract]
 
-    def test_strategy_from_string(self):
-        """Test creating strategy from string."""
-        assert SamplingStrategy("value") == SamplingStrategy.VALUE
-        assert SamplingStrategy("visits") == SamplingStrategy.VISITS
+    def test_unknown_string_strategy_raises(self):
+        root = _create_test_tree()
+        sampler = PathSampler(root)
+        with pytest.raises(ValueError, match="Unknown strategy"):
+            sampler.sample(n=3, strategy="nonexistent")
+
+
+class TestSampledPath:
+    """Tests for SampledPath dataclass."""
+
+    def test_basic_fields(self):
+        path = SampledPath(
+            nodes=[],
+            answer="42",
+            value=0.9,
+            visits=5,
+        )
+        assert path.answer == "42"
+        assert path.value == 0.9
+        assert path.visits == 5
 
 
 class TestSelfConsistency:
-    """Tests for self-consistency voting."""
+    """Tests for self-consistency voting (legacy API)."""
 
     def _create_voting_tree(self):
-        """Create a tree with various answers for voting tests."""
         root = Node(state="What is 2+2?")
 
-        # 3 paths saying "4" with varying values
-        for i, value in enumerate([0.9, 0.8, 0.7]):
+        for i, val in enumerate([0.9, 0.8, 0.7]):
             step = root.add_child(state=f"What is 2+2?\nPath {i}")
-            terminal = step.add_child(
+            step.add_child(
                 state=f"What is 2+2?\nPath {i}\nANSWER: 4",
                 is_terminal=True,
                 answer="4",
+                value=val,
+                visits=1,
             )
-            terminal.visits = 1
-            terminal.value = value
 
-        # 2 paths saying "5" with lower values
-        for i, value in enumerate([0.3, 0.2]):
+        for i, val in enumerate([0.3, 0.2]):
             step = root.add_child(state=f"What is 2+2?\nWrong path {i}")
-            terminal = step.add_child(
+            step.add_child(
                 state=f"What is 2+2?\nWrong path {i}\nANSWER: 5",
                 is_terminal=True,
                 answer="5",
+                value=val,
+                visits=1,
             )
-            terminal.visits = 1
-            terminal.value = value
 
         return root
 
     def test_majority_vote(self):
-        """Test simple majority voting."""
         root = self._create_voting_tree()
         sampler = PathSampler(root)
-
         answer, confidence = sampler.majority_vote()
-
         assert answer == "4"
-        assert confidence == pytest.approx(3 / 5)  # 3 out of 5
+        assert confidence == pytest.approx(3 / 5)
 
     def test_weighted_vote(self):
-        """Test value-weighted voting."""
         root = self._create_voting_tree()
         sampler = PathSampler(root)
-
         answer, confidence = sampler.weighted_vote()
-
         assert answer == "4"
-        # "4" has total value 0.9+0.8+0.7=2.4
-        # "5" has total value 0.3+0.2=0.5
-        # Total = 2.9, so confidence = 2.4/2.9 ≈ 0.828
+        # "4" total value: 0.9+0.8+0.7=2.4, "5": 0.3+0.2=0.5, total=2.9
         assert confidence > 0.8
 
     def test_self_consistency_vote_full_result(self):
-        """Test full self-consistency result dict."""
         root = self._create_voting_tree()
         sampler = PathSampler(root)
-
         result = sampler.self_consistency_vote()
 
         assert result["answer"] == "4"
@@ -332,74 +313,54 @@ class TestSelfConsistency:
         assert result["confidence"] > 0
 
     def test_self_consistency_normalize_answers(self):
-        """Test answer normalization in voting."""
         root = Node(state="Q")
-
-        # Add answers with different formatting
-        answers = ["$100", "100", " 100 ", "$100.00"]
-        for i, ans in enumerate(answers):
-            terminal = root.add_child(
+        for i, ans in enumerate(["$100", "100", " 100 ", "$100.00"]):
+            root.add_child(
                 state=f"Q\nPath {i}\nANSWER: {ans}",
                 is_terminal=True,
                 answer=ans,
+                value=0.5,
+                visits=1,
             )
-            terminal.visits = 1
-            terminal.value = 0.5
-
         sampler = PathSampler(root)
-
-        # With normalization: all should be same answer
         result = sampler.self_consistency_vote(normalize_answers=True)
         assert result["total_votes"] == 4
-        # All normalize to "100" or "100.00"
-        assert len(result["votes"]) <= 2  # Some may still differ due to .00
+        assert len(result["votes"]) <= 2
 
     def test_self_consistency_no_normalize(self):
-        """Test voting without normalization."""
         root = Node(state="Q")
-
-        # Add answers with different formatting
         for ans in ["$100", "100"]:
-            terminal = root.add_child(
+            root.add_child(
                 state=f"Q\nANSWER: {ans}",
                 is_terminal=True,
                 answer=ans,
+                value=0.5,
+                visits=1,
             )
-            terminal.visits = 1
-            terminal.value = 0.5
-
         sampler = PathSampler(root)
-
-        # Without normalization: treated as different
         result = sampler.self_consistency_vote(normalize_answers=False)
-        assert len(result["votes"]) == 2  # Two different answers
+        assert len(result["votes"]) == 2
 
     def test_self_consistency_empty_tree(self):
-        """Test voting with no terminal states."""
         root = Node(state="Q")
-        root.add_child(state="Q\nPartial")  # Non-terminal
-
+        root.add_child(state="Q\nPartial")
         sampler = PathSampler(root)
         result = sampler.self_consistency_vote()
-
         assert result["answer"] is None
         assert result["confidence"] == 0.0
         assert result["total_votes"] == 0
 
     def test_self_consistency_single_answer(self):
-        """Test voting with single terminal."""
         root = Node(state="Q")
-        terminal = root.add_child(
+        root.add_child(
             state="Q\nANSWER: 42",
             is_terminal=True,
             answer="42",
+            value=1.0,
+            visits=1,
         )
-        terminal.visits = 1
-        terminal.value = 1.0
-
         sampler = PathSampler(root)
         result = sampler.self_consistency_vote()
-
         assert result["answer"] == "42"
         assert result["confidence"] == 1.0
         assert result["total_votes"] == 1

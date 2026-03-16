@@ -51,8 +51,28 @@ from .prompt import (
 # Sampling strategies
 from .sampling import (
     PathSampler,
-    SampledPath,
     SamplingStrategy,
+    ValueSampling,
+    VisitSampling,
+    DiverseSampling,
+    TopKSampling,
+)
+
+# Consensus strategies
+from .consensus import (
+    ConsensusStrategy,
+    MajorityVote,
+    WeightedVote,
+)
+
+# Providers
+from .providers import (
+    LLMProvider,
+    OpenAIProvider,
+    AnthropicProvider,
+    OllamaProvider,
+    detect_provider,
+    get_provider,
 )
 
 # Core types
@@ -62,6 +82,7 @@ from .types import (
     Continuation,
     Evaluation,
     TerminalCheck,
+    SampledPath,
     SearchState,
     ConsensusResult,
     extend_state,
@@ -101,12 +122,27 @@ __all__ = [
     "StaticExampleSource",
     # Sampling
     "PathSampler",
-    "SampledPath",
     "SamplingStrategy",
+    "ValueSampling",
+    "VisitSampling",
+    "DiverseSampling",
+    "TopKSampling",
+    # Consensus
+    "ConsensusStrategy",
+    "MajorityVote",
+    "WeightedVote",
+    # Providers
+    "LLMProvider",
+    "OpenAIProvider",
+    "AnthropicProvider",
+    "OllamaProvider",
+    "detect_provider",
+    "get_provider",
     # Types
     "State",
     "Message",
     "Continuation",
+    "SampledPath",
     "SearchState",
     "ConsensusResult",
     "extend_state",

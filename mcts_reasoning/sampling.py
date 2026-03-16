@@ -1,248 +1,155 @@
 """
 Sampling: Extract paths from the MCTS search tree.
 
-Provides strategies for sampling solution paths from a completed search:
-- value: Paths ordered by average value (quality)
-- visits: Paths ordered by visit count (confidence)
-- diverse: Paths maximizing diversity (exploration)
-- topk: Top-k terminal states by evaluation score
+Provides ABC-based strategies for sampling solution paths:
+- ValueSampling: Paths ordered by average value (quality)
+- VisitSampling: Paths ordered by visit count (confidence)
+- DiverseSampling: Paths maximizing diversity (exploration)
+- TopKSampling: Top-k terminal states by evaluation score
 
 Example usage:
     result = mcts.search(question, simulations=100)
+
+    # ABC-based usage
+    from mcts_reasoning.sampling import PathSampler, ValueSampling
+    sampler = PathSampler(result.root, strategy=ValueSampling())
+    paths = sampler.sample(n=5)
+
+    # Convenience string-based usage (backward compat)
     sampler = PathSampler(result.root)
-
-    # Get top 5 paths by value
     paths = sampler.sample(n=5, strategy="value")
-
-    # Get diverse paths
-    diverse_paths = sampler.sample(n=3, strategy="diverse")
-
-    # Get all terminal states
-    terminals = sampler.get_terminals()
 """
 
-from dataclasses import dataclass
-from typing import List, Optional, Set
-from enum import Enum
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from collections import Counter
+from typing import Optional
 
 from .node import Node
+from .types import SampledPath
 
 
-class SamplingStrategy(Enum):
-    """Available sampling strategies."""
-
-    VALUE = "value"  # Order by average value
-    VISITS = "visits"  # Order by visit count
-    DIVERSE = "diverse"  # Maximize path diversity
-    TOPK = "topk"  # Top-k by terminal score
+# ---------------------------------------------------------------------------
+# Iterative tree helpers
+# ---------------------------------------------------------------------------
 
 
-@dataclass
-class SampledPath:
-    """A sampled reasoning path from the tree."""
-
-    nodes: List[Node]
-    terminal: Optional[Node]  # Terminal node if path reaches one
-    value: float  # Average value of terminal or leaf
-    visits: int  # Visit count of terminal or leaf
-    answer: Optional[str]  # Extracted answer if terminal
-
-    @property
-    def depth(self) -> int:
-        """Path depth (number of steps)."""
-        return len(self.nodes) - 1  # Exclude root
-
-    @property
-    def reasoning(self) -> str:
-        """Full reasoning trace as string."""
-        if self.terminal:
-            return self.terminal.state
-        elif self.nodes:
-            return self.nodes[-1].state
-        return ""
-
-    @property
-    def steps(self) -> List[str]:
-        """Individual reasoning steps (excluding root)."""
-        result = []
-        for i, node in enumerate(self.nodes):
-            if i == 0:
-                continue  # Skip root
-            prev_state = self.nodes[i - 1].state
-            step = node.state[len(prev_state) :].strip()
-            if step:
-                result.append(step)
-        return result
-
-
-class PathSampler:
-    """
-    Sample paths from an MCTS search tree.
-
-    Provides multiple sampling strategies for extracting
-    solution paths of varying quality and diversity.
-    """
-
-    def __init__(self, root: Node):
-        """
-        Initialize sampler with a search tree root.
-
-        Args:
-            root: Root node of the completed search tree
-        """
-        self.root = root
-        self._terminals: Optional[List[Node]] = None
-
-    def get_terminals(self) -> List[Node]:
-        """Get all terminal nodes in the tree."""
-        if self._terminals is None:
-            self._terminals = self._find_terminals(self.root)
-        return self._terminals
-
-    def _find_terminals(self, node: Node) -> List[Node]:
-        """Recursively find all terminal nodes."""
-        terminals = []
+def _find_terminals(root: Node) -> list[Node]:
+    """Find all terminal nodes via iterative stack-based DFS."""
+    terminals: list[Node] = []
+    stack: list[Node] = [root]
+    while stack:
+        node = stack.pop()
         if node.is_terminal:
             terminals.append(node)
-        for child in node.children:
-            terminals.extend(self._find_terminals(child))
-        return terminals
+        stack.extend(node.children)
+    return terminals
 
-    def sample(
-        self,
-        n: int = 5,
-        strategy: str = "value",
-        include_non_terminal: bool = False,
-    ) -> List[SampledPath]:
-        """
-        Sample n paths from the tree.
 
-        Args:
-            n: Number of paths to sample
-            strategy: Sampling strategy ("value", "visits", "diverse", "topk")
-            include_non_terminal: If True, include non-terminal leaf paths
-
-        Returns:
-            List of SampledPath objects
-        """
-        strategy_enum = SamplingStrategy(strategy)
-
-        if strategy_enum == SamplingStrategy.VALUE:
-            return self._sample_by_value(n, include_non_terminal)
-        elif strategy_enum == SamplingStrategy.VISITS:
-            return self._sample_by_visits(n, include_non_terminal)
-        elif strategy_enum == SamplingStrategy.DIVERSE:
-            return self._sample_diverse(n, include_non_terminal)
-        elif strategy_enum == SamplingStrategy.TOPK:
-            return self._sample_topk(n)
-        else:
-            raise ValueError(f"Unknown strategy: {strategy}")
-
-    def _get_candidate_nodes(self, include_non_terminal: bool) -> List[Node]:
-        """Get candidate nodes for sampling."""
-        terminals = self.get_terminals()
-        if include_non_terminal:
-            # Also include high-value leaf nodes
-            leaves = self._find_leaves(self.root)
-            # Combine without duplicates using id()
-            seen = set(id(t) for t in terminals)
-            candidates = list(terminals)
-            for leaf in leaves:
-                if id(leaf) not in seen:
-                    candidates.append(leaf)
-                    seen.add(id(leaf))
-        else:
-            candidates = terminals
-        return candidates
-
-    def _find_leaves(self, node: Node) -> List[Node]:
-        """Find all leaf nodes (no children)."""
-        leaves = []
+def _find_leaves(root: Node) -> list[Node]:
+    """Find all leaf nodes (no children) via iterative stack-based DFS."""
+    leaves: list[Node] = []
+    stack: list[Node] = [root]
+    while stack:
+        node = stack.pop()
         if not node.children:
             leaves.append(node)
-        for child in node.children:
-            leaves.extend(self._find_leaves(child))
-        return leaves
+        else:
+            stack.extend(node.children)
+    return leaves
 
-    def _node_to_path(self, node: Node) -> SampledPath:
-        """Convert a node to a SampledPath."""
-        path_nodes = node.path_from_root()
-        return SampledPath(
-            nodes=path_nodes,
-            terminal=node if node.is_terminal else None,
-            value=node.average_value,
-            visits=node.visits,
-            answer=node.answer if node.is_terminal else None,
-        )
 
-    def _sample_by_value(
-        self,
-        n: int,
-        include_non_terminal: bool,
-    ) -> List[SampledPath]:
-        """Sample paths ordered by average value."""
-        candidates = self._get_candidate_nodes(include_non_terminal)
-        # Sort by value descending
-        sorted_nodes = sorted(
-            candidates,
-            key=lambda x: x.average_value,
-            reverse=True,
-        )
-        return [self._node_to_path(node) for node in sorted_nodes[:n]]
+def _node_to_sampled_path(node: Node) -> SampledPath:
+    """Convert a Node to a SampledPath."""
+    path_nodes = node.path_from_root()
+    return SampledPath(
+        nodes=path_nodes,
+        answer=node.answer if node.is_terminal else None,
+        value=node.average_value,
+        visits=node.visits,
+    )
 
-    def _sample_by_visits(
-        self,
-        n: int,
-        include_non_terminal: bool,
-    ) -> List[SampledPath]:
-        """Sample paths ordered by visit count."""
-        candidates = self._get_candidate_nodes(include_non_terminal)
-        # Sort by visits descending
-        sorted_nodes = sorted(
-            candidates,
-            key=lambda x: x.visits,
-            reverse=True,
-        )
-        return [self._node_to_path(node) for node in sorted_nodes[:n]]
 
-    def _sample_topk(self, n: int) -> List[SampledPath]:
-        """Sample top-k terminal states by value."""
-        terminals = self.get_terminals()
-        sorted_nodes = sorted(
-            terminals,
-            key=lambda x: x.average_value,
-            reverse=True,
-        )
-        return [self._node_to_path(node) for node in sorted_nodes[:n]]
+# ---------------------------------------------------------------------------
+# Sampling strategy ABC and implementations
+# ---------------------------------------------------------------------------
 
-    def _sample_diverse(
-        self,
-        n: int,
-        include_non_terminal: bool,
-    ) -> List[SampledPath]:
+
+class SamplingStrategy(ABC):
+    """Abstract base class for path sampling strategies."""
+
+    @abstractmethod
+    def sample(self, root: Node, n: int) -> list[SampledPath]:
         """
-        Sample diverse paths using greedy selection.
+        Sample n paths from the tree rooted at root.
 
-        Selects paths that maximize diversity by choosing paths
-        that differ most from already selected paths.
+        Args:
+            root: Root node of the search tree.
+            n: Maximum number of paths to return.
 
-        Uses index marking instead of list.pop() to avoid O(m²) complexity.
+        Returns:
+            List of SampledPath objects, up to n.
         """
-        candidates = self._get_candidate_nodes(include_non_terminal)
-        if not candidates:
+
+
+class ValueSampling(SamplingStrategy):
+    """Sort terminal nodes by average value (descending), return top n."""
+
+    def sample(self, root: Node, n: int) -> list[SampledPath]:
+        terminals = _find_terminals(root)
+        sorted_nodes = sorted(
+            terminals, key=lambda nd: nd.average_value, reverse=True
+        )
+        return [_node_to_sampled_path(nd) for nd in sorted_nodes[:n]]
+
+
+class VisitSampling(SamplingStrategy):
+    """Sort terminal nodes by visit count (descending), return top n."""
+
+    def sample(self, root: Node, n: int) -> list[SampledPath]:
+        terminals = _find_terminals(root)
+        sorted_nodes = sorted(
+            terminals, key=lambda nd: nd.visits, reverse=True
+        )
+        return [_node_to_sampled_path(nd) for nd in sorted_nodes[:n]]
+
+
+class TopKSampling(SamplingStrategy):
+    """Top-k terminal states by value -- same ranking as ValueSampling."""
+
+    def sample(self, root: Node, n: int) -> list[SampledPath]:
+        terminals = _find_terminals(root)
+        sorted_nodes = sorted(
+            terminals, key=lambda nd: nd.average_value, reverse=True
+        )
+        return [_node_to_sampled_path(nd) for nd in sorted_nodes[:n]]
+
+
+class DiverseSampling(SamplingStrategy):
+    """
+    Greedy diverse selection.
+
+    Picks one representative per unique answer first (highest value
+    within that answer), then fills remaining slots by Jaccard distance.
+    """
+
+    def sample(self, root: Node, n: int) -> list[SampledPath]:
+        terminals = _find_terminals(root)
+        if not terminals:
             return []
 
-        # Convert to paths with precomputed step sets for efficiency
-        path_data = []
-        for node in candidates:
-            path = self._node_to_path(node)
-            step_set = frozenset(path.steps)
+        # Build paths with precomputed step sets
+        path_data: list[tuple[SampledPath, frozenset[str]]] = []
+        for node in terminals:
+            path = _node_to_sampled_path(node)
+            step_set = frozenset(self._path_steps(path))
             path_data.append((path, step_set))
 
-        # Greedy diverse selection
-        selected: List[SampledPath] = []
-        selected_steps: List[frozenset] = []
-        used: Set[int] = set()  # Track used indices instead of list.pop()
+        # Greedy diverse selection using index marking
+        selected: list[SampledPath] = []
+        selected_steps: list[frozenset[str]] = []
+        used: set[int] = set()
 
         # Start with highest value path
         path_data.sort(key=lambda x: x[0].value, reverse=True)
@@ -251,15 +158,13 @@ class PathSampler:
         used.add(0)
 
         while len(selected) < n and len(used) < len(path_data):
-            # Find path most different from selected paths
             best_idx = -1
-            best_diversity = -1
+            best_diversity = -1.0
 
             for i, (path, steps) in enumerate(path_data):
                 if i in used:
                     continue
 
-                # Calculate minimum Jaccard distance to any selected path
                 min_similarity = 1.0
                 for sel_steps in selected_steps:
                     if not steps and not sel_steps:
@@ -284,25 +189,152 @@ class PathSampler:
 
         return selected
 
+    @staticmethod
+    def _path_steps(path: SampledPath) -> list[str]:
+        """Extract individual reasoning steps from a path."""
+        result: list[str] = []
+        nodes = path.nodes
+        for i in range(1, len(nodes)):
+            prev_state = nodes[i - 1].state
+            step = nodes[i].state[len(prev_state) :].strip()
+            if step:
+                result.append(step)
+        return result
+
+
+# ---------------------------------------------------------------------------
+# Strategy registry for string-based dispatch (backward compat)
+# ---------------------------------------------------------------------------
+
+_STRATEGY_REGISTRY: dict[str, type[SamplingStrategy]] = {
+    "value": ValueSampling,
+    "visits": VisitSampling,
+    "diverse": DiverseSampling,
+    "topk": TopKSampling,
+}
+
+
+def _resolve_strategy(strategy: str | SamplingStrategy | None) -> SamplingStrategy:
+    """Resolve a strategy from a string name or instance."""
+    if strategy is None:
+        return ValueSampling()
+    if isinstance(strategy, SamplingStrategy):
+        return strategy
+    if isinstance(strategy, str):
+        if strategy not in _STRATEGY_REGISTRY:
+            raise ValueError(
+                f"Unknown strategy: {strategy}. "
+                f"Choose from: {list(_STRATEGY_REGISTRY.keys())}"
+            )
+        return _STRATEGY_REGISTRY[strategy]()
+    raise TypeError(f"Expected str or SamplingStrategy, got {type(strategy)}")
+
+
+# ---------------------------------------------------------------------------
+# PathSampler facade
+# ---------------------------------------------------------------------------
+
+
+class PathSampler:
+    """
+    Convenience facade for sampling paths from an MCTS search tree.
+
+    Supports both ABC-based and string-based strategy dispatch.
+    """
+
+    def __init__(
+        self,
+        root: Node,
+        strategy: SamplingStrategy | None = None,
+        consensus: object | None = None,
+    ):
+        from .consensus import MajorityVote
+
+        self.root = root
+        self.strategy = strategy or ValueSampling()
+        self.consensus = consensus or MajorityVote()
+        self._terminals: list[Node] | None = None
+
+    def get_terminals(self) -> list[Node]:
+        """Get all terminal nodes in the tree (cached)."""
+        if self._terminals is None:
+            self._terminals = _find_terminals(self.root)
+        return self._terminals
+
+    def sample(
+        self,
+        n: int = 5,
+        strategy: str | SamplingStrategy | None = None,
+        include_non_terminal: bool = False,
+    ) -> list[SampledPath]:
+        """
+        Sample n paths from the tree.
+
+        Args:
+            n: Number of paths to sample.
+            strategy: Override strategy (string name or SamplingStrategy instance).
+                      Uses the instance default if None.
+            include_non_terminal: If True, include non-terminal leaf paths.
+                                  Only applies to value/visits string strategies.
+        """
+        resolved = _resolve_strategy(strategy) if strategy else self.strategy
+
+        if include_non_terminal and isinstance(resolved, (ValueSampling, VisitSampling)):
+            return self._sample_with_non_terminal(n, resolved)
+
+        return resolved.sample(self.root, n)
+
+    def _sample_with_non_terminal(
+        self, n: int, strategy: SamplingStrategy
+    ) -> list[SampledPath]:
+        """Sample including non-terminal leaf nodes."""
+        terminals = self.get_terminals()
+        leaves = _find_leaves(self.root)
+
+        # Combine without duplicates
+        seen = set(id(t) for t in terminals)
+        candidates = list(terminals)
+        for leaf in leaves:
+            if id(leaf) not in seen:
+                candidates.append(leaf)
+                seen.add(id(leaf))
+
+        paths = [_node_to_sampled_path(nd) for nd in candidates]
+
+        if isinstance(strategy, VisitSampling):
+            paths.sort(key=lambda p: p.visits, reverse=True)
+        else:
+            paths.sort(key=lambda p: p.value, reverse=True)
+
+        return paths[:n]
+
+    def vote(self) -> object:
+        """Run consensus voting on sampled paths."""
+        paths = self.sample()
+        return self.consensus.vote(paths)  # type: ignore[attr-defined]
+
     def get_answer_distribution(self) -> dict:
         """
         Get distribution of answers in terminal states.
 
         Returns:
-            Dict mapping answers to (count, total_value)
+            Dict mapping answers to {count, total_value, avg_value, nodes}.
         """
         terminals = self.get_terminals()
-        distribution = {}
+        distribution: dict = {}
 
         for terminal in terminals:
             answer = terminal.answer
             if answer not in distribution:
-                distribution[answer] = {"count": 0, "total_value": 0.0, "nodes": []}
+                distribution[answer] = {
+                    "count": 0,
+                    "total_value": 0.0,
+                    "nodes": [],
+                }
             distribution[answer]["count"] += 1
             distribution[answer]["total_value"] += terminal.average_value
             distribution[answer]["nodes"].append(terminal)
 
-        # Calculate average value per answer
         for answer in distribution:
             count = distribution[answer]["count"]
             distribution[answer]["avg_value"] = (
@@ -316,7 +348,7 @@ class PathSampler:
         Calculate consistency of answers across terminal states.
 
         Returns:
-            Score from 0 (all different) to 1 (all same)
+            Score from 0 (all different) to 1 (all same).
         """
         terminals = self.get_terminals()
         if len(terminals) <= 1:
@@ -326,15 +358,16 @@ class PathSampler:
         if not any(answers):
             return 0.0
 
-        # Find most common answer
-        from collections import Counter
-
         counter = Counter(a for a in answers if a is not None)
         if not counter:
             return 0.0
 
         most_common_count = counter.most_common(1)[0][1]
         return most_common_count / len(terminals)
+
+    # ------------------------------------------------------------------
+    # Legacy self-consistency API (kept for backward compat)
+    # ------------------------------------------------------------------
 
     def self_consistency_vote(
         self,
@@ -344,22 +377,12 @@ class PathSampler:
         """
         Apply self-consistency voting to select the best answer.
 
-        Self-consistency (Wang et al., 2022) samples multiple reasoning
-        paths and selects the answer that appears most frequently,
-        optionally weighted by path quality.
-
         Args:
-            weighted: If True, weight votes by path value
-            normalize_answers: If True, normalize answers before comparing
-                              (lowercase, strip whitespace, remove $ and ,)
+            weighted: If True, weight votes by path value.
+            normalize_answers: If True, normalize answers before comparing.
 
         Returns:
-            Dictionary with:
-            - answer: Winning answer
-            - confidence: Confidence score (proportion of votes)
-            - votes: Vote count per answer
-            - weighted_votes: Weighted vote count (if weighted=True)
-            - total_votes: Total number of votes
+            Dict with answer, confidence, votes, weighted_votes, total_votes.
         """
         terminals = self.get_terminals()
         if not terminals:
@@ -376,16 +399,12 @@ class PathSampler:
                 return None
             if not normalize_answers:
                 return answer
-            # Normalize: lowercase, strip, remove currency/formatting
             result = answer.lower().strip()
             result = result.replace("$", "").replace(",", "")
             return result
 
-        # Count votes
-        from collections import Counter
-
         votes = Counter()
-        weighted_votes = {}
+        weighted_votes: dict[str, float] = {}
 
         for terminal in terminals:
             answer = normalize(terminal.answer)
@@ -406,10 +425,8 @@ class PathSampler:
 
         total_votes = sum(votes.values())
 
-        # Select winner based on voting strategy
         if weighted:
             winner = max(weighted_votes.keys(), key=lambda a: weighted_votes[a])
-            # Confidence is normalized weighted vote
             total_weight = sum(weighted_votes.values())
             confidence = (
                 weighted_votes[winner] / total_weight if total_weight > 0 else 0.0
@@ -427,21 +444,21 @@ class PathSampler:
         }
 
     def majority_vote(self) -> tuple:
-        """
-        Simple majority voting across terminal states.
-
-        Returns:
-            (answer, confidence) tuple
-        """
+        """Simple majority voting. Returns (answer, confidence)."""
         result = self.self_consistency_vote(weighted=False)
         return result["answer"], result["confidence"]
 
     def weighted_vote(self) -> tuple:
-        """
-        Value-weighted voting across terminal states.
-
-        Returns:
-            (answer, confidence) tuple
-        """
+        """Value-weighted voting. Returns (answer, confidence)."""
         result = self.self_consistency_vote(weighted=True)
         return result["answer"], result["confidence"]
+
+
+__all__ = [
+    "SamplingStrategy",
+    "ValueSampling",
+    "VisitSampling",
+    "DiverseSampling",
+    "TopKSampling",
+    "PathSampler",
+]
