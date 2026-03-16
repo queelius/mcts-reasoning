@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "mcts-reasoning": {
+      "command": "python",
+      "args": ["-m", "mcts_reasoning.server"],
+      "cwd": "/home/spinoza/github/beta/mcts-reasoning"
+    }
+  }
+}

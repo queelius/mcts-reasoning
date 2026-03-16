@@ -27,7 +27,13 @@ def create_server():
 
     mcp = FastMCP("mcts-reasoning")
 
-    from .tools import mcts_bench_impl, mcts_explore_impl, mcts_search_impl
+    from .tools import (
+        mcts_bench_impl,
+        mcts_explore_impl,
+        mcts_search_impl,
+        list_components_impl,
+        get_contracts_impl,
+    )
 
     @mcp.tool()
     def mcts_search(
@@ -76,6 +82,19 @@ def create_server():
             model or None,
             sim_list,
         )
+
+    @mcp.tool()
+    def list_components() -> dict:
+        """List all available implementations for each MCTS decision point (providers, strategies, benchmarks)."""
+        return list_components_impl()
+
+    @mcp.tool()
+    def get_contracts(contract_name: str = "") -> dict:
+        """Get ABC interface contracts (method signatures + docstrings). Like querying a schema for the API.
+
+        Pass a specific name (e.g., 'PromptStrategy') or leave empty for all contracts.
+        A client can read these and write a conforming implementation on the fly."""
+        return get_contracts_impl(contract_name or None)
 
     return mcp
 
