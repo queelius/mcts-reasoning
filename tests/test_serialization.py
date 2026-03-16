@@ -6,7 +6,7 @@ import tempfile
 import pytest
 
 from mcts_reasoning.node import Node
-from mcts_reasoning.mcts import MCTS, SearchResult
+from mcts_reasoning.mcts import MCTS
 from mcts_reasoning.generator import MockGenerator
 from mcts_reasoning.evaluator import MockEvaluator
 
@@ -189,117 +189,86 @@ class TestNodeSerialization:
         assert node.visits == 5
 
 
-class TestMCTSSerialization:
-    """Tests for MCTS serialization."""
+class TestSearchStateSerialization:
+    """Tests for SearchState serialization (replaces old MCTS serialization)."""
 
-    def _create_mcts_with_tree(self):
-        """Create MCTS instance with a searched tree."""
+    def _create_search_state(self):
+        """Create a SearchState via MCTS search."""
         generator = MockGenerator()
         evaluator = MockEvaluator()
         mcts = MCTS(generator, evaluator, max_rollout_depth=3)
+        state = mcts.search("What is 2+2?", simulations=5)
+        return state, generator, evaluator
 
-        # Run a small search
-        mcts.search("What is 2+2?", simulations=5)
+    def test_search_state_save_load(self):
+        """Test SearchState file-based save and load."""
+        state, _, _ = self._create_search_state()
 
-        return mcts, generator, evaluator
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "state.json")
+            state.save(path)
+            assert os.path.exists(path)
 
-    def test_mcts_to_dict(self):
-        """Test MCTS serialization to dict."""
-        mcts, _, _ = self._create_mcts_with_tree()
+            from mcts_reasoning.types import SearchState
+            loaded = SearchState.load(path)
+            assert loaded.question == "What is 2+2?"
+            assert loaded.root.state == state.root.state
 
-        data = mcts.to_dict()
+    def test_search_state_preserves_simulations(self):
+        """Test that simulations_run is preserved."""
+        state, _, _ = self._create_search_state()
 
-        assert data["version"] == "0.4.0"
-        assert data["question"] == "What is 2+2?"
-        assert "root" in data
-        assert "terminal_states" in data
-        assert data["exploration_constant"] == 1.414
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "state.json")
+            state.save(path)
 
-    def test_mcts_to_dict_no_root_fails(self):
-        """Test that serialization fails without a root."""
-        generator = MockGenerator()
-        evaluator = MockEvaluator()
-        mcts = MCTS(generator, evaluator)
+            from mcts_reasoning.types import SearchState
+            loaded = SearchState.load(path)
+            assert loaded.simulations_run == state.simulations_run
 
-        with pytest.raises(ValueError, match="Cannot serialize"):
-            mcts.to_dict()
-
-    def test_mcts_from_dict(self):
-        """Test MCTS deserialization from dict."""
-        mcts, generator, evaluator = self._create_mcts_with_tree()
-        data = mcts.to_dict()
-
-        # Deserialize with new generator/evaluator
-        new_generator = MockGenerator()
-        new_evaluator = MockEvaluator()
-        restored = MCTS.from_dict(data, new_generator, new_evaluator)
-
-        assert restored.question == "What is 2+2?"
-        assert restored.root is not None
-        assert restored.exploration_constant == data["exploration_constant"]
-
-    def test_mcts_round_trip_preserves_tree(self):
+    def test_search_state_round_trip_preserves_tree(self):
         """Test that round trip preserves tree structure."""
-        mcts, generator, evaluator = self._create_mcts_with_tree()
+        state, _, _ = self._create_search_state()
 
-        # Count nodes before
-        def count_nodes(node):
-            return 1 + sum(count_nodes(c) for c in node.children)
-
-        original_count = count_nodes(mcts.root)
-
-        # Round trip
-        data = mcts.to_dict()
-        restored = MCTS.from_dict(data, generator, evaluator)
-
-        restored_count = count_nodes(restored.root)
-        assert restored_count == original_count
-
-    def test_mcts_save_and_load(self):
-        """Test file-based save and load."""
-        mcts, generator, evaluator = self._create_mcts_with_tree()
+        original_count = state.root.count_nodes()
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = os.path.join(tmpdir, "tree.json")
+            path = os.path.join(tmpdir, "state.json")
+            state.save(path)
 
-            # Save
-            mcts.save(path)
-            assert os.path.exists(path)
+            from mcts_reasoning.types import SearchState
+            loaded = SearchState.load(path)
+            assert loaded.root.count_nodes() == original_count
 
-            # Load
-            loaded = MCTS.load(path, generator, evaluator)
-
-            assert loaded.question == mcts.question
-            assert loaded.root.state == mcts.root.state
-
-    def test_mcts_save_creates_directory(self):
-        """Test that save creates parent directories."""
-        mcts, _, _ = self._create_mcts_with_tree()
+    def test_search_state_preserves_config(self):
+        """Test that exploration_constant etc. are preserved."""
+        state, _, _ = self._create_search_state()
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = os.path.join(tmpdir, "nested", "dirs", "tree.json")
+            path = os.path.join(tmpdir, "state.json")
+            state.save(path)
 
-            mcts.save(path)
+            from mcts_reasoning.types import SearchState
+            loaded = SearchState.load(path)
+            assert loaded.exploration_constant == state.exploration_constant
+            assert loaded.max_children_per_node == state.max_children_per_node
+            assert loaded.max_rollout_depth == state.max_rollout_depth
 
-            assert os.path.exists(path)
+    def test_search_state_json_structure(self):
+        """Test that saved JSON contains expected keys."""
+        state, _, _ = self._create_search_state()
 
-    def test_mcts_to_json(self):
-        """Test JSON string serialization."""
-        mcts, _, _ = self._create_mcts_with_tree()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "state.json")
+            state.save(path)
 
-        json_str = mcts.to_json()
-        data = json.loads(json_str)
+            with open(path) as f:
+                data = json.load(f)
 
-        assert data["question"] == "What is 2+2?"
-
-    def test_mcts_from_json(self):
-        """Test JSON string deserialization."""
-        mcts, generator, evaluator = self._create_mcts_with_tree()
-        json_str = mcts.to_json()
-
-        restored = MCTS.from_json(json_str, generator, evaluator)
-
-        assert restored.question == mcts.question
+            assert data["question"] == "What is 2+2?"
+            assert "root" in data
+            assert "terminal_states" in data
+            assert "simulations_run" in data
 
 
 class TestContinueSearch:
@@ -311,47 +280,35 @@ class TestContinueSearch:
         evaluator = MockEvaluator()
         mcts = MCTS(generator, evaluator, max_rollout_depth=3)
 
-        # Initial search
-        result1 = mcts.search("What is 2+2?", simulations=5)
-        initial_visits = mcts.root.visits
+        state = mcts.search("What is 2+2?", simulations=5)
+        initial_visits = state.root.visits
 
-        # Continue search
-        result2 = mcts.continue_search(simulations=5)
+        # Continue search (stateless -- pass state explicitly)
+        state = mcts.continue_search(state, simulations=5)
 
-        # Visits should have increased
-        assert mcts.root.visits > initial_visits
-        assert result2.simulations == mcts.root.visits
-
-    def test_continue_search_without_tree_fails(self):
-        """Test that continue_search fails without existing tree."""
-        generator = MockGenerator()
-        evaluator = MockEvaluator()
-        mcts = MCTS(generator, evaluator)
-
-        with pytest.raises(ValueError, match="Cannot continue search"):
-            mcts.continue_search(simulations=5)
+        assert state.root.visits > initial_visits
+        assert state.simulations_run == 10
 
     def test_continue_search_after_load(self):
         """Test continuing search after loading a saved tree."""
+        from mcts_reasoning.types import SearchState
+
         generator = MockGenerator()
         evaluator = MockEvaluator()
         mcts = MCTS(generator, evaluator, max_rollout_depth=3)
 
-        # Initial search and save
-        mcts.search("What is 2+2?", simulations=5)
+        state = mcts.search("What is 2+2?", simulations=5)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = os.path.join(tmpdir, "tree.json")
-            mcts.save(path)
+            path = os.path.join(tmpdir, "state.json")
+            state.save(path)
 
-            # Load and continue
-            loaded = MCTS.load(path, generator, evaluator)
+            loaded = SearchState.load(path)
             initial_visits = loaded.root.visits
 
-            result = loaded.continue_search(simulations=5)
+            result = mcts.continue_search(loaded, simulations=5)
 
-            assert loaded.root.visits > initial_visits
-            assert result.best_answer is not None
+            assert result.root.visits > initial_visits
 
     def test_continue_search_finds_more_terminals(self):
         """Test that continued search can find more terminal states."""
@@ -359,30 +316,27 @@ class TestContinueSearch:
         evaluator = MockEvaluator()
         mcts = MCTS(generator, evaluator, max_rollout_depth=3)
 
-        # Initial search
-        result1 = mcts.search("What is 2+2?", simulations=3)
-        initial_terminals = len(mcts.terminal_states)
+        state = mcts.search("What is 2+2?", simulations=3)
+        initial_terminals = len(state.terminal_states)
 
-        # Continue with more simulations
-        result2 = mcts.continue_search(simulations=10)
+        state = mcts.continue_search(state, simulations=10)
 
-        # Should potentially find more terminal states
-        # (not guaranteed but likely with more simulations)
-        assert len(mcts.terminal_states) >= initial_terminals
+        assert len(state.terminal_states) >= initial_terminals
 
-    def test_continue_search_returns_search_result(self):
-        """Test that continue_search returns proper SearchResult."""
+    def test_continue_search_returns_search_state(self):
+        """Test that continue_search returns SearchState."""
+        from mcts_reasoning.types import SearchState
+
         generator = MockGenerator()
         evaluator = MockEvaluator()
         mcts = MCTS(generator, evaluator, max_rollout_depth=3)
 
-        mcts.search("What is 2+2?", simulations=5)
-        result = mcts.continue_search(simulations=5)
+        state = mcts.search("What is 2+2?", simulations=5)
+        state2 = mcts.continue_search(state, simulations=5)
 
-        assert isinstance(result, SearchResult)
-        assert result.root is mcts.root
-        assert result.simulations == mcts.root.visits
-        assert result.confidence >= 0
+        assert isinstance(state2, SearchState)
+        assert state2.root is state.root
+        assert state2.simulations_run == 10
 
 
 class TestSerializationEdgeCases:
@@ -423,16 +377,19 @@ class TestSerializationEdgeCases:
         assert len(restored.children) == 10
         assert all(len(c.children) == 5 for c in restored.children)
 
-    def test_mcts_preserves_terminal_states(self):
-        """Test that terminal_states list is preserved."""
+    def test_search_state_preserves_terminal_states(self):
+        """Test that terminal_states list is preserved through save/load."""
+        from mcts_reasoning.types import SearchState
+
         generator = MockGenerator()
         evaluator = MockEvaluator()
         mcts = MCTS(generator, evaluator, max_rollout_depth=3)
 
-        mcts.search("What is 2+2?", simulations=10)
-        original_terminals = len(mcts.terminal_states)
+        state = mcts.search("What is 2+2?", simulations=10)
+        original_terminals = len(state.terminal_states)
 
-        data = mcts.to_dict()
-        restored = MCTS.from_dict(data, generator, evaluator)
-
-        assert len(restored.terminal_states) == original_terminals
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "state.json")
+            state.save(path)
+            loaded = SearchState.load(path)
+            assert len(loaded.terminal_states) == original_terminals

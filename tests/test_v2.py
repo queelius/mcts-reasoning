@@ -632,15 +632,17 @@ class TestMCTS:
 
     def test_mcts_search_basic(self):
         """Test basic MCTS search."""
+        from mcts_reasoning.types import SearchState
+
         gen = MockGenerator()
         eval_ = MockEvaluator(default_score=0.8)
 
         mcts = MCTS(gen, eval_, max_children_per_node=2)
-        result = mcts.search("What is 2+2?", simulations=10)
+        state = mcts.search("What is 2+2?", simulations=10)
 
-        assert isinstance(result, SearchResult)
-        assert result.simulations == 10
-        assert result.root is not None
+        assert isinstance(state, SearchState)
+        assert state.simulations_run == 10
+        assert state.root is not None
 
     def test_mcts_finds_answer(self):
         """Test MCTS finds an answer."""
@@ -648,8 +650,10 @@ class TestMCTS:
         eval_ = MockEvaluator(default_score=0.8)
 
         mcts = MCTS(gen, eval_)
-        result = mcts.search("What is 2+2?", simulations=20)
+        state = mcts.search("What is 2+2?", simulations=20)
 
+        # Convert to legacy SearchResult to check best_answer
+        result = MCTS.to_search_result(state)
         assert result.best_answer is not None
         assert result.confidence > 0
 
@@ -659,11 +663,10 @@ class TestMCTS:
         eval_ = MockEvaluator()
 
         mcts = MCTS(gen, eval_, max_children_per_node=3)
-        result = mcts.search("What is 2+2?", simulations=30)
+        state = mcts.search("What is 2+2?", simulations=30)
 
-        stats = result.stats
-        assert stats["total_nodes"] > 1
-        assert stats["max_depth"] > 0
+        assert state.root.count_nodes() > 1
+        assert state.root.max_depth() > 0
 
     def test_mcts_finds_terminal_states(self):
         """Test MCTS records terminal states."""
@@ -689,27 +692,27 @@ class TestMCTS:
         # Check root doesn't exceed max children
         assert len(result.root.children) <= 2
 
-    def test_mcts_tree_visualization(self):
-        """Test tree visualization."""
+    def test_mcts_search_returns_search_state(self):
+        """Test search returns a SearchState with correct fields."""
         gen = MockGenerator()
         eval_ = MockEvaluator()
 
         mcts = MCTS(gen, eval_)
-        mcts.search("What is 2+2?", simulations=10)
+        state = mcts.search("What is 2+2?", simulations=10)
 
-        viz = mcts.get_tree_visualization(max_depth=2)
-        assert isinstance(viz, str)
-        assert len(viz) > 0
-        assert "v=" in viz  # Contains visit count
+        assert state.question == "What is 2+2?"
+        assert state.simulations_run == 10
+        assert state.root is not None
 
-    def test_mcts_stats(self):
-        """Test SearchResult stats property."""
+    def test_mcts_stats_via_search_result(self):
+        """Test SearchResult stats property (via to_search_result)."""
         gen = MockGenerator()
         eval_ = MockEvaluator()
 
         mcts = MCTS(gen, eval_)
-        result = mcts.search("What is 2+2?", simulations=15)
+        state = mcts.search("What is 2+2?", simulations=15)
 
+        result = MCTS.to_search_result(state)
         stats = result.stats
         assert "total_nodes" in stats
         assert "max_depth" in stats
@@ -753,9 +756,10 @@ class TestIntegration:
         eval_ = GroundTruthEvaluator(ground_truth="4")
 
         mcts = MCTS(gen, eval_, max_children_per_node=2)
-        result = mcts.search("What is 2+2?", simulations=10)
+        state = mcts.search("What is 2+2?", simulations=10)
 
-        # Should find the correct answer
+        # Convert to SearchResult to check best_answer
+        result = MCTS.to_search_result(state)
         assert "4" in str(result.best_answer)
         assert result.confidence > 0.5
 
@@ -776,11 +780,11 @@ class TestIntegration:
         eval_ = MockEvaluator(default_score=0.8)
 
         mcts = MCTS(gen, eval_)
-        result = mcts.search("test", simulations=20)
+        state = mcts.search("test", simulations=20)
 
         # Root should have accumulated visits
-        assert result.root.visits == 20
-        assert result.root.value > 0
+        assert state.root.visits == 20
+        assert state.root.value > 0
 
 
 if __name__ == "__main__":

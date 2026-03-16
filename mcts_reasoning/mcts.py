@@ -1,32 +1,38 @@
 """
 MCTS: Monte Carlo Tree Search for reasoning.
 
+Stateless implementation: search() creates a fresh SearchState each time;
+continue_search(state, n) accepts an existing SearchState and extends it.
+No mutable search state lives on the MCTS object itself.
+
 Implements the spec from paper/main.tex with:
 - UCB1 selection (Definition 4.1)
-- State-dependent action spaces (Definition 3.5)
-- On-demand expansion with branching factor bound B (Definition 3.7)
+- On-demand expansion via Generator (no ActionSpace indirection)
 - Tree-building rollouts (Algorithm 4, Remark 4.4)
 - Backpropagation from terminal nodes (Algorithm 5)
 - Terminal-only evaluation for cost efficiency
+- on_simulation callback for observability
 """
 
-from typing import Optional, List, Dict, Any
-from dataclasses import dataclass, field
-import json
-from pathlib import Path
+from __future__ import annotations
 
-from .node import Node
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional
+
 from .generator import Generator
 from .evaluator import Evaluator
+from .node import Node
+from .terminal import MarkerTerminalDetector, TerminalDetector
+from .types import SearchState, State
 
-# actions module was removed in v0.6 Task 1; action_space parameter is
-# kept for API compatibility until Task 10 replaces MCTS entirely.
-ActionSpace = None  # type alias placeholder
 
+# ---------------------------------------------------------------------------
+# Legacy SearchResult -- kept for backward compatibility with test_v2 etc.
+# ---------------------------------------------------------------------------
 
 @dataclass
 class SearchResult:
-    """Result of MCTS search."""
+    """Result of MCTS search (legacy wrapper around SearchState)."""
 
     best_answer: Optional[str]
     confidence: float
@@ -41,17 +47,9 @@ class SearchResult:
         if self._cached_stats is not None:
             return self._cached_stats
 
-        def count_nodes(node: Node) -> int:
-            return 1 + sum(count_nodes(c) for c in node.children)
-
-        def max_depth(node: Node) -> int:
-            if not node.children:
-                return 0
-            return 1 + max(max_depth(c) for c in node.children)
-
         self._cached_stats = {
-            "total_nodes": count_nodes(self.root),
-            "max_depth": max_depth(self.root),
+            "total_nodes": self.root.count_nodes(),
+            "max_depth": self.root.max_depth(),
             "simulations": self.simulations,
             "terminal_states_found": len(self.terminal_states),
             "best_answer": self.best_answer,
@@ -64,495 +62,224 @@ class SearchResult:
         self._cached_stats = None
 
 
+# Type alias for the on_simulation callback signature.
+OnSimulationCallback = Callable[[int, str, Node, SearchState], None]
+
+
 class MCTS:
     """
     Monte Carlo Tree Search for LLM reasoning.
 
-    Usage:
+    **Stateless**: search() and continue_search() do NOT mutate ``self``.
+    All mutable search state lives on the returned :class:`SearchState`.
+
+    Usage::
+
         generator = LLMGenerator(llm)
         evaluator = LLMEvaluator(llm)
 
         mcts = MCTS(generator, evaluator)
-        result = mcts.search("What is 2+2?", simulations=50)
+        state = mcts.search("What is 2+2?", simulations=50)
 
-        print(result.best_answer)
-        print(result.confidence)
-
-    With custom action space:
-        action_space = ExtendedActionSpace(generator=generator, llm=llm)
-        mcts = MCTS(generator, evaluator, action_space=action_space)
+        # Continue later
+        state = mcts.continue_search(state, simulations=50)
     """
 
     def __init__(
         self,
         generator: Generator,
         evaluator: Evaluator,
+        terminal_detector: Optional[TerminalDetector] = None,
         exploration_constant: float = 1.414,
         max_children_per_node: int = 3,
-        max_rollout_depth: int = 10,
-        action_space: Optional[ActionSpace] = None,
+        max_rollout_depth: int = 5,
+        on_simulation: Optional[OnSimulationCallback] = None,
+        # Legacy kwargs -- silently accepted so old code doesn't break.
+        action_space: Any = None,
     ):
-        """
-        Initialize MCTS.
-
-        Args:
-            generator: Produces reasoning continuations
-            evaluator: Scores terminal states
-            exploration_constant: UCB1 exploration parameter (higher = more exploration)
-            max_children_per_node: Maximum branching factor (B in the spec)
-            max_rollout_depth: Maximum steps in a rollout (D in the spec)
-            action_space: Defines available actions per state (default: CONTINUE only)
-        """
         self.generator = generator
         self.evaluator = evaluator
+        self.terminal_detector = terminal_detector or MarkerTerminalDetector()
         self.exploration_constant = exploration_constant
         self.max_children_per_node = max_children_per_node
         self.max_rollout_depth = max_rollout_depth
+        self.on_simulation = on_simulation
 
-        # Action space: removed in v0.6 (was DefaultActionSpace).
-        # Rollout now uses generator directly instead of action_space.
-        self.action_space = action_space
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
 
-        # Search state
-        self.root: Optional[Node] = None
-        self.question: str = ""
-        self.terminal_states: List[Dict[str, Any]] = []
-
-    def search(self, question: str, simulations: int = 100) -> SearchResult:
-        """
-        Run MCTS search.
-
-        Args:
-            question: The question to solve
-            simulations: Number of simulations to run
-
-        Returns:
-            SearchResult with best answer and statistics
-        """
-        self.question = question
-        self.terminal_states = []
-
-        # Initialize root with the question as the initial state
-        initial_state = f"Question: {question}\n\nLet me solve this step by step."
-        self.root = Node(state=initial_state)
-
-        # Run simulations
-        for i in range(simulations):
-            self._simulate()
-
-        # Find best answer
-        best_answer, confidence = self._get_best_answer()
-
-        return SearchResult(
-            best_answer=best_answer,
-            confidence=confidence,
-            root=self.root,
-            simulations=simulations,
-            terminal_states=self.terminal_states,
+    def search(self, question: str, simulations: int = 10) -> SearchState:
+        """Run a fresh MCTS search, returning a :class:`SearchState`."""
+        initial_state = State(
+            f"Question: {question}\n\nLet me solve this step by step."
         )
+        root = Node(state=initial_state)
+        search_state = SearchState(
+            root=root,
+            question=question,
+            exploration_constant=self.exploration_constant,
+            max_children_per_node=self.max_children_per_node,
+            max_rollout_depth=self.max_rollout_depth,
+        )
+        return self._run_simulations(search_state, simulations)
 
-    def _simulate(self):
-        """Run one MCTS simulation: select, expand, rollout, backpropagate."""
-        # Selection: traverse tree to find promising leaf
-        node = self._select(self.root)
+    def continue_search(self, state: SearchState, simulations: int = 10) -> SearchState:
+        """Run more simulations on an existing :class:`SearchState`."""
+        return self._run_simulations(state, simulations)
 
-        # If terminal, just evaluate and backpropagate
-        if node.is_terminal:
-            reward = self._evaluate_terminal(node)
-            self._backpropagate(node, reward)
-            return
+    # ------------------------------------------------------------------
+    # Simulation loop
+    # ------------------------------------------------------------------
 
-        # Expansion: add one new child
-        child = self._expand(node)
+    def _run_simulations(self, search_state: SearchState, simulations: int) -> SearchState:
+        base = search_state.simulations_run
+        for sim in range(simulations):
+            self._simulate(search_state, base + sim + 1)
+        search_state.simulations_run += simulations
+        return search_state
 
-        if child is None:
-            # No expansion possible, evaluate current node
-            reward = 0.0  # Non-terminal leaf gets low reward
-            self._backpropagate(node, reward)
-            return
+    def _simulate(self, state: SearchState, sim_number: int) -> None:
+        # 1. SELECT: UCB1 traversal to expandable leaf
+        node = self._select(state.root, state.exploration_constant, state.max_children_per_node)
+        self._fire_callback(sim_number, "select", node, state)
 
-        # Rollout: continue from child until terminal (tree-building)
-        terminal_node, reward = self._rollout(child)
+        # 2. EXPAND: generate continuation, add child
+        if not node.is_terminal:
+            child = self._expand(state.question, node, state.max_children_per_node)
+            if child is not None:
+                node = child
+        self._fire_callback(sim_number, "expand", node, state)
 
-        # Backpropagate from terminal node (per spec Algorithm 5)
-        self._backpropagate(terminal_node, reward)
+        # 3. ROLLOUT: keep generating until terminal or max depth
+        rollout_node = self._rollout(
+            state.question, node,
+            state.max_children_per_node, state.max_rollout_depth,
+        )
+        self._fire_callback(sim_number, "rollout", rollout_node, state)
 
-    def _select(self, node: Node) -> Node:
-        """
-        Select a node to expand using UCB1.
+        # 4. BACKPROP: evaluate if terminal, propagate score
+        if rollout_node.is_terminal and rollout_node.answer:
+            evaluation = self.evaluator.evaluate(
+                state.question, str(rollout_node.state), rollout_node.answer,
+            )
+            state.terminal_states.append({
+                "answer": rollout_node.answer,
+                "score": evaluation.score,
+                "state": str(rollout_node.state)[:200],
+            })
+            self._backpropagate(rollout_node, evaluation.score)
+        else:
+            self._backpropagate(rollout_node, 0.0)
+        self._fire_callback(sim_number, "backprop", rollout_node, state)
 
-        Traverses tree until finding a node that:
-        1. Is terminal, OR
-        2. Has untried continuations (can be expanded), OR
-        3. Has fewer children than max_children_per_node
-        """
+    # ------------------------------------------------------------------
+    # MCTS phases
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _select(root: Node, exploration_constant: float, max_children: int) -> Node:
+        """UCB1 walk from *root* to an expandable or terminal leaf (iterative)."""
+        node = root
         while True:
-            # If terminal, return it
             if node.is_terminal:
                 return node
 
-            # If can expand (has untried continuations or room for more children)
-            if self._can_expand(node):
+            # Expandable: has room for more children
+            if len(node.children) < max_children:
                 return node
 
-            # If no children, must expand
+            # All slots filled -- descend via best UCB1 child
             if not node.children:
                 return node
 
-            # Otherwise, select best child and continue
-            node = node.best_child(self.exploration_constant)
+            best = node.best_child(exploration_constant)
+            if best is None:
+                return node
+            node = best
 
-            if node is None:
-                # Shouldn't happen, but safety fallback
-                return self.root
-
-        return node
-
-    def _can_expand(self, node: Node) -> bool:
-        """Check if node can be expanded with a new child."""
-        # Already at max children
-        if len(node.children) >= self.max_children_per_node:
-            return False
-
-        # Has untried continuations cached
-        if node.has_untried_continuations():
-            return True
-
-        # Hasn't generated continuations yet
-        if node._continuations is None:
-            return True
-
-        return False
-
-    def _expand(self, node: Node) -> Optional[Node]:
-        """Expand node by adding one child."""
-        # Generate continuations if not cached
-        if node._continuations is None:
-            continuations = self.generator.generate(
-                self.question,
-                node.state,
-                n=self.max_children_per_node,
-            )
-            node.set_continuations([c.text for c in continuations])
-
-            # Store terminal info for each continuation
-            node._continuation_info = {
-                c.text: (c.is_terminal, c.answer) for c in continuations
-            }
-
-        # Get next untried continuation
-        next_state = node.get_next_continuation()
-        if next_state is None:
+    def _expand(self, question: str, node: Node, max_children: int) -> Optional[Node]:
+        """Generate one continuation and attach it as a child of *node*."""
+        if len(node.children) >= max_children:
             return None
 
-        # Check if this continuation is terminal
-        is_terminal = False
-        answer = None
-        if (
-            hasattr(node, "_continuation_info")
-            and next_state in node._continuation_info
-        ):
-            is_terminal, answer = node._continuation_info[next_state]
+        continuations = self.generator.generate(question, str(node.state), n=1)
+        if not continuations:
+            return None
 
-        # Create child node
+        cont = continuations[0]
         child = node.add_child(
-            state=next_state,
-            is_terminal=is_terminal,
-            answer=answer,
+            state=str(cont.text),
+            is_terminal=cont.is_terminal,
+            answer=cont.answer,
         )
-
         return child
 
-    def _rollout(self, node: Node) -> tuple:
-        """
-        Tree-building rollout from node until terminal state.
-
-        Per spec (Algorithm 4, Remark 4.4): During rollout, we ADD nodes to the
-        tree rather than just simulating. This preserves the reasoning trace
-        for future exploration.
-
-        Uses Generator directly (CONTINUE action only).
-
-        Returns:
-            (terminal_node, reward) - terminal_node is added to tree
-        """
-        current_node = node
+    def _rollout(
+        self, question: str, node: Node, max_children: int, max_depth: int,
+    ) -> Node:
+        """Tree-building rollout: generate until terminal or *max_depth* (iterative)."""
+        current = node
         depth = 0
+        while depth < max_depth and not current.is_terminal:
+            # Respect branching-factor bound during rollout
+            if len(current.children) >= max_children:
+                break
 
-        # If already terminal, evaluate immediately
-        if current_node.is_terminal:
-            reward = self._evaluate_terminal(current_node)
-            return current_node, reward
-
-        # Rollout until terminal or max depth (adding nodes to tree)
-        while depth < self.max_rollout_depth:
-            # Generate a single continuation (CONTINUE action)
-            continuations = self.generator.generate(
-                self.question,
-                current_node.state,
-                n=1,
-            )
-
+            continuations = self.generator.generate(question, str(current.state), n=1)
             if not continuations:
                 break
 
             cont = continuations[0]
-            depth += 1
-
-            # Create and add child node to tree (tree-building rollout)
-            child_node = current_node.add_child(
-                state=cont.text,
+            child = current.add_child(
+                state=str(cont.text),
                 is_terminal=cont.is_terminal,
                 answer=cont.answer,
             )
+            current = child
+            depth += 1
+        return current
 
-            if cont.is_terminal:
-                # Reached terminal state - evaluate and return
-                reward = self._evaluate_terminal(child_node)
-                return child_node, reward
+    @staticmethod
+    def _backpropagate(node: Node, score: float) -> None:
+        """Walk from *node* to root, updating visits and running-average value (iterative)."""
+        current: Optional[Node] = node
+        while current is not None:
+            current.visits += 1
+            # Running average: new_avg = (old_avg * (n-1) + score) / n
+            if current.visits == 1:
+                current.value = score
+            else:
+                current.value = (
+                    current.value * (current.visits - 1) + score
+                ) / current.visits
+            current = current.parent
 
-            # Continue rollout from this new node
-            current_node = child_node
+    def _fire_callback(
+        self, sim_number: int, phase: str, node: Node, state: SearchState,
+    ) -> None:
+        if self.on_simulation is not None:
+            self.on_simulation(sim_number, phase, node, state)
 
-        # Didn't reach terminal - return last node with low reward
-        return current_node, 0.1
+    # ------------------------------------------------------------------
+    # Convenience: build a legacy SearchResult from a SearchState
+    # ------------------------------------------------------------------
 
-    def _evaluate_terminal(self, node: Node) -> float:
-        """Evaluate a terminal node."""
-        evaluation = self.evaluator.evaluate(
-            self.question,
-            node.state,
-            node.answer or "",
-        )
+    @staticmethod
+    def to_search_result(state: SearchState) -> SearchResult:
+        """Convert a :class:`SearchState` into a legacy :class:`SearchResult`."""
+        best_answer: Optional[str] = None
+        confidence: float = 0.0
 
-        # Record this terminal state
-        self.terminal_states.append(
-            {
-                "state": node.state,
-                "answer": node.answer,
-                "score": evaluation.score,
-                "depth": node.depth,
-            }
-        )
-
-        return evaluation.score
-
-    def _backpropagate(self, node: Node, reward: float):
-        """Backpropagate reward up the tree."""
-        while node is not None:
-            node.visits += 1
-            node.value += reward
-            node = node.parent
-
-    def _get_best_answer(self) -> tuple:
-        """Get the best answer from terminal states found."""
-        if not self.terminal_states:
-            # No terminal states found - try to get best leaf
-            return self._get_best_leaf_answer()
-
-        # Find highest scoring terminal state
-        best = max(self.terminal_states, key=lambda x: x["score"])
-        return best["answer"], best["score"]
-
-    def _get_best_leaf_answer(self) -> tuple:
-        """Fallback: get answer from best leaf node."""
-
-        def find_best_leaf(node: Node) -> Node:
-            if not node.children:
-                return node
-            best_child = node.highest_value_child()
-            if best_child is None:
-                return node
-            return find_best_leaf(best_child)
-
-        best_leaf = find_best_leaf(self.root)
-
-        # Try to extract any answer from the state
-        answer = self.generator.extract_answer(best_leaf.state)
-        confidence = best_leaf.average_value if best_leaf.visits > 0 else 0.0
-
-        return answer, confidence
-
-    def get_tree_visualization(self, max_depth: int = 3) -> str:
-        """Get a text visualization of the search tree."""
-        lines = []
-
-        def visualize(node: Node, prefix: str = "", is_last: bool = True):
-            # Node representation
-            marker = "└── " if is_last else "├── "
-            state_preview = node.state.split("\n")[-1][:40]  # Last line, truncated
-            if node.is_terminal:
-                state_preview = f"[TERMINAL: {node.answer}]"
-
-            stats = f"(v={node.visits}, avg={node.average_value:.2f})"
-            lines.append(f"{prefix}{marker}{state_preview} {stats}")
-
-            # Recurse to children
-            if node.depth < max_depth:
-                child_prefix = prefix + ("    " if is_last else "│   ")
-                for i, child in enumerate(node.children):
-                    is_last_child = i == len(node.children) - 1
-                    visualize(child, child_prefix, is_last_child)
-
-        visualize(self.root, "", True)
-        return "\n".join(lines)
-
-    # ========== Serialization ==========
-
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Serialize the MCTS state to a dictionary.
-
-        Note: Generator and evaluator are not serialized. They must be
-        provided when loading via from_dict() or load().
-        """
-        if self.root is None:
-            raise ValueError("Cannot serialize MCTS without a root node")
-
-        return {
-            "version": "0.4.0",
-            "question": self.question,
-            "exploration_constant": self.exploration_constant,
-            "max_children_per_node": self.max_children_per_node,
-            "max_rollout_depth": self.max_rollout_depth,
-            "terminal_states": self.terminal_states,
-            "root": self.root.to_dict(),
-        }
-
-    @classmethod
-    def from_dict(
-        cls,
-        data: Dict[str, Any],
-        generator: Generator,
-        evaluator: Evaluator,
-        action_space: Optional["ActionSpace"] = None,
-    ) -> "MCTS":
-        """
-        Deserialize MCTS state from a dictionary.
-
-        Args:
-            data: Dictionary from to_dict()
-            generator: Generator instance (required for continued search)
-            evaluator: Evaluator instance (required for continued search)
-            action_space: Optional custom action space
-
-        Returns:
-            MCTS instance with restored tree state
-        """
-        mcts = cls(
-            generator=generator,
-            evaluator=evaluator,
-            exploration_constant=data.get("exploration_constant", 1.414),
-            max_children_per_node=data.get("max_children_per_node", 3),
-            max_rollout_depth=data.get("max_rollout_depth", 10),
-            action_space=action_space,
-        )
-
-        mcts.question = data.get("question", "")
-        mcts.terminal_states = data.get("terminal_states", [])
-        mcts.root = Node.from_dict(data["root"])
-
-        return mcts
-
-    def to_json(self, indent: int = 2) -> str:
-        """Serialize to JSON string."""
-        return json.dumps(self.to_dict(), indent=indent)
-
-    @classmethod
-    def from_json(
-        cls,
-        json_str: str,
-        generator: Generator,
-        evaluator: Evaluator,
-        action_space: Optional["ActionSpace"] = None,
-    ) -> "MCTS":
-        """Deserialize from JSON string."""
-        data = json.loads(json_str)
-        return cls.from_dict(data, generator, evaluator, action_space)
-
-    def save(self, path: str) -> None:
-        """
-        Save MCTS tree state to a file.
-
-        Args:
-            path: File path to save to (will be created/overwritten)
-
-        Example:
-            result = mcts.search("What is 2+2?", simulations=50)
-            mcts.save("tree.json")
-        """
-        path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w") as f:
-            f.write(self.to_json())
-
-    @classmethod
-    def load(
-        cls,
-        path: str,
-        generator: Generator,
-        evaluator: Evaluator,
-        action_space: Optional["ActionSpace"] = None,
-    ) -> "MCTS":
-        """
-        Load MCTS tree state from a file.
-
-        Args:
-            path: File path to load from
-            generator: Generator instance (required for continued search)
-            evaluator: Evaluator instance (required for continued search)
-            action_space: Optional custom action space
-
-        Returns:
-            MCTS instance with restored tree state
-
-        Example:
-            mcts = MCTS.load("tree.json", generator, evaluator)
-            result = mcts.continue_search(simulations=50)
-        """
-        with open(path, "r") as f:
-            json_str = f.read()
-        return cls.from_json(json_str, generator, evaluator, action_space)
-
-    # ========== Continued Search ==========
-
-    def continue_search(self, simulations: int = 100) -> SearchResult:
-        """
-        Continue search from existing tree state.
-
-        Use this to add more simulations to an existing search,
-        either after initial search() or after loading a saved tree.
-
-        Args:
-            simulations: Additional simulations to run
-
-        Returns:
-            SearchResult with updated statistics
-
-        Example:
-            result = mcts.search("What is 2+2?", simulations=50)
-            # Later, add more simulations
-            result = mcts.continue_search(simulations=50)
-        """
-        if self.root is None:
-            raise ValueError(
-                "Cannot continue search without existing tree. Use search() first."
-            )
-
-        # Run additional simulations
-        for _ in range(simulations):
-            self._simulate()
-
-        # Get updated best answer
-        best_answer, confidence = self._get_best_answer()
-
-        # Count total simulations from root visits
-        total_simulations = self.root.visits
+        if state.terminal_states:
+            best = max(state.terminal_states, key=lambda t: t["score"])
+            best_answer = best["answer"]
+            confidence = best["score"]
 
         return SearchResult(
             best_answer=best_answer,
             confidence=confidence,
-            root=self.root,
-            simulations=total_simulations,
-            terminal_states=self.terminal_states,
+            root=state.root,
+            simulations=state.simulations_run,
+            terminal_states=state.terminal_states,
         )
