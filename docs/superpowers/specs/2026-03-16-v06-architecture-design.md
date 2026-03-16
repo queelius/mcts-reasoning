@@ -45,7 +45,7 @@ mcts_reasoning/
         solver.py            # Solver ABC, BaselineSolver, MCTSSolver
         runner.py            # BenchRunner
         report.py            # BenchReport (table, json, csv output)
-        optimizer.py         # PromptOptimizer ABC + GridSearchOptimizer
+        optimizer.py         # PromptOptimizer ABC (v0.7: GridSearchOptimizer)
         benchmarks/
             __init__.py      # Registry of built-in benchmarks
             knights.py       # KnightsAndKnaves (logic)
@@ -108,7 +108,12 @@ class LLMProvider(ABC):
         """Return a human-readable provider name (e.g., 'Ollama-llama3.2')."""
 ```
 
-Note: `generate()` takes `list[Message]` not a raw string. Providers that need raw strings flatten internally.
+Note: `generate()` takes `list[Message]`. All providers use chat/message APIs natively:
+- `OllamaProvider` uses `/api/chat` (not `/api/generate`), which accepts messages directly.
+- `OpenAIProvider` uses `chat.completions.create()` with messages.
+- `AnthropicProvider` uses `messages.create()` with messages.
+
+Each `detect()` classmethod has a 2-second timeout on any network calls to avoid blocking.
 
 ### PromptStrategy
 
@@ -128,7 +133,41 @@ class PromptStrategy(ABC):
 
 Implementations:
 - `StepByStepPrompt`: current default template ("continue reasoning step by step"). Accepts a `TerminalDetector` to include the right completion instruction.
-- `FewShotPrompt`: includes examples selected from a pool. Used by the learnable prompt optimizer.
+- `FewShotPrompt`: decorator over any base `PromptStrategy`. Prepends few-shot examples from an `ExampleSource` to the base strategy's messages.
+
+### ExampleSource (internal to prompt layer)
+
+Not an MCTS-level ABC. A dependency of `FewShotPrompt` for sourcing examples:
+
+```python
+# prompt.py
+class ExampleSource(Protocol):
+    def find_similar(self, question: str, k: int) -> list[Example]: ...
+
+@dataclass
+class Example:
+    problem: str
+    solution: str
+    reasoning: str | None = None
+
+class FewShotPrompt(PromptStrategy):
+    """Decorator: wraps a base strategy with few-shot examples."""
+    def __init__(self, base: PromptStrategy, examples: ExampleSource, k: int = 3): ...
+
+    def format(self, question, state, n=1) -> list[Message]:
+        similar = self.examples.find_similar(question, self.k)
+        base_messages = self.base.format(question, state, n)
+        # Prepend examples as assistant/user message pairs before the base messages
+        ...
+
+    def parse(self, response, n=1) -> list[str]:
+        return self.base.parse(response, n)  # delegate parsing to base
+```
+
+Example source implementations (built-in):
+- `StaticExampleSource`: fixed list of hand-picked examples
+- `SynthdataExampleSource`: generate examples on-the-fly from synthdata (optional dep)
+- `RAGExampleSource`: similarity-based retrieval from a corpus (future)
 
 ### Generator
 
@@ -144,7 +183,32 @@ class LLMGenerator(Generator):
                  terminal_detector: TerminalDetector): ...
 ```
 
-LLMGenerator becomes thin: calls `prompt_strategy.format()`, sends to `provider.generate()`, calls `prompt_strategy.parse()`, checks `terminal_detector`. No hardcoded prompt templates.
+LLMGenerator assembly logic (the core pipeline):
+
+```python
+class LLMGenerator(Generator):
+    def generate(self, question: str, state: State, n: int = 1) -> list[Continuation]:
+        # 1. Format the prompt
+        messages = self.prompt_strategy.format(question, state, n)
+        # 2. Call the LLM
+        response = self.provider.generate(messages, self.max_tokens, self.temperature)
+        # 3. Parse into raw continuation strings
+        raw_continuations = self.prompt_strategy.parse(response, n)
+        # 4. For each continuation, check terminal and build Continuation object
+        results = []
+        for text in raw_continuations:
+            # Terminal detection runs on the raw continuation only, NOT the accumulated state
+            check = self.terminal_detector.is_terminal(text)
+            new_state = extend_state(state, text)
+            results.append(Continuation(
+                text=new_state,
+                is_terminal=check.is_terminal,
+                answer=check.answer,
+            ))
+        return results
+```
+
+No hardcoded prompt templates. Terminal detection receives only the new continuation text (not the full state) to avoid re-detecting markers from earlier steps.
 
 ### Evaluator
 
@@ -186,6 +250,21 @@ class SamplingStrategy(ABC):
 
 Implementations: `ValueSampling`, `VisitSampling`, `DiverseSampling`, `TopKSampling`.
 
+`PathSampler` is retained as a convenience facade:
+
+```python
+class PathSampler:
+    """Convenience wrapper combining sampling, consensus, and tree statistics."""
+    def __init__(self, root: Node, strategy: SamplingStrategy = ValueSampling(),
+                 consensus: ConsensusStrategy = MajorityVote()):
+        ...
+
+    def sample(self, n: int = 5) -> list[SampledPath]: ...
+    def vote(self) -> ConsensusResult: ...
+    def get_answer_distribution(self) -> dict[str, int]: ...
+    def consistency_score(self) -> float: ...
+```
+
 ### ConsensusStrategy
 
 ```python
@@ -216,6 +295,17 @@ class SearchState:
     question: str
     terminal_states: list[dict]
     simulations_run: int
+    # Config needed for continue_search and serialization
+    exploration_constant: float
+    max_children_per_node: int
+    max_rollout_depth: int
+
+    def save(self, path: str) -> None:
+        """Serialize to JSON (tree + config + metadata)."""
+
+    @classmethod
+    def load(cls, path: str) -> "SearchState":
+        """Deserialize from JSON."""
 
 class MCTS:
     def __init__(self, generator: Generator, evaluator: Evaluator,
@@ -251,7 +341,8 @@ All state concatenation goes through `extend_state`. One place to change the con
 
 ```python
 # providers/__init__.py
-_PROVIDER_CLASSES = [OllamaProvider, OpenAIProvider, AnthropicProvider]
+# Order matters: env-var-only checks first (fast), network probes last (slow)
+_PROVIDER_CLASSES = [OpenAIProvider, AnthropicProvider, OllamaProvider]
 
 def detect_provider(base_url: str | None = None, **kwargs) -> LLMProvider:
     """Probe base_url or env vars to find a working provider.
@@ -378,12 +469,9 @@ class PromptOptimizer(ABC):
                  budget: int) -> PromptStrategy:
         """Search for a better prompt strategy within the given budget."""
 
-class GridSearchOptimizer(PromptOptimizer):
-    """Exhaustively try combinations from a parameter grid."""
-    def __init__(self, grid: dict[str, list]): ...
 ```
 
-Fancier optimizers (BanditOptimizer, EvolutionaryOptimizer, LLMGuidedOptimizer) are future work enabled by the ABC.
+v0.6 ships the ABC only. v0.7 adds `GridSearchOptimizer`. Fancier optimizers (BanditOptimizer, EvolutionaryOptimizer, LLMGuidedOptimizer) are future work enabled by the ABC.
 
 ## MCP Server (Primary Interface)
 
@@ -406,7 +494,7 @@ def mcts_bench(benchmark: str = "knights", provider: str = "auto",
     """Run benchmark comparison: baseline vs MCTS. Returns accuracy table."""
 ```
 
-The server is a thin layer over the engine. All logic lives in the engine ABCs.
+The server is a thin layer over the engine. All logic lives in the engine ABCs. Tool calls return error dicts (not raise) on failure. `mcts_bench` may run for minutes on non-trivial benchmarks; the server should support progress reporting via MCP notifications where available.
 
 ## CLI (Secondary, Feature Parity)
 
@@ -430,19 +518,19 @@ Same capabilities as MCP, different surface.
 
 ## Bug Fixes Included in v0.6
 
-1. **`_continuation_info`**: index-based parallel list, not text-keyed dict
+1. **`_continuation_info` eliminated**: the new `LLMGenerator` returns `list[Continuation]` with `is_terminal` and `answer` already set. MCTS `_expand()` stores this info directly from the Continuation objects. No text-keyed dict, no monkey-patched attribute.
 2. **Rollout `max_children_per_node`**: enforced during rollout, not just expansion
 3. **`LLMEvaluator._parse_score`**: prefer numbers in 0-1 range, not first number found
-4. **Test fixtures**: use `value` field, not nonexistent `_total_value`
-5. **`_continuation_info`**: proper `Optional[dict]` field on Node, not monkey-patched
-6. **Tree-walking**: iterative (stack-based DFS) throughout, no recursion limit risk
-7. **Prompt template**: format at generate-time, not pre-format at construction
+4. **Test fixtures**: use `value` field, not nonexistent `_total_value` (fix immediately in v0.5.x too)
+5. **Tree-walking**: iterative (stack-based DFS) throughout (9 sites across 4 files), no recursion limit risk. `Node.depth` becomes a cached field set during `add_child`.
+6. **Prompt template**: format at generate-time via PromptStrategy, not pre-format at construction
+7. **TerminalDetector method rename**: `check()` becomes `is_terminal()` for clarity (breaking change, noted)
 
 ## Dependencies
 
 ```toml
 [project]
-dependencies = []  # Zero-dependency core
+dependencies = []  # Zero-dependency core (importable without extras; LLMGenerator/LLMEvaluator require a provider at runtime)
 
 [project.optional-dependencies]
 ollama = ["requests>=2.28.0"]
