@@ -5,26 +5,33 @@ Each node contains:
 - A reasoning state (text generated so far)
 - Cached children (generated continuations)
 - Statistics for UCB1 (visits, value)
+- Cached depth (set by add_child, avoids recursive computation)
 """
 
 from __future__ import annotations
-import math
+
 import json
-from typing import Optional, List, Any, Dict
+import math
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+from .types import State
 
 
 @dataclass
 class Node:
     """A node in the MCTS reasoning tree."""
 
-    state: str
+    state: State
     parent: Optional[Node] = None
     children: List[Node] = field(default_factory=list)
 
     # UCB1 statistics
     visits: int = 0
     value: float = 0.0
+
+    # Cached depth (set by add_child; 0 for root)
+    depth: int = 0
 
     # Cached continuations (generated on demand)
     _continuations: Optional[List[str]] = field(default=None, repr=False)
@@ -43,13 +50,6 @@ class Node:
     def is_root(self) -> bool:
         """Node has no parent."""
         return self.parent is None
-
-    @property
-    def depth(self) -> int:
-        """Depth from root."""
-        if self.is_root:
-            return 0
-        return self.parent.depth + 1
 
     @property
     def average_value(self) -> float:
@@ -96,20 +96,28 @@ class Node:
         self._continuation_index += 1
         return continuation
 
-    def set_continuations(self, continuations: List[str]):
+    def set_continuations(self, continuations: List[str]) -> None:
         """Set the cached continuations for this node."""
         self._continuations = continuations
         self._continuation_index = 0
 
     def add_child(
-        self, state: str, is_terminal: bool = False, answer: Optional[str] = None
+        self,
+        state: str,
+        is_terminal: bool = False,
+        answer: Optional[str] = None,
+        value: float = 0.0,
+        visits: int = 0,
     ) -> Node:
         """Add a child node with the given state."""
         child = Node(
-            state=state,
+            state=State(state),
             parent=self,
             is_terminal=is_terminal,
             answer=answer,
+            value=value,
+            visits=visits,
+            depth=self.depth + 1,
         )
         self.children.append(child)
         return child
@@ -135,41 +143,84 @@ class Node:
     def path_from_root(self) -> List[Node]:
         """Get path from root to this node."""
         path = []
-        node = self
+        node: Optional[Node] = self
         while node is not None:
             path.append(node)
             node = node.parent
         return list(reversed(path))
 
-    def __repr__(self) -> str:
-        state_preview = self.state[:50] + "..." if len(self.state) > 50 else self.state
-        return f"Node(visits={self.visits}, value={self.value:.2f}, state='{state_preview}')"
+    # ------------------------------------------------------------------
+    # Iterative tree metrics
+    # ------------------------------------------------------------------
+
+    def count_nodes(self) -> int:
+        """Count all nodes in the subtree rooted at this node (iterative)."""
+        count = 0
+        stack = [self]
+        while stack:
+            node = stack.pop()
+            count += 1
+            stack.extend(node.children)
+        return count
+
+    def max_depth(self) -> int:
+        """Return the maximum depth in the subtree rooted at this node (iterative)."""
+        max_d = self.depth
+        stack = [self]
+        while stack:
+            node = stack.pop()
+            if node.depth > max_d:
+                max_d = node.depth
+            stack.extend(node.children)
+        return max_d - self.depth
+
+    # ------------------------------------------------------------------
+    # Serialization (iterative)
+    # ------------------------------------------------------------------
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        Serialize node and its subtree to a dictionary.
+        Serialize node and its subtree to a dictionary (iterative).
 
         Parent references are not included (reconstructed on load).
         Continuation cache is preserved for resuming expansion.
         """
-        return {
-            "state": self.state,
-            "visits": self.visits,
-            "value": self.value,
-            "is_terminal": self.is_terminal,
-            "answer": self.answer,
-            # Continuation cache for resuming
-            "_continuations": self._continuations,
-            "_continuation_index": self._continuation_index,
-            "_continuation_info": getattr(self, "_continuation_info", None),
-            # Recursively serialize children
-            "children": [child.to_dict() for child in self.children],
-        }
+        # Map id(node) -> dict for the node, so we can attach children after.
+        root_dict: Dict[str, Any] = {}
+
+        # Stack of (node, parent_dict_or_None)
+        stack: list[tuple[Node, Optional[Dict[str, Any]]]] = [(self, None)]
+
+        while stack:
+            node, parent_dict = stack.pop()
+
+            node_dict: Dict[str, Any] = {
+                "state": node.state,
+                "visits": node.visits,
+                "value": node.value,
+                "is_terminal": node.is_terminal,
+                "answer": node.answer,
+                "_continuations": node._continuations,
+                "_continuation_index": node._continuation_index,
+                "children": [],
+            }
+
+            if parent_dict is None:
+                # This is the root
+                root_dict = node_dict
+            else:
+                parent_dict["children"].append(node_dict)
+
+            # Push children in reverse so first child is processed first
+            for child in reversed(node.children):
+                stack.append((child, node_dict))
+
+        return root_dict
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], parent: Optional[Node] = None) -> Node:
         """
-        Deserialize node and its subtree from a dictionary.
+        Deserialize node and its subtree from a dictionary (iterative).
 
         Args:
             data: Dictionary from to_dict()
@@ -178,26 +229,39 @@ class Node:
         Returns:
             Reconstructed Node with full subtree
         """
+        root_node = cls._node_from_data(data, parent)
+
+        # Stack of (child_data_list, parent_node)
+        stack: list[tuple[list[Dict[str, Any]], Node]] = [
+            (data.get("children", []), root_node)
+        ]
+
+        while stack:
+            children_data, parent_node = stack.pop()
+            for child_data in children_data:
+                child_node = cls._node_from_data(child_data, parent_node)
+                parent_node.children.append(child_node)
+                grandchildren = child_data.get("children", [])
+                if grandchildren:
+                    stack.append((grandchildren, child_node))
+
+        return root_node
+
+    @classmethod
+    def _node_from_data(cls, data: Dict[str, Any], parent: Optional[Node]) -> Node:
+        """Create a single Node from a dict, without processing children."""
         node = cls(
-            state=data["state"],
+            state=State(data["state"]),
             parent=parent,
             visits=data.get("visits", 0),
             value=data.get("value", 0.0),
             is_terminal=data.get("is_terminal", False),
             answer=data.get("answer"),
+            depth=(parent.depth + 1) if parent is not None else 0,
         )
-
         # Restore continuation cache
         node._continuations = data.get("_continuations")
         node._continuation_index = data.get("_continuation_index", 0)
-        if data.get("_continuation_info"):
-            node._continuation_info = data["_continuation_info"]
-
-        # Recursively deserialize children
-        for child_data in data.get("children", []):
-            child = cls.from_dict(child_data, parent=node)
-            node.children.append(child)
-
         return node
 
     def to_json(self, indent: int = 2) -> str:
@@ -209,3 +273,7 @@ class Node:
         """Deserialize from JSON string."""
         data = json.loads(json_str)
         return cls.from_dict(data)
+
+    def __repr__(self) -> str:
+        state_preview = self.state[:50] + "..." if len(self.state) > 50 else self.state
+        return f"Node(visits={self.visits}, value={self.value:.2f}, state='{state_preview}')"

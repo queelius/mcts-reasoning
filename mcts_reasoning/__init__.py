@@ -5,23 +5,11 @@ A clean implementation of MCTS for systematic reasoning with LLMs.
 Separates Search (MCTS), Generator (LLM), and Evaluator (Judge) concerns.
 """
 
-__version__ = "0.5.2"
+__version__ = "0.6.0-dev"
 
 # Core MCTS components
 from .node import Node
 from .mcts import MCTS, SearchResult
-
-# Actions (state-dependent operations)
-from .actions import (
-    Action,
-    ActionResult,
-    ActionSpace,
-    ContinueAction,
-    DefaultActionSpace,
-    # Extensions
-    CompressAction,
-    ExtendedActionSpace,
-)
 
 # Terminal detection
 from .terminal import (
@@ -60,35 +48,20 @@ from .sampling import (
     SamplingStrategy,
 )
 
-# LLM provider adapter for v2
-from .llm_provider import create_generator, create_evaluator
-
-# LLM Providers (unified interface)
-from .compositional.providers import (
-    LLMProvider,
-    OpenAIProvider,
-    AnthropicProvider,
-    OllamaProvider,
-    MockLLMProvider,
-    get_llm,
+# Core types
+from .types import (
+    State,
+    Message,
+    SearchState,
+    ConsensusResult,
+    extend_state,
 )
-
-# Configuration
-from .config import Config, get_config
 
 __all__ = [
     # Core MCTS
     "Node",
     "MCTS",
     "SearchResult",
-    # Actions
-    "Action",
-    "ActionResult",
-    "ActionSpace",
-    "ContinueAction",
-    "DefaultActionSpace",
-    "CompressAction",
-    "ExtendedActionSpace",
     # Terminal Detection
     "TerminalDetector",
     "TerminalCheck",
@@ -114,17 +87,10 @@ __all__ = [
     "PathSampler",
     "SampledPath",
     "SamplingStrategy",
-    # LLM Provider Adapter
-    "create_generator",
-    "create_evaluator",
-    # LLM Providers
-    "LLMProvider",
-    "OpenAIProvider",
-    "AnthropicProvider",
-    "OllamaProvider",
-    "MockLLMProvider",
-    "get_llm",
-    # Configuration
-    "Config",
-    "get_config",
+    # Types
+    "State",
+    "Message",
+    "SearchState",
+    "ConsensusResult",
+    "extend_state",
 ]

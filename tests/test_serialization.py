@@ -423,20 +423,6 @@ class TestSerializationEdgeCases:
         assert len(restored.children) == 10
         assert all(len(c.children) == 5 for c in restored.children)
 
-    def test_continuation_info_serialization(self):
-        """Test that _continuation_info is serialized."""
-        node = Node(state="Test")
-        node._continuation_info = {
-            "cont1": (True, "42"),
-            "cont2": (False, None),
-        }
-
-        data = node.to_dict()
-        restored = Node.from_dict(data)
-
-        assert hasattr(restored, "_continuation_info")
-        assert restored._continuation_info == node._continuation_info
-
     def test_mcts_preserves_terminal_states(self):
         """Test that terminal_states list is preserved."""
         generator = MockGenerator()

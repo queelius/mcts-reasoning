@@ -12,14 +12,16 @@ Implements the spec from paper/main.tex with:
 
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
-import random
 import json
 from pathlib import Path
 
 from .node import Node
 from .generator import Generator
 from .evaluator import Evaluator
-from .actions import ActionSpace, DefaultActionSpace
+
+# actions module was removed in v0.6 Task 1; action_space parameter is
+# kept for API compatibility until Task 10 replaces MCTS entirely.
+ActionSpace = None  # type alias placeholder
 
 
 @dataclass
@@ -107,8 +109,9 @@ class MCTS:
         self.max_children_per_node = max_children_per_node
         self.max_rollout_depth = max_rollout_depth
 
-        # Action space: defaults to CONTINUE only via DefaultActionSpace
-        self.action_space = action_space or DefaultActionSpace(generator=generator)
+        # Action space: removed in v0.6 (was DefaultActionSpace).
+        # Rollout now uses generator directly instead of action_space.
+        self.action_space = action_space
 
         # Search state
         self.root: Optional[Node] = None
@@ -268,7 +271,7 @@ class MCTS:
         tree rather than just simulating. This preserves the reasoning trace
         for future exploration.
 
-        Uses ActionSpace to select and apply actions at each step.
+        Uses Generator directly (CONTINUE action only).
 
         Returns:
             (terminal_node, reward) - terminal_node is added to tree
@@ -283,32 +286,27 @@ class MCTS:
 
         # Rollout until terminal or max depth (adding nodes to tree)
         while depth < self.max_rollout_depth:
-            # Get available actions for current state
-            actions = self.action_space.get_actions(
+            # Generate a single continuation (CONTINUE action)
+            continuations = self.generator.generate(
+                self.question,
                 current_node.state,
-                is_terminal=current_node.is_terminal,
+                n=1,
             )
 
-            if not actions:
-                # No actions available (shouldn't happen for non-terminal)
+            if not continuations:
                 break
 
-            # Select action (for canonical case, there's only CONTINUE)
-            # For extended action spaces, could use UCB or random selection
-            action = random.choice(actions) if len(actions) > 1 else actions[0]
-
-            # Apply action to get new state
-            result = action.apply(self.question, current_node.state)
+            cont = continuations[0]
             depth += 1
 
             # Create and add child node to tree (tree-building rollout)
             child_node = current_node.add_child(
-                state=result.new_state,
-                is_terminal=result.is_terminal,
-                answer=result.answer,
+                state=cont.text,
+                is_terminal=cont.is_terminal,
+                answer=cont.answer,
             )
 
-            if result.is_terminal:
+            if cont.is_terminal:
                 # Reached terminal state - evaluate and return
                 reward = self._evaluate_terminal(child_node)
                 return child_node, reward
