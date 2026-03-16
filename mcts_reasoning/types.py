@@ -43,8 +43,10 @@ class Continuation:
 class Evaluation:
     """Result of evaluating a terminal state."""
 
-    score: float
-    explanation: str = ""
+    score: float  # 0 to 1
+    reasoning: str | None = None  # Evaluator's explanation (for debugging)
+    is_correct: bool | None = None  # If ground truth available
+    explanation: str = ""  # Alias kept for backward compat
 
 
 @dataclass

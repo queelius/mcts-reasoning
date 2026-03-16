@@ -207,7 +207,7 @@ class TestGenerator:
         # Generate a single continuation
         conts = gen.generate("What is 2+2?", "Initial state", n=1)
         assert len(conts) == 1
-        assert "Step 1" in conts[0].text
+        assert "Thinking step" in conts[0].text
 
     def test_mock_generator_multiple(self):
         """Test generating multiple continuations."""
@@ -219,24 +219,27 @@ class TestGenerator:
             assert isinstance(cont, Continuation)
 
     def test_mock_generator_becomes_terminal(self):
-        """Test mock generator produces terminal state after several steps."""
-        gen = MockGenerator()
+        """Test mock generator produces terminal state after terminal_at calls."""
+        gen = MockGenerator(terminal_at=3)
 
-        # Build up state to trigger terminal
-        state = "Initial\n\nStep 1: ...\n\nStep 2: ..."
-        conts = gen.generate("test", state, n=1)
+        # First two calls are non-terminal
+        c1 = gen.generate("test", "state", n=1)
+        assert not c1[0].is_terminal
+        c2 = gen.generate("test", "state", n=1)
+        assert not c2[0].is_terminal
 
-        # Should produce ANSWER
-        assert conts[0].is_terminal
-        assert conts[0].answer == "4"
+        # Third call should be terminal
+        c3 = gen.generate("test", "state", n=1)
+        assert c3[0].is_terminal
+        assert c3[0].answer == "42"
 
     def test_mock_generator_custom_responses(self):
         """Test mock generator with custom responses."""
         responses = [
             "This is step one.",
-            "ANSWER: 42",
+            "This is step two.",
         ]
-        gen = MockGenerator(responses=responses)
+        gen = MockGenerator(responses=responses, terminal_at=2)
 
         cont1 = gen.generate("q", "state", n=1)[0]
         assert not cont1.is_terminal

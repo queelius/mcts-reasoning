@@ -270,7 +270,7 @@ def run_search(args, question: str) -> dict:
 
     # Create generator and evaluator
     generator = LLMGenerator(
-        llm=llm,
+        provider=llm,
         temperature=args.temperature,
         max_tokens=500,
     )

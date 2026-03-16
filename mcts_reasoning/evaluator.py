@@ -44,17 +44,9 @@ Example usage:
 
 from abc import ABC, abstractmethod
 from typing import Optional, Callable
-from dataclasses import dataclass
 import re
 
-
-@dataclass
-class Evaluation:
-    """Result of evaluating a terminal state."""
-
-    score: float  # 0 to 1
-    reasoning: Optional[str] = None  # Evaluator's explanation (for debugging)
-    is_correct: Optional[bool] = None  # If ground truth available
+from .types import State, Evaluation
 
 
 class Evaluator(ABC):
@@ -143,15 +135,33 @@ Respond with ONLY a number between 0 and 1 (e.g., 0.8):"""
 
     def _parse_score(self, response: str) -> float:
         """Parse a score from the LLM response."""
-        # Try to find a decimal number
-        match = re.search(r"(\d+\.?\d*)", response)
-        if match:
-            score = float(match.group(1))
-            # Clamp to 0-1
-            return max(0.0, min(1.0, score))
+        return self._parse_score_from_text(response)
 
-        # Default to middle score if parsing fails
-        return 0.5
+    @staticmethod
+    def _parse_score_from_text(text: str) -> float:
+        """
+        Parse a score from text, preferring numbers in [0, 1] range.
+
+        Strategy:
+        1. Find all numbers in the text.
+        2. If any are in [0, 1] range, return the last one (most likely the score).
+        3. Otherwise, clamp the last number to [0, 1].
+        4. If no numbers found, return 0.5.
+        """
+        # Find all numbers (including decimals)
+        numbers = re.findall(r"\d+\.?\d*", text)
+        if not numbers:
+            return 0.5
+
+        parsed = [float(n) for n in numbers]
+
+        # Prefer numbers in [0, 1] range
+        in_range = [n for n in parsed if 0.0 <= n <= 1.0]
+        if in_range:
+            return in_range[-1]
+
+        # Fall back to clamping the last number
+        return max(0.0, min(1.0, parsed[-1]))
 
 
 class GroundTruthEvaluator(Evaluator):

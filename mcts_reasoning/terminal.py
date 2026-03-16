@@ -8,17 +8,9 @@ Terminal detection is separate from action generation because:
 """
 
 from typing import Optional, Protocol, runtime_checkable
-from dataclasses import dataclass
 import re
 
-
-@dataclass
-class TerminalCheck:
-    """Result of checking if a state is terminal."""
-
-    is_terminal: bool
-    answer: Optional[str] = None
-    confidence: float = 1.0  # For probabilistic detectors
+from .types import State, TerminalCheck
 
 
 @runtime_checkable
@@ -32,7 +24,7 @@ class TerminalDetector(Protocol):
     - Confidence-based: Check if answer confidence exceeds threshold
     """
 
-    def check(self, state: str) -> TerminalCheck:
+    def is_terminal(self, state: str) -> TerminalCheck:
         """
         Check if state is terminal.
 
@@ -63,7 +55,7 @@ class MarkerTerminalDetector:
     def __init__(self, marker: str = "ANSWER:"):
         self.marker = marker
 
-    def check(self, state: str) -> TerminalCheck:
+    def is_terminal(self, state: str) -> TerminalCheck:
         """Check if state contains the answer marker."""
         if self.marker not in state:
             return TerminalCheck(is_terminal=False)
@@ -72,7 +64,6 @@ class MarkerTerminalDetector:
         return TerminalCheck(
             is_terminal=True,
             answer=answer,
-            confidence=1.0,
         )
 
     def _extract_answer(self, text: str) -> Optional[str]:
@@ -104,7 +95,7 @@ class BoxedTerminalDetector:
     Common in mathematical reasoning benchmarks.
     """
 
-    def check(self, state: str) -> TerminalCheck:
+    def is_terminal(self, state: str) -> TerminalCheck:
         """Check if state contains a boxed answer."""
         # Match \boxed{...} allowing nested braces
         match = re.search(r"\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}", state)
@@ -114,7 +105,6 @@ class BoxedTerminalDetector:
         return TerminalCheck(
             is_terminal=True,
             answer=match.group(1).strip(),
-            confidence=1.0,
         )
 
     def format_instruction(self) -> str:
@@ -132,97 +122,22 @@ class MultiMarkerTerminalDetector:
     def __init__(self, markers: Optional[list] = None):
         self.markers = markers or ["ANSWER:", "FINAL ANSWER:", "\\boxed{"]
 
-    def check(self, state: str) -> TerminalCheck:
+    def is_terminal(self, state: str) -> TerminalCheck:
         """Check if state contains any of the markers."""
         for marker in self.markers:
             if marker == "\\boxed{":
                 # Special handling for boxed
                 detector = BoxedTerminalDetector()
-                result = detector.check(state)
+                result = detector.is_terminal(state)
                 if result.is_terminal:
                     return result
             elif marker in state:
                 # Use marker detector
                 detector = MarkerTerminalDetector(marker)
-                return detector.check(state)
+                return detector.is_terminal(state)
 
         return TerminalCheck(is_terminal=False)
 
     def format_instruction(self) -> str:
         """Instruction listing all accepted formats."""
         return f"When you reach a final answer, use one of: {', '.join(self.markers)}"
-
-
-# =============================================================================
-# EXTENSIONS (for future consideration)
-# =============================================================================
-
-
-class LLMJudgeTerminalDetector:
-    """
-    Use LLM to judge if reasoning is complete.
-
-    NOTE: This is an EXTENSION concept. More expensive but can detect
-    implicit completions that lack explicit markers.
-    """
-
-    JUDGE_PROMPT = """Analyze this reasoning trace and determine if it has reached a complete, final answer.
-
-Reasoning trace:
-{state}
-
-Questions to consider:
-1. Has the reasoning reached a definitive conclusion?
-2. Is there a clear answer that addresses the original question?
-3. Would continuing add meaningful value?
-
-Respond with:
-COMPLETE: <yes/no>
-ANSWER: <extracted answer if complete, or "none">
-CONFIDENCE: <0.0-1.0>"""
-
-    def __init__(self, llm, confidence_threshold: float = 0.8):
-        self.llm = llm
-        self.confidence_threshold = confidence_threshold
-
-    def check(self, state: str) -> TerminalCheck:
-        """Ask LLM to judge if state is terminal."""
-        prompt = self.JUDGE_PROMPT.format(state=state)
-        response = self.llm.generate(prompt, temperature=0.1, max_tokens=100)
-
-        # Parse response
-        is_complete = "COMPLETE: yes" in response.lower()
-        confidence = self._extract_confidence(response)
-
-        if is_complete and confidence >= self.confidence_threshold:
-            answer = self._extract_answer(response)
-            return TerminalCheck(
-                is_terminal=True,
-                answer=answer,
-                confidence=confidence,
-            )
-
-        return TerminalCheck(is_terminal=False, confidence=confidence)
-
-    def _extract_confidence(self, response: str) -> float:
-        """Extract confidence score from response."""
-        match = re.search(r"CONFIDENCE:\s*([\d.]+)", response)
-        if match:
-            try:
-                return float(match.group(1))
-            except ValueError:
-                pass
-        return 0.5
-
-    def _extract_answer(self, response: str) -> Optional[str]:
-        """Extract answer from judge response."""
-        match = re.search(r"ANSWER:\s*(.+?)(?:\n|$)", response)
-        if match:
-            answer = match.group(1).strip()
-            if answer.lower() != "none":
-                return answer
-        return None
-
-    def format_instruction(self) -> str:
-        """No specific format needed for LLM-judge."""
-        return "Reason until you reach a complete answer."

@@ -14,7 +14,6 @@ from .mcts import MCTS, SearchResult
 # Terminal detection
 from .terminal import (
     TerminalDetector,
-    TerminalCheck,
     MarkerTerminalDetector,
     BoxedTerminalDetector,
     MultiMarkerTerminalDetector,
@@ -25,7 +24,6 @@ from .generator import (
     Generator,
     LLMGenerator,
     MockGenerator,
-    Continuation,
     ANSWER_MARKER,
 )
 
@@ -38,7 +36,16 @@ from .evaluator import (
     NumericEvaluator,
     ProcessEvaluator,
     CompositeEvaluator,
-    Evaluation,
+)
+
+# Prompt strategies
+from .prompt import (
+    PromptStrategy,
+    StepByStepPrompt,
+    FewShotPrompt,
+    Example,
+    ExampleSource,
+    StaticExampleSource,
 )
 
 # Sampling strategies
@@ -52,6 +59,9 @@ from .sampling import (
 from .types import (
     State,
     Message,
+    Continuation,
+    Evaluation,
+    TerminalCheck,
     SearchState,
     ConsensusResult,
     extend_state,
@@ -72,7 +82,6 @@ __all__ = [
     "Generator",
     "LLMGenerator",
     "MockGenerator",
-    "Continuation",
     "ANSWER_MARKER",
     # Evaluator
     "Evaluator",
@@ -83,6 +92,13 @@ __all__ = [
     "ProcessEvaluator",
     "CompositeEvaluator",
     "Evaluation",
+    # Prompt
+    "PromptStrategy",
+    "StepByStepPrompt",
+    "FewShotPrompt",
+    "Example",
+    "ExampleSource",
+    "StaticExampleSource",
     # Sampling
     "PathSampler",
     "SampledPath",
@@ -90,6 +106,7 @@ __all__ = [
     # Types
     "State",
     "Message",
+    "Continuation",
     "SearchState",
     "ConsensusResult",
     "extend_state",
