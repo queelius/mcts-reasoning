@@ -40,16 +40,20 @@ def create_server():
         question: str,
         provider: str = "auto",
         model: str = "",
+        base_url: str = "",
         simulations: int = 10,
         exploration_constant: float = 1.414,
     ) -> dict:
-        """Run MCTS search on a question. Returns best answer with confidence."""
+        """Run MCTS search on a question. Returns best answer with confidence.
+
+        For remote Ollama, pass base_url (e.g., 'http://192.168.0.225:11434')."""
         return mcts_search_impl(
             question,
             provider,
             model or None,
             simulations,
             exploration_constant,
+            base_url or None,
         )
 
     @mcp.tool()
@@ -57,14 +61,18 @@ def create_server():
         question: str,
         provider: str = "auto",
         model: str = "",
+        base_url: str = "",
         simulations: int = 10,
     ) -> dict:
-        """Run MCTS and return the full reasoning tree for inspection."""
+        """Run MCTS and return the full reasoning tree for inspection.
+
+        For remote Ollama, pass base_url (e.g., 'http://192.168.0.225:11434')."""
         return mcts_explore_impl(
             question,
             provider,
             model or None,
             simulations,
+            base_url or None,
         )
 
     @mcp.tool()
@@ -72,15 +80,19 @@ def create_server():
         benchmark: str = "knights",
         provider: str = "auto",
         model: str = "",
+        base_url: str = "",
         simulations: str = "10",
     ) -> dict:
-        """Run benchmark: baseline vs MCTS. Returns accuracy comparison."""
+        """Run benchmark: baseline vs MCTS. Returns accuracy comparison.
+
+        For remote Ollama, pass base_url (e.g., 'http://192.168.0.225:11434')."""
         sim_list = [int(s.strip()) for s in simulations.split(",")]
         return mcts_bench_impl(
             benchmark,
             provider,
             model or None,
             sim_list,
+            base_url or None,
         )
 
     @mcp.tool()

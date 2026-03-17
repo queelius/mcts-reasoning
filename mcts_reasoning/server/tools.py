@@ -127,7 +127,11 @@ def list_components_impl() -> dict:
     }
 
 
-def _resolve_provider(provider_name: str | None, model: str | None = None):
+def _resolve_provider(
+    provider_name: str | None,
+    model: str | None = None,
+    base_url: str | None = None,
+):
     """
     Resolve an LLM provider from a name or auto-detect.
 
@@ -135,6 +139,7 @@ def _resolve_provider(provider_name: str | None, model: str | None = None):
         provider_name: One of "openai", "anthropic", "ollama", "mock", "auto",
             or None (treated as "auto").
         model: Optional model name to pass to the provider.
+        base_url: Optional base URL for the provider (e.g., remote Ollama).
 
     Returns:
         An LLMProvider instance.
@@ -144,6 +149,8 @@ def _resolve_provider(provider_name: str | None, model: str | None = None):
     kwargs: dict = {}
     if model:
         kwargs["model"] = model
+    if base_url:
+        kwargs["base_url"] = base_url
 
     if provider_name == "auto" or provider_name is None:
         return detect_provider(**kwargs)
@@ -160,6 +167,7 @@ def mcts_search_impl(
     model: str | None = None,
     simulations: int = 10,
     exploration_constant: float = 1.414,
+    base_url: str | None = None,
 ) -> dict:
     """
     Run MCTS search on a question.
@@ -168,7 +176,7 @@ def mcts_search_impl(
     and tree_nodes -- or {"error": "..."} on failure.
     """
     try:
-        provider = _resolve_provider(provider_name, model)
+        provider = _resolve_provider(provider_name, model, base_url)
         detector = MarkerTerminalDetector()
         prompt = StepByStepPrompt(terminal_detector=detector)
         gen = LLMGenerator(
@@ -205,6 +213,7 @@ def mcts_explore_impl(
     provider_name: str = "auto",
     model: str | None = None,
     simulations: int = 10,
+    base_url: str | None = None,
 ) -> dict:
     """
     Run MCTS and return the full reasoning tree for inspection.
@@ -213,7 +222,7 @@ def mcts_explore_impl(
     terminal_states -- or {"error": "..."} on failure.
     """
     try:
-        provider = _resolve_provider(provider_name, model)
+        provider = _resolve_provider(provider_name, model, base_url)
         detector = MarkerTerminalDetector()
         prompt = StepByStepPrompt(terminal_detector=detector)
         gen = LLMGenerator(
@@ -239,6 +248,7 @@ def mcts_bench_impl(
     provider_name: str = "auto",
     model: str | None = None,
     simulations: Optional[list[int]] = None,
+    base_url: str | None = None,
 ) -> dict:
     """
     Run a benchmark: baseline vs MCTS at one or more simulation counts.
@@ -253,7 +263,7 @@ def mcts_bench_impl(
         from ..bench.solver import BaselineSolver, MCTSSolver
 
         bench = get_benchmark(benchmark)
-        provider = _resolve_provider(provider_name, model)
+        provider = _resolve_provider(provider_name, model, base_url)
         detector = MarkerTerminalDetector()
         prompt = StepByStepPrompt(terminal_detector=detector)
         evaluator = ProcessEvaluator()
