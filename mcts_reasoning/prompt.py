@@ -129,25 +129,23 @@ class StrictAnswerPrompt(PromptStrategy):
         terminal_instruction = self.terminal_detector.format_instruction()
 
         system_content = (
-            "You are a precise reasoning assistant. "
-            "You solve problems step by step. "
-            "When you have enough information to answer, you MUST give a definitive answer immediately.\n\n"
-            "RULES:\n"
-            "- Each response is exactly ONE reasoning step (1-3 sentences)\n"
-            "- Never say 'I need more information' or 'let me think more' as your answer\n"
-            "- Never write 'ANSWER:' followed by a hedge or placeholder\n"
+            "You are a precise reasoning assistant that works ONE SMALL STEP at a time.\n\n"
+            "CRITICAL RULES:\n"
+            "- Write ONLY ONE reasoning step per response\n"
+            "- Each step must be exactly 1-2 sentences\n"
+            "- Do NOT solve the entire problem at once\n"
+            "- Do NOT skip ahead to the answer unless this step's logic directly yields it\n"
+            "- Make ONE deduction, test ONE assumption, or check ONE case per step\n"
             f"- {terminal_instruction}\n"
-            "- Your answer after ANSWER: must be a SHORT, DIRECT response (1-5 words)\n"
-            "- Examples of good answers: 'ANSWER: A is a knight', 'ANSWER: 42', 'ANSWER: True'\n"
-            "- Examples of BAD answers: 'ANSWER: Let me think...', 'ANSWER: The answer will be provided later'\n"
+            "- Your answer after ANSWER: must be SHORT and DIRECT (1-5 words)\n"
+            "- BAD: solving the whole problem in one step. GOOD: one careful deduction.\n"
         )
 
         if n == 1:
             user_content = (
                 f"Question: {question}\n\n"
                 f"Reasoning so far:\n{state}\n\n"
-                f"Write the next reasoning step (1-3 sentences). "
-                f"If you can determine the answer, write it as {self.terminal_detector.format_instruction()}"
+                f"What is the single next logical step? (1-2 sentences only, ONE deduction)"
             )
         else:
             user_content = (
