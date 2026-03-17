@@ -14,7 +14,7 @@ from typing import Optional
 from ..evaluator import ProcessEvaluator
 from ..generator import LLMGenerator
 from ..mcts import MCTS
-from ..prompt import StepByStepPrompt
+from ..prompt import StrictAnswerPrompt
 from ..terminal import MarkerTerminalDetector
 
 
@@ -178,7 +178,7 @@ def mcts_search_impl(
     try:
         provider = _resolve_provider(provider_name, model, base_url)
         detector = MarkerTerminalDetector()
-        prompt = StepByStepPrompt(terminal_detector=detector)
+        prompt = StrictAnswerPrompt(terminal_detector=detector)
         gen = LLMGenerator(
             provider=provider,
             prompt_strategy=prompt,
@@ -224,7 +224,7 @@ def mcts_explore_impl(
     try:
         provider = _resolve_provider(provider_name, model, base_url)
         detector = MarkerTerminalDetector()
-        prompt = StepByStepPrompt(terminal_detector=detector)
+        prompt = StrictAnswerPrompt(terminal_detector=detector)
         gen = LLMGenerator(
             provider=provider,
             prompt_strategy=prompt,
@@ -265,7 +265,7 @@ def mcts_bench_impl(
         bench = get_benchmark(benchmark)
         provider = _resolve_provider(provider_name, model, base_url)
         detector = MarkerTerminalDetector()
-        prompt = StepByStepPrompt(terminal_detector=detector)
+        prompt = StrictAnswerPrompt(terminal_detector=detector)
         evaluator = ProcessEvaluator()
 
         solvers: list = [BaselineSolver(provider, prompt)]

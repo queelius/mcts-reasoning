@@ -112,6 +112,71 @@ class StepByStepPrompt(PromptStrategy):
         return continuations
 
 
+class StrictAnswerPrompt(PromptStrategy):
+    """
+    Stronger prompt strategy that enforces answer format.
+
+    Key differences from StepByStepPrompt:
+    - System prompt explicitly forbids hedging or deferring answers
+    - Answer format is specified with examples
+    - Shorter, more directive instructions
+    """
+
+    def __init__(self, terminal_detector: TerminalDetector):
+        self.terminal_detector = terminal_detector
+
+    def format(self, question: str, state: State, n: int = 1) -> list[Message]:
+        terminal_instruction = self.terminal_detector.format_instruction()
+
+        system_content = (
+            "You are a precise reasoning assistant. "
+            "You solve problems step by step. "
+            "When you have enough information to answer, you MUST give a definitive answer immediately.\n\n"
+            "RULES:\n"
+            "- Each response is exactly ONE reasoning step (1-3 sentences)\n"
+            "- Never say 'I need more information' or 'let me think more' as your answer\n"
+            "- Never write 'ANSWER:' followed by a hedge or placeholder\n"
+            f"- {terminal_instruction}\n"
+            "- Your answer after ANSWER: must be a SHORT, DIRECT response (1-5 words)\n"
+            "- Examples of good answers: 'ANSWER: A is a knight', 'ANSWER: 42', 'ANSWER: True'\n"
+            "- Examples of BAD answers: 'ANSWER: Let me think...', 'ANSWER: The answer will be provided later'\n"
+        )
+
+        if n == 1:
+            user_content = (
+                f"Question: {question}\n\n"
+                f"Reasoning so far:\n{state}\n\n"
+                f"Write the next reasoning step (1-3 sentences). "
+                f"If you can determine the answer, write it as {self.terminal_detector.format_instruction()}"
+            )
+        else:
+            user_content = (
+                f"Question: {question}\n\n"
+                f"Reasoning so far:\n{state}\n\n"
+                f"Generate {n} DIFFERENT possible next steps.\n"
+                f"Format:\n"
+                f"--- CONTINUATION 1 ---\n[step]\n\n"
+                f"--- CONTINUATION 2 ---\n[step]\n"
+            )
+
+        return [
+            Message(role="system", content=system_content),
+            Message(role="user", content=user_content),
+        ]
+
+    def parse(self, response: str, n: int = 1) -> list[str]:
+        if n == 1:
+            return [response]
+
+        parts = re.split(r"---\s*CONTINUATION\s*\d+\s*---", response)
+        continuations = [p.strip() for p in parts if p.strip()]
+
+        if not continuations:
+            return [response]
+
+        return continuations
+
+
 # ---------------------------------------------------------------------------
 # Example / Few-shot support
 # ---------------------------------------------------------------------------

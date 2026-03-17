@@ -32,6 +32,7 @@ from .terminal import (
 from .prompt import (
     PromptStrategy,
     StepByStepPrompt,
+    StrictAnswerPrompt,
     FewShotPrompt,
     ExampleSource,
     Example,
@@ -45,7 +46,7 @@ from .sampling import (
     TopKSampling,
     PathSampler,
 )
-from .consensus import ConsensusStrategy, MajorityVote, WeightedVote
+from .consensus import ConsensusStrategy, MajorityVote, WeightedVote, NormalizedVote
 from .providers import get_provider, detect_provider
 
 __all__ = [
