@@ -238,14 +238,21 @@ def make_prompt_strategy(name, detector):
 
 
 def run_baseline(provider, prompt_strategy, question, max_tokens):
-    """Single-pass LLM call (no MCTS)."""
-    messages = prompt_strategy.format(question, State(""), n=1)
-    # Give baseline more tokens since it needs to solve in one shot
+    """Single-pass LLM call (no MCTS). Uses its own unconstrained prompt."""
+    detector = MarkerTerminalDetector()
+    # Baseline gets a fair prompt: solve the whole problem, no step-size constraints
+    messages = [
+        Message(role="system", content=(
+            "You are a careful reasoning assistant. Solve the problem step by step. "
+            "Show your full reasoning, then give your final answer as: ANSWER: <your answer>\n"
+            "Your answer after ANSWER: should be short and direct (1-5 words)."
+        )),
+        Message(role="user", content=question),
+    ]
     start = time.time()
-    response = provider.generate(messages, max_tokens=max(max_tokens * 5, 500), temperature=0.7)
+    response = provider.generate(messages, max_tokens=2000, temperature=0.7)
     elapsed = time.time() - start
 
-    detector = MarkerTerminalDetector()
     check = detector.is_terminal(response)
     return check.answer, elapsed
 
