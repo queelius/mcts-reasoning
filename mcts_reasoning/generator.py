@@ -58,7 +58,7 @@ class LLMGenerator(Generator):
         provider=None,
         prompt_strategy: Optional[PromptStrategy] = None,
         terminal_detector: Optional[TerminalDetector] = None,
-        max_tokens: int = 150,
+        max_tokens: int = 1000,
         temperature: float = 0.7,
         # Legacy kwargs -- silently accepted for backward compat
         llm=None,
