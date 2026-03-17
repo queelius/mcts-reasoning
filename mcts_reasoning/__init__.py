@@ -33,6 +33,8 @@ from .prompt import (
     PromptStrategy,
     StepByStepPrompt,
     StrictAnswerPrompt,
+    IncrementalReasoningPrompt,
+    AssumptionTestingPrompt,
     FewShotPrompt,
     ExampleSource,
     Example,

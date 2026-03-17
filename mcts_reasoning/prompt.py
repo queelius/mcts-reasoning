@@ -175,6 +175,106 @@ class StrictAnswerPrompt(PromptStrategy):
         return continuations
 
 
+class IncrementalReasoningPrompt(PromptStrategy):
+    """Forces very small reasoning steps with explicit state tracking.
+
+    Best performing strategy in experiments. Each response is limited to
+    exactly one logical deduction or calculation, preventing models from
+    solving entire problems in a single step.
+    """
+
+    def __init__(self, terminal_detector: TerminalDetector):
+        self.terminal_detector = terminal_detector
+
+    def format(self, question: str, state: State, n: int = 1) -> list[Message]:
+        terminal_instruction = self.terminal_detector.format_instruction()
+        system = (
+            "You reason by taking tiny, careful steps. Each response contains:\n"
+            "1. EXACTLY ONE logical deduction or calculation\n"
+            "2. A brief statement of what you now know\n\n"
+            "CONSTRAINTS:\n"
+            "- Maximum 2 sentences per response\n"
+            "- Each step must make progress toward the answer\n"
+            "- Do not repeat reasoning already done\n"
+            "- Do not try to solve the whole problem at once\n"
+            f"- When you can definitively answer the original question: {terminal_instruction}\n"
+            "- ANSWER: must respond to the ORIGINAL question, not a sub-question\n"
+        )
+        if n == 1:
+            user = (
+                f"Original question: {question}\n\n"
+                f"Work so far:\n{state}\n\n"
+                f"Next single deduction:"
+            )
+        else:
+            user = (
+                f"Original question: {question}\n\n"
+                f"Work so far:\n{state}\n\n"
+                f"Provide {n} different possible next deductions.\n"
+                f"Format: --- CONTINUATION 1 ---\n[deduction]\n--- CONTINUATION 2 ---\n[deduction]"
+            )
+        return [
+            Message(role="system", content=system),
+            Message(role="user", content=user),
+        ]
+
+    def parse(self, response: str, n: int = 1) -> list[str]:
+        if n == 1:
+            return [response]
+        parts = re.split(r"---\s*CONTINUATION\s*\d+\s*---", response)
+        continuations = [p.strip() for p in parts if p.strip()]
+        return continuations if continuations else [response]
+
+
+class AssumptionTestingPrompt(PromptStrategy):
+    """Explicitly asks the LLM to state and test assumptions.
+
+    Each response follows ASSUME/THEN/CHECK pattern. Particularly effective
+    for logic puzzles where case analysis is needed.
+    """
+
+    def __init__(self, terminal_detector: TerminalDetector):
+        self.terminal_detector = terminal_detector
+
+    def format(self, question: str, state: State, n: int = 1) -> list[Message]:
+        terminal_instruction = self.terminal_detector.format_instruction()
+        system = (
+            "You solve problems by explicitly stating and testing assumptions.\n\n"
+            "Each response must follow this pattern:\n"
+            "- ASSUME: [state one specific assumption]\n"
+            "- THEN: [derive one consequence from that assumption]\n"
+            "- CHECK: [verify if the consequence is consistent or contradictory]\n\n"
+            "If CHECK reveals a contradiction, say CONTRADICTION and try a different assumption next time.\n"
+            "If CHECK is consistent AND you have enough to answer the original question:\n"
+            f"{terminal_instruction}\n"
+            "ANSWER: must respond to the ORIGINAL question directly (1-5 words).\n"
+        )
+        if n == 1:
+            user = (
+                f"Original question: {question}\n\n"
+                f"Work so far:\n{state}\n\n"
+                f"Next assumption to test:"
+            )
+        else:
+            user = (
+                f"Original question: {question}\n\n"
+                f"Work so far:\n{state}\n\n"
+                f"Provide {n} different assumptions to test.\n"
+                f"Format: --- CONTINUATION 1 ---\n[assumption test]\n--- CONTINUATION 2 ---\n[assumption test]"
+            )
+        return [
+            Message(role="system", content=system),
+            Message(role="user", content=user),
+        ]
+
+    def parse(self, response: str, n: int = 1) -> list[str]:
+        if n == 1:
+            return [response]
+        parts = re.split(r"---\s*CONTINUATION\s*\d+\s*---", response)
+        continuations = [p.strip() for p in parts if p.strip()]
+        return continuations if continuations else [response]
+
+
 # ---------------------------------------------------------------------------
 # Example / Few-shot support
 # ---------------------------------------------------------------------------
