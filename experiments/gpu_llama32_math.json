@@ -1,0 +1,216 @@
+{
+  "question": "What is (17 * 23) - (14 * 19) + 55?",
+  "simulations_run": 5,
+  "exploration_constant": 1.414,
+  "max_children_per_node": 3,
+  "max_rollout_depth": 6,
+  "terminal_states": [
+    {
+      "answer": "180",
+      "score": 0.575,
+      "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[calculate] To continue with the problem, let's perform the multiplication operations first:\n\n(17 * 23) = ?\n(14 * 19) = "
+    },
+    {
+      "answer": "(391) - (294) + 55",
+      "score": 0.575,
+      "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 f"
+    },
+    {
+      "answer": "180",
+      "score": 0.5,
+      "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[verify] Your initial statement and question are identical, which can be a sign of an unstated assumption or a need to r"
+    },
+    {
+      "answer": "180",
+      "score": 0.575,
+      "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[calculate] To continue with the problem, let's perform the multiplication operations first:\n\n(17 * 23) = ?\n(14 * 19) = "
+    },
+    {
+      "answer": "124",
+      "score": 0.6499999999999999,
+      "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 f"
+    }
+  ],
+  "root": {
+    "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.",
+    "visits": 5,
+    "value": 0.575,
+    "is_terminal": false,
+    "answer": null,
+    "_continuations": null,
+    "_continuation_index": 0,
+    "children": [
+      {
+        "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[calculate] To continue with the problem, let's perform the multiplication operations first:\n\n(17 * 23) = ?\n(14 * 19) = ?\n\nCalculation:\n(17 * 23) = 17 \u00d7 20 + 17 \u00d7 3\n= 340 + 51\n= 391\n\n(14 * 19) = 14 \u00d7 18 + 14 \u00d7 1\n= 252 + 14\n= 266\n\nSo, the updated equation becomes:\n\nQuestion: What is (391) - (266) + 55?",
+        "visits": 2,
+        "value": 0.575,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[calculate] To continue with the problem, let's perform the multiplication operations first:\n\n(17 * 23) = ?\n(14 * 19) = ?\n\nCalculation:\n(17 * 23) = 17 \u00d7 20 + 17 \u00d7 3\n= 340 + 51\n= 391\n\n(14 * 19) = 14 \u00d7 18 + 14 \u00d7 1\n= 252 + 14\n= 266\n\nSo, the updated equation becomes:\n\nQuestion: What is (391) - (266) + 55?\n\n[conclude] Since we have performed all the multiplication operations and simplified the equation to a point where we can directly calculate the result, I am confident in providing a definitive answer.\n\nLet's proceed with the subtraction and addition:\n\nQuestion: What is (391) - (266) + 55?\n\nCalculation:\n391 - 266 = 125\n125 + 55 = 180\n\nTherefore, the final answer to the original question is:\n\nANSWER: 180",
+            "visits": 1,
+            "value": 0.575,
+            "is_terminal": true,
+            "answer": "180",
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": []
+          },
+          {
+            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[calculate] To continue with the problem, let's perform the multiplication operations first:\n\n(17 * 23) = ?\n(14 * 19) = ?\n\nCalculation:\n(17 * 23) = 17 \u00d7 20 + 17 \u00d7 3\n= 340 + 51\n= 391\n\n(14 * 19) = 14 \u00d7 18 + 14 \u00d7 1\n= 252 + 14\n= 266\n\nSo, the updated equation becomes:\n\nQuestion: What is (391) - (266) + 55?\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Perform subtraction operation: (391) - (266)\n2. Add the result from step 1 to 55.",
+            "visits": 1,
+            "value": 0.575,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[calculate] To continue with the problem, let's perform the multiplication operations first:\n\n(17 * 23) = ?\n(14 * 19) = ?\n\nCalculation:\n(17 * 23) = 17 \u00d7 20 + 17 \u00d7 3\n= 340 + 51\n= 391\n\n(14 * 19) = 14 \u00d7 18 + 14 \u00d7 1\n= 252 + 14\n= 266\n\nSo, the updated equation becomes:\n\nQuestion: What is (391) - (266) + 55?\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Perform subtraction operation: (391) - (266)\n2. Add the result from step 1 to 55.\n\n[conclude] Since we have completed the calculation and broken down the problem into smaller sub-problems, we can proceed to solve each sub-problem and then combine the results.\n\n1. Perform subtraction operation: (391) - (266)\n\nCalculation:\n= 391 - 266\n= 125\n\n2. Add the result from step 1 to 55:\n\nCalculation:\n= 125 + 55\n= 180\n\nTherefore, we can definitively answer the original question:\n\nANSWER: 180",
+                "visits": 1,
+                "value": 0.575,
+                "is_terminal": true,
+                "answer": "180",
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\nThese sub-problems can be solved in this order to arrive at the final answer.",
+        "visits": 2,
+        "value": 0.6124999999999999,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\nThese sub-problems can be solved in this order to arrive at the final answer.\n\n[calculate] Let's solve the first sub-problem: \n\n[17 * 23]\n\nTo calculate this, I'll multiply 17 by 20 (which is 2/3 of 23) and then add 17 multiplied by the remaining 3:\n\n17 \u00d7 20 = 340\n17 \u00d7 3 = 51\n\nAdding these two results together:\n340 + 51 = 391\n\nSo, 17 * 23 equals 391.",
+            "visits": 1,
+            "value": 0.575,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\nThese sub-problems can be solved in this order to arrive at the final answer.\n\n[calculate] Let's solve the first sub-problem: \n\n[17 * 23]\n\nTo calculate this, I'll multiply 17 by 20 (which is 2/3 of 23) and then add 17 multiplied by the remaining 3:\n\n17 \u00d7 20 = 340\n17 \u00d7 3 = 51\n\nAdding these two results together:\n340 + 51 = 391\n\nSo, 17 * 23 equals 391.\n\n[verify] Your step-by-step approach to solving the problem is clear and logical. However, I do notice a potential issue with your calculation of 17 * 23. \n\nIn step 3 of your decomposition, you mentioned multiplying 17 by 20 (which is 2/3 of 23) and then adding 17 multiplied by the remaining 3. This approach seems to be an attempt to handle the multiplication of two numbers that are not multiples of each other.\n\nA more straightforward way to calculate this would be:\n\n17 \u00d7 23 = 17 \u00d7 (20 + 3)\n= 17 \u00d7 20 + 17 \u00d7 3\n= 340 + 51\n\nBoth methods should yield the same result, which is indeed 391. However, I do want to note that your approach might not be the most efficient or intuitive way to calculate this product.\n\nOverall, your reasoning seems sound so far. Well done!",
+                "visits": 1,
+                "value": 0.575,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\nThese sub-problems can be solved in this order to arrive at the final answer.\n\n[calculate] Let's solve the first sub-problem: \n\n[17 * 23]\n\nTo calculate this, I'll multiply 17 by 20 (which is 2/3 of 23) and then add 17 multiplied by the remaining 3:\n\n17 \u00d7 20 = 340\n17 \u00d7 3 = 51\n\nAdding these two results together:\n340 + 51 = 391\n\nSo, 17 * 23 equals 391.\n\n[verify] Your step-by-step approach to solving the problem is clear and logical. However, I do notice a potential issue with your calculation of 17 * 23. \n\nIn step 3 of your decomposition, you mentioned multiplying 17 by 20 (which is 2/3 of 23) and then adding 17 multiplied by the remaining 3. This approach seems to be an attempt to handle the multiplication of two numbers that are not multiples of each other.\n\nA more straightforward way to calculate this would be:\n\n17 \u00d7 23 = 17 \u00d7 (20 + 3)\n= 17 \u00d7 20 + 17 \u00d7 3\n= 340 + 51\n\nBoth methods should yield the same result, which is indeed 391. However, I do want to note that your approach might not be the most efficient or intuitive way to calculate this product.\n\nOverall, your reasoning seems sound so far. Well done!\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3",
+                    "visits": 1,
+                    "value": 0.575,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\nThese sub-problems can be solved in this order to arrive at the final answer.\n\n[calculate] Let's solve the first sub-problem: \n\n[17 * 23]\n\nTo calculate this, I'll multiply 17 by 20 (which is 2/3 of 23) and then add 17 multiplied by the remaining 3:\n\n17 \u00d7 20 = 340\n17 \u00d7 3 = 51\n\nAdding these two results together:\n340 + 51 = 391\n\nSo, 17 * 23 equals 391.\n\n[verify] Your step-by-step approach to solving the problem is clear and logical. However, I do notice a potential issue with your calculation of 17 * 23. \n\nIn step 3 of your decomposition, you mentioned multiplying 17 by 20 (which is 2/3 of 23) and then adding 17 multiplied by the remaining 3. This approach seems to be an attempt to handle the multiplication of two numbers that are not multiples of each other.\n\nA more straightforward way to calculate this would be:\n\n17 \u00d7 23 = 17 \u00d7 (20 + 3)\n= 17 \u00d7 20 + 17 \u00d7 3\n= 340 + 51\n\nBoth methods should yield the same result, which is indeed 391. However, I do want to note that your approach might not be the most efficient or intuitive way to calculate this product.\n\nOverall, your reasoning seems sound so far. Well done!\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\n[calculate] Let's move on to the next sub-problem.\n\n[calculate] \n\nNow, let's solve the second sub-problem: \n14 * 19\n\nTo calculate this, I'll multiply 14 by 20 (which is 2/3 of 19) and then add 14 multiplied by the remaining 1:\n\n14 \u00d7 20 = 280\n14 \u00d7 1 = 14\n\nAdding these two results together:\n280 + 14 = 294\n\nSo, 14 * 19 equals 294.\n\n[verify]",
+                        "visits": 1,
+                        "value": 0.575,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\nThese sub-problems can be solved in this order to arrive at the final answer.\n\n[calculate] Let's solve the first sub-problem: \n\n[17 * 23]\n\nTo calculate this, I'll multiply 17 by 20 (which is 2/3 of 23) and then add 17 multiplied by the remaining 3:\n\n17 \u00d7 20 = 340\n17 \u00d7 3 = 51\n\nAdding these two results together:\n340 + 51 = 391\n\nSo, 17 * 23 equals 391.\n\n[verify] Your step-by-step approach to solving the problem is clear and logical. However, I do notice a potential issue with your calculation of 17 * 23. \n\nIn step 3 of your decomposition, you mentioned multiplying 17 by 20 (which is 2/3 of 23) and then adding 17 multiplied by the remaining 3. This approach seems to be an attempt to handle the multiplication of two numbers that are not multiples of each other.\n\nA more straightforward way to calculate this would be:\n\n17 \u00d7 23 = 17 \u00d7 (20 + 3)\n= 17 \u00d7 20 + 17 \u00d7 3\n= 340 + 51\n\nBoth methods should yield the same result, which is indeed 391. However, I do want to note that your approach might not be the most efficient or intuitive way to calculate this product.\n\nOverall, your reasoning seems sound so far. Well done!\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\n[calculate] Let's move on to the next sub-problem.\n\n[calculate] \n\nNow, let's solve the second sub-problem: \n14 * 19\n\nTo calculate this, I'll multiply 14 by 20 (which is 2/3 of 19) and then add 14 multiplied by the remaining 1:\n\n14 \u00d7 20 = 280\n14 \u00d7 1 = 14\n\nAdding these two results together:\n280 + 14 = 294\n\nSo, 14 * 19 equals 294.\n\n[verify]\n\n[conclude] ANSWER: (391) - (294) + 55",
+                            "visits": 1,
+                            "value": 0.575,
+                            "is_terminal": true,
+                            "answer": "(391) - (294) + 55",
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\nThese sub-problems can be solved in this order to arrive at the final answer.\n\n[calculate] Let's solve the first calculation step: \n\n17 * 23\n\nTo calculate this, I will multiply 17 by 20 and then add 17 multiplied by 3:\n\n(17 * 20) = 340\n(17 * 3) = 51\nAdd these two results together:\n340 + 51 = 391\n\nSo the result of (17 * 23) is 391.",
+            "visits": 1,
+            "value": 0.6499999999999999,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\nThese sub-problems can be solved in this order to arrive at the final answer.\n\n[calculate] Let's solve the first calculation step: \n\n17 * 23\n\nTo calculate this, I will multiply 17 by 20 and then add 17 multiplied by 3:\n\n(17 * 20) = 340\n(17 * 3) = 51\nAdd these two results together:\n340 + 51 = 391\n\nSo the result of (17 * 23) is 391.\n\n[verify] Your reasoning checks out so far. You've broken down the problem into manageable sub-problems, and you've provided a clear step-by-step explanation for each calculation.\n\nHowever, I would like to point out that your solution uses an unorthodox but mathematically equivalent approach to multiplying two numbers by multiplying each number by 20 (or in this case, 23) and then adding the result of multiplying one number by the remaining factor. This method is often referred to as \"decomposing\" or \"partial products.\" While it may not be the most common way to solve multiplication problems, it's a valid approach.\n\nYour calculations for each step are accurate:\n\n1. (17 * 20) = 340\n2. (17 * 3) = 51\n3. 340 + 51 = 391\n\nSo, indeed, (17 * 23) = 391.\n\nNow that we have the result of the first calculation, let's move on to the next step.",
+                "visits": 1,
+                "value": 0.6499999999999999,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[decompose] Here are the key sub-problems to solve:\n\n1. Calculate 17 * 23\n2. Calculate 14 * 19\n3. Subtract result of 2 from result of 1\n4. Add 55 to result of 3\n\nThese sub-problems can be solved in this order to arrive at the final answer.\n\n[calculate] Let's solve the first calculation step: \n\n17 * 23\n\nTo calculate this, I will multiply 17 by 20 and then add 17 multiplied by 3:\n\n(17 * 20) = 340\n(17 * 3) = 51\nAdd these two results together:\n340 + 51 = 391\n\nSo the result of (17 * 23) is 391.\n\n[verify] Your reasoning checks out so far. You've broken down the problem into manageable sub-problems, and you've provided a clear step-by-step explanation for each calculation.\n\nHowever, I would like to point out that your solution uses an unorthodox but mathematically equivalent approach to multiplying two numbers by multiplying each number by 20 (or in this case, 23) and then adding the result of multiplying one number by the remaining factor. This method is often referred to as \"decomposing\" or \"partial products.\" While it may not be the most common way to solve multiplication problems, it's a valid approach.\n\nYour calculations for each step are accurate:\n\n1. (17 * 20) = 340\n2. (17 * 3) = 51\n3. 340 + 51 = 391\n\nSo, indeed, (17 * 23) = 391.\n\nNow that we have the result of the first calculation, let's move on to the next step.\n\n[conclude] Based on the correct calculations and verification of each step, I can confidently proceed to the final answer.\n\nNow that we have the result of (17 * 23), let's move on to the next steps:\n\n1. Calculate 14 * 19:\nUsing the same \"decompose\" approach, we get:\n(14 * 20) = 280\n(14 * 3) = 42\nAdd these two results together:\n280 + 42 = 322\n\nSo, (14 * 19) = 322.\n\n[addition] Now that we have the result of both calculations, let's proceed to the final step:\n\n(17 * 23) - (14 * 19) + 55\n= 391 - 322 + 55\n= 124\n\nTherefore, the answer is:\nANSWER: 124",
+                    "visits": 1,
+                    "value": 0.6499999999999999,
+                    "is_terminal": true,
+                    "answer": "124",
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[verify] Your initial statement and question are identical, which can be a sign of an unstated assumption or a need to rephrase the problem. However, from a mathematical standpoint, your approach to solving the problem is sound, as you're breaking it down into individual steps.\n\nSo far, everything checks out. You've identified the arithmetic operations involved and presented them in a clear sequence.",
+        "visits": 1,
+        "value": 0.5,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[verify] Your initial statement and question are identical, which can be a sign of an unstated assumption or a need to rephrase the problem. However, from a mathematical standpoint, your approach to solving the problem is sound, as you're breaking it down into individual steps.\n\nSo far, everything checks out. You've identified the arithmetic operations involved and presented them in a clear sequence.\n\n[verify] Yes, your initial statement and question are identical, which can be considered an unstated assumption or a need to rephrase the problem to provide more context. However, from a mathematical standpoint, your approach to solving the problem is sound, breaking it down into individual steps.\n\nI've reviewed the reasoning so far, and I couldn't find any arithmetic errors, invalid steps, or contradictions. Your step-by-step solution appears to be correct, and the calculations seem accurate.\n\nPlease proceed with the calculation: (17 * 23) - (14 * 19) + 55",
+            "visits": 1,
+            "value": 0.5,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\n[verify] Your initial statement and question are identical, which can be a sign of an unstated assumption or a need to rephrase the problem. However, from a mathematical standpoint, your approach to solving the problem is sound, as you're breaking it down into individual steps.\n\nSo far, everything checks out. You've identified the arithmetic operations involved and presented them in a clear sequence.\n\n[verify] Yes, your initial statement and question are identical, which can be considered an unstated assumption or a need to rephrase the problem to provide more context. However, from a mathematical standpoint, your approach to solving the problem is sound, breaking it down into individual steps.\n\nI've reviewed the reasoning so far, and I couldn't find any arithmetic errors, invalid steps, or contradictions. Your step-by-step solution appears to be correct, and the calculations seem accurate.\n\nPlease proceed with the calculation: (17 * 23) - (14 * 19) + 55\n\n[conclude] To solve the problem, I will continue with the calculations:\n\n(17 * 23) = 391\n(14 * 19) = 266\nNow, let's perform the subtraction and addition:\n391 - 266 = 125\n125 + 55 = 180\n\nANSWER: 180",
+                "visits": 1,
+                "value": 0.5,
+                "is_terminal": true,
+                "answer": "180",
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

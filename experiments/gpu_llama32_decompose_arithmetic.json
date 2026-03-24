@@ -1,0 +1,181 @@
+{
+  "question": "What is (17 * 23) - (14 * 19) + 55?",
+  "simulations_run": 3,
+  "exploration_constant": 1.414,
+  "max_children_per_node": 2,
+  "max_rollout_depth": 4,
+  "terminal_states": [],
+  "root": {
+    "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.",
+    "visits": 3,
+    "value": 0.0,
+    "is_terminal": false,
+    "answer": null,
+    "_continuations": null,
+    "_continuation_index": 0,
+    "children": [
+      {
+        "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:",
+        "visits": 2,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 17 and 23:\n17 * 23 = 391",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 17 and 23:\n17 * 23 = 391\n\nHere is the rewritten solution:\n\nQuestion: What is (17 * 23) - (14 * 19) + 55?",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 17 and 23:\n17 * 23 = 391\n\nHere is the rewritten solution:\n\nQuestion: What is (17 * 23) - (14 * 19) + 55?\n\nMultiply 17 and 23:\n17 * 23 = 391",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 17 and 23:\n17 * 23 = 391\n\nHere is the rewritten solution:\n\nQuestion: What is (17 * 23) - (14 * 19) + 55?\n\nMultiply 17 and 23:\n17 * 23 = 391\n\nHere is the rewritten solution:",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 14 and 19:\n14 * 19 = 266",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 14 and 19:\n14 * 19 = 266\n\nHere is the rewritten solution in a sequence of individual reasoning steps:",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 14 and 19:\n14 * 19 = 266\n\nHere is the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 17 and 23 to get 391.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 14 and 19:\n14 * 19 = 266\n\nHere is the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 17 and 23 to get 391.\n\nHere is the rewritten solution:",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere's the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 14 and 19:\n14 * 19 = 266\n\nHere is the rewritten solution in a sequence of individual reasoning steps:\n\nMultiply 17 and 23 to get 391.\n\nHere is the rewritten solution:\n\nMultiply 14 and 19 to get 266.",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere is the rewritten solution with individual reasoning steps:",
+        "visits": 1,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere is the rewritten solution with individual reasoning steps:\n\nMultiply 17 and 23 to get (17 * 23) = 17 x 20 + 17 x 3.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere is the rewritten solution with individual reasoning steps:\n\nMultiply 17 and 23 to get (17 * 23) = 17 x 20 + 17 x 3.\n\nHere is the rewritten solution:",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere is the rewritten solution with individual reasoning steps:\n\nMultiply 17 and 23 to get (17 * 23) = 17 x 20 + 17 x 3.\n\nHere is the rewritten solution:\n\nBreak down the multiplication of 17 and 23 into its components.\n(17 * 23) = 17 x 20 + 17 x 3",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: What is (17 * 23) - (14 * 19) + 55?\n\nLet me solve this step by step.\n\nHere is the rewritten solution with individual reasoning steps:\n\nMultiply 17 and 23 to get (17 * 23) = 17 x 20 + 17 x 3.\n\nHere is the rewritten solution:\n\nBreak down the multiplication of 17 and 23 into its components.\n(17 * 23) = 17 x 20 + 17 x 3\n\nHere are the rewritten steps:",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

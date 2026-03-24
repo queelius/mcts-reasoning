@@ -1,0 +1,181 @@
+{
+  "question": "A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.",
+  "simulations_run": 3,
+  "exploration_constant": 1.414,
+  "max_children_per_node": 2,
+  "max_rollout_depth": 4,
+  "terminal_states": [],
+  "root": {
+    "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.",
+    "visits": 3,
+    "value": 0.0,
+    "is_terminal": false,
+    "answer": null,
+    "_continuations": null,
+    "_continuation_index": 0,
+    "children": [
+      {
+        "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:",
+        "visits": 2,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:\n\nIf A says \"B is a knave,\" then:\n- If A is a knight, B must be a knave.\n- If A is a knave, B cannot be a knave.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:\n\nIf A says \"B is a knave,\" then:\n- If A is a knight, B must be a knave.\n- If A is a knave, B cannot be a knave.\n\nHere is the rewritten solution:",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:\n\nIf A says \"B is a knave,\" then:\n- If A is a knight, B must be a knave.\n- If A is a knave, B cannot be a knave.\n\nHere is the rewritten solution:\n\nIf A says \"B is a knave,\" then:\n- If A is a knight, B must be a knave.\n- If A is a knave, B cannot be a knave.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:\n\nIf A says \"B is a knave,\" then:\n- If A is a knight, B must be a knave.\n- If A is a knave, B cannot be a knave.\n\nHere is the rewritten solution:\n\nIf A says \"B is a knave,\" then:\n- If A is a knight, B must be a knave.\n- If A is a knave, B cannot be a knave.\n\nHere's the rewritten solution in step-by-step format:",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:\n\nIf B says \"We are the same type,\" then:\n- If B is a knight, A and B must indeed be of the same type, either both knights or both knaves.\n- If B is a knave, A and B must not be of the same type; one must be a knight and the other a knave.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:\n\nIf B says \"We are the same type,\" then:\n- If B is a knight, A and B must indeed be of the same type, either both knights or both knaves.\n- If B is a knave, A and B must not be of the same type; one must be a knight and the other a knave.\n\nHere's the rewritten solution:",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:\n\nIf B says \"We are the same type,\" then:\n- If B is a knight, A and B must indeed be of the same type, either both knights or both knaves.\n- If B is a knave, A and B must not be of the same type; one must be a knight and the other a knave.\n\nHere's the rewritten solution:\n\nSince B says \"We are the same type,\" we can analyze the two possibilities:\n- If B is a knight, A and B being the same type means A is also a knight.\n- If B is a knave, A and B not being the same type means one of them (A or B) is a knight and the other is a knave.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:\n\nIf B says \"We are the same type,\" then:\n- If B is a knight, A and B must indeed be of the same type, either both knights or both knaves.\n- If B is a knave, A and B must not be of the same type; one must be a knight and the other a knave.\n\nHere's the rewritten solution:\n\nSince B says \"We are the same type,\" we can analyze the two possibilities:\n- If B is a knight, A and B being the same type means A is also a knight.\n- If B is a knave, A and B not being the same type means one of them (A or B) is a knight and the other is a knave.\n\nHere are the individual reasoning steps:",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere's the rewritten solution:\n\nIf B says \"We are the same type,\" then:\n- If B is a knight, A and B must indeed be of the same type, either both knights or both knaves.\n- If B is a knave, A and B must not be of the same type; one must be a knight and the other a knave.\n\nHere's the rewritten solution:\n\nSince B says \"We are the same type,\" we can analyze the two possibilities:\n- If B is a knight, A and B being the same type means A is also a knight.\n- If B is a knave, A and B not being the same type means one of them (A or B) is a knight and the other is a knave.\n\nHere are the individual reasoning steps:\n\nWe have two possibilities for B's type: either B is a knight or B is a knave. If B is a knight, then A and B being the same type means A is also a knight.",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere are the rewritten steps:",
+        "visits": 1,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere are the rewritten steps:\n\nDetermine the possible types of A and B based on their statements. If A is a knight, then B must be a knave. If A is a knave, then B must not be a knave.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere are the rewritten steps:\n\nDetermine the possible types of A and B based on their statements. If A is a knight, then B must be a knave. If A is a knave, then B must not be a knave.\n\nHere are the rewritten steps:",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere are the rewritten steps:\n\nDetermine the possible types of A and B based on their statements. If A is a knight, then B must be a knave. If A is a knave, then B must not be a knave.\n\nHere are the rewritten steps:\n\nIf A is a knight:\n   - A says \"B is a knave.\" (A tells the truth)",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says \"B is a knave.\" B says \"We are the same type.\" Is A a knight or a knave? Knights always tell truth, knaves always lie.\n\nLet me solve this step by step.\n\nHere are the rewritten steps:\n\nDetermine the possible types of A and B based on their statements. If A is a knight, then B must be a knave. If A is a knave, then B must not be a knave.\n\nHere are the rewritten steps:\n\nIf A is a knight:\n   - A says \"B is a knave.\" (A tells the truth)\n\nHere's the rewritten solution:",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
