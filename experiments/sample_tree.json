@@ -1,0 +1,132 @@
+{
+  "question": "Is A a knight or a knave?",
+  "simulations_run": 8,
+  "exploration_constant": 1.414,
+  "max_children_per_node": 3,
+  "max_rollout_depth": 5,
+  "terminal_states": [
+    {
+      "answer": "42",
+      "score": 0.8,
+      "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nLet me assume A is a knight. Then A tells truth.\n\nIf A tells truth, then B is a knave.\n\nB is a knave, so B lies. B says same type,"
+    },
+    {
+      "answer": "42",
+      "score": 0.8,
+      "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nAlternatively, assume A is a knave. Then A lies. ANSWER: 42"
+    },
+    {
+      "answer": "42",
+      "score": 0.8,
+      "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nIf A lies about B being a knave, then B is a knight. ANSWER: 42"
+    },
+    {
+      "answer": "42",
+      "score": 0.8,
+      "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nLet me assume A is a knight. Then A tells truth.\n\nB is a knight, so B tells truth. B says same type. But A=knave, B=knight. Contra"
+    },
+    {
+      "answer": "42",
+      "score": 0.8,
+      "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nAlternatively, assume A is a knave. Then A lies. ANSWER: 42"
+    },
+    {
+      "answer": "42",
+      "score": 0.8,
+      "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nIf A lies about B being a knave, then B is a knight. ANSWER: 42"
+    },
+    {
+      "answer": "42",
+      "score": 0.8,
+      "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nLet me assume A is a knight. Then A tells truth.\n\nLet me assume A is a knight. Then A tells truth. ANSWER: 42"
+    },
+    {
+      "answer": "42",
+      "score": 0.8,
+      "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nAlternatively, assume A is a knave. Then A lies. ANSWER: 42"
+    }
+  ],
+  "root": {
+    "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.",
+    "visits": 8,
+    "value": 0.7999999999999999,
+    "is_terminal": false,
+    "answer": null,
+    "_continuations": null,
+    "_continuation_index": 0,
+    "children": [
+      {
+        "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nLet me assume A is a knight. Then A tells truth.",
+        "visits": 3,
+        "value": 0.8000000000000002,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nLet me assume A is a knight. Then A tells truth.\n\nIf A tells truth, then B is a knave.",
+            "visits": 1,
+            "value": 0.8,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nLet me assume A is a knight. Then A tells truth.\n\nIf A tells truth, then B is a knave.\n\nB is a knave, so B lies. B says same type, but they differ. Consistent. ANSWER: A is a knight ANSWER: 42",
+                "visits": 1,
+                "value": 0.8,
+                "is_terminal": true,
+                "answer": "42",
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": []
+              }
+            ]
+          },
+          {
+            "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nLet me assume A is a knight. Then A tells truth.\n\nB is a knight, so B tells truth. B says same type. But A=knave, B=knight. Contradiction. ANSWER: A is a knave ANSWER: 42",
+            "visits": 1,
+            "value": 0.8,
+            "is_terminal": true,
+            "answer": "42",
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": []
+          },
+          {
+            "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nLet me assume A is a knight. Then A tells truth.\n\nLet me assume A is a knight. Then A tells truth. ANSWER: 42",
+            "visits": 1,
+            "value": 0.8,
+            "is_terminal": true,
+            "answer": "42",
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": []
+          }
+        ]
+      },
+      {
+        "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nAlternatively, assume A is a knave. Then A lies. ANSWER: 42",
+        "visits": 3,
+        "value": 0.8000000000000002,
+        "is_terminal": true,
+        "answer": "42",
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": []
+      },
+      {
+        "state": "Question: Is A a knight or a knave?\n\nLet me solve this step by step.\n\nIf A lies about B being a knave, then B is a knight. ANSWER: 42",
+        "visits": 2,
+        "value": 0.8,
+        "is_terminal": true,
+        "answer": "42",
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": []
+      }
+    ]
+  }
+}

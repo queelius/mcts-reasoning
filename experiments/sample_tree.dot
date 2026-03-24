@@ -1,0 +1,21 @@
+digraph mcts_tree {
+  rankdir=TB;
+  node [shape=box, style=rounded, fontsize=10, fontname="Courier"];
+  edge [color="#888888"];
+
+  n133026898780400 [label="v=0.80 n=8\nLet me solve this step by step"];
+  n133026898780400 -> n133026898781216;
+  n133026898781216 [label="v=0.80 n=3\nLet me assume A is a knight. T"];
+  n133026898781216 -> n133026898781264;
+  n133026898781264 [label="v=0.80 n=1\nIf A tells truth, then B is a "];
+  n133026898781264 -> n133026898781120;
+  n133026898781120 [label="v=0.80 n=1\nB is a knave, so B lies. B say\nANSWER: 42", fillcolor="#4ade8022", style="rounded,filled"];
+  n133026898781216 -> n133026898781312;
+  n133026898781312 [label="v=0.80 n=1\nB is a knight, so B tells trut\nANSWER: 42", fillcolor="#4ade8022", style="rounded,filled"];
+  n133026898781216 -> n133026898781456;
+  n133026898781456 [label="v=0.80 n=1\nLet me assume A is a knight. T\nANSWER: 42", fillcolor="#4ade8022", style="rounded,filled"];
+  n133026898780400 -> n133026898781360;
+  n133026898781360 [label="v=0.80 n=3\nAlternatively, assume A is a k\nANSWER: 42", fillcolor="#4ade8022", style="rounded,filled"];
+  n133026898780400 -> n133026898781408;
+  n133026898781408 [label="v=0.80 n=2\nIf A lies about B being a knav\nANSWER: 42", fillcolor="#4ade8022", style="rounded,filled"];
+}
