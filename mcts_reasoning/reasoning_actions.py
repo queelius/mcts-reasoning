@@ -17,19 +17,30 @@ import random
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from .terminal import TerminalDetector, MarkerTerminalDetector
 from .types import Continuation, Message, State, extend_state
 from .generator import Generator
+
+if TYPE_CHECKING:
+    from .node import Node
 
 
 class ReasoningAction(ABC):
     """A type of reasoning move the LLM can make at a tree node."""
 
     @abstractmethod
-    def prompt(self, question: str, state: State) -> list[Message]:
-        """Build the prompt for this action type."""
+    def prompt(self, question: str, state: State, node: "Node | None" = None) -> list[Message]:
+        """Build the prompt for this action type.
+
+        Args:
+            question: The original question.
+            state: The current reasoning state (linear path from root).
+            node: The current Node in the tree. Actions that need structural
+                  context (siblings, ancestors, depth) can inspect this.
+                  None for backward compat with callers that don't have a node.
+        """
 
     @property
     @abstractmethod
@@ -44,7 +55,7 @@ class DecomposeAction(ReasoningAction):
     def name(self) -> str:
         return "decompose"
 
-    def prompt(self, question: str, state: State) -> list[Message]:
+    def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
                 "You break problems into smaller, manageable sub-problems. "
@@ -66,7 +77,7 @@ class DeduceAction(ReasoningAction):
     def name(self) -> str:
         return "deduce"
 
-    def prompt(self, question: str, state: State) -> list[Message]:
+    def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
                 "You make careful logical deductions. "
@@ -88,7 +99,7 @@ class AssumeAction(ReasoningAction):
     def name(self) -> str:
         return "assume"
 
-    def prompt(self, question: str, state: State) -> list[Message]:
+    def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
                 "You test assumptions by stating them explicitly and deriving consequences. "
@@ -110,7 +121,7 @@ class VerifyAction(ReasoningAction):
     def name(self) -> str:
         return "verify"
 
-    def prompt(self, question: str, state: State) -> list[Message]:
+    def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
                 "You are a careful checker. Review the reasoning so far and look for: "
@@ -132,7 +143,7 @@ class CalculateAction(ReasoningAction):
     def name(self) -> str:
         return "calculate"
 
-    def prompt(self, question: str, state: State) -> list[Message]:
+    def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
                 "You perform careful calculations, one step at a time. "
@@ -156,7 +167,7 @@ class ConcludeAction(ReasoningAction):
     def name(self) -> str:
         return "conclude"
 
-    def prompt(self, question: str, state: State) -> list[Message]:
+    def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         instruction = self.terminal_detector.format_instruction()
         return [
             Message(role="system", content=(
@@ -177,6 +188,144 @@ class ConcludeAction(ReasoningAction):
         ]
 
 
+# ─── Meta-actions (need tree context) ────────────────────────────
+
+class SummarizeAction(ReasoningAction):
+    """Condense the reasoning chain so far into a compact state.
+
+    Reads the full ancestor chain and produces a summary that preserves
+    key conclusions while reducing text. Useful for long chains where
+    the accumulated state is getting noisy.
+    """
+
+    @property
+    def name(self) -> str:
+        return "summarize"
+
+    def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
+        return [
+            Message(role="system", content=(
+                "You are a precise summarizer. Given a chain of reasoning steps, "
+                "produce a concise summary that preserves:\n"
+                "- All conclusions reached so far\n"
+                "- Any contradictions or dead ends found\n"
+                "- Key intermediate results needed for future reasoning\n\n"
+                "Discard: repetition, hedging, false starts, verbose explanations.\n"
+                "The summary should be a self-contained starting point for further reasoning."
+            )),
+            Message(role="user", content=(
+                f"Question: {question}\n\n"
+                f"Full reasoning chain:\n{state}\n\n"
+                f"Summarize the key findings and conclusions so far:"
+            )),
+        ]
+
+
+class CompareAction(ReasoningAction):
+    """Compare sibling branches to find agreement and disagreement.
+
+    Needs the Node to inspect siblings. If no siblings exist or no node
+    is provided, falls back to reviewing the current path.
+    """
+
+    @property
+    def name(self) -> str:
+        return "compare"
+
+    def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
+        # Collect sibling summaries if we have the node
+        sibling_info = ""
+        if node and node.parent:
+            siblings = [ch for ch in node.parent.children if ch is not node]
+            if siblings:
+                sibling_texts = []
+                for i, sib in enumerate(siblings):
+                    # Get the last meaningful line of each sibling's state
+                    lines = str(sib.state).split("\n")
+                    meaningful = [l.strip() for l in lines if l.strip()][-3:]
+                    snippet = " ".join(meaningful)[:200]
+                    answer = f" (concluded: {sib.answer})" if sib.answer else ""
+                    sibling_texts.append(f"Branch {i+1} (v={sib.value:.2f}, n={sib.visits}){answer}: {snippet}")
+                sibling_info = "\n".join(sibling_texts)
+
+        if sibling_info:
+            return [
+                Message(role="system", content=(
+                    "You compare different reasoning paths that branched from the same point. "
+                    "Identify what they agree on, where they diverge, and which path seems more promising."
+                )),
+                Message(role="user", content=(
+                    f"Question: {question}\n\n"
+                    f"Current path:\n{state}\n\n"
+                    f"Alternative branches from the same parent:\n{sibling_info}\n\n"
+                    f"Compare these paths. What do they agree on? Where do they diverge?"
+                )),
+            ]
+        else:
+            # No siblings — fall back to self-review
+            return [
+                Message(role="system", content=(
+                    "Review the reasoning so far. Identify the strongest conclusions "
+                    "and any areas of uncertainty."
+                )),
+                Message(role="user", content=(
+                    f"Question: {question}\n\n"
+                    f"Reasoning:\n{state}\n\n"
+                    f"What are the strongest conclusions so far? What is still uncertain?"
+                )),
+            ]
+
+
+class RefineAction(ReasoningAction):
+    """Take an existing answer and improve it with more careful reasoning.
+
+    Useful when a branch has reached an answer but with low confidence.
+    """
+
+    @property
+    def name(self) -> str:
+        return "refine"
+
+    def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
+        # Find the most recent answer in the path
+        existing_answer = None
+        if node:
+            current = node
+            while current:
+                if current.answer:
+                    existing_answer = current.answer
+                    break
+                current = current.parent
+
+        if existing_answer:
+            return [
+                Message(role="system", content=(
+                    "You have a preliminary answer. Re-examine it critically. "
+                    "Check the reasoning that led to it. If it holds up, confirm it "
+                    "with a clearer explanation. If you find a flaw, derive the correct answer."
+                )),
+                Message(role="user", content=(
+                    f"Question: {question}\n\n"
+                    f"Reasoning so far:\n{state}\n\n"
+                    f"Preliminary answer: {existing_answer}\n\n"
+                    f"Is this answer correct? Verify it carefully."
+                )),
+            ]
+        else:
+            return [
+                Message(role="system", content=(
+                    "Review the reasoning so far and try to draw a conclusion. "
+                    "If the reasoning is sufficient, state the answer. "
+                    "If not, identify what's missing."
+                )),
+                Message(role="user", content=(
+                    f"Question: {question}\n\n"
+                    f"Reasoning:\n{state}\n\n"
+                    f"Can we draw a conclusion from this?"
+                )),
+            ]
+
+
 # ─── Pre-built action sets ──────────────────────────────────────
 
 def logic_actions(terminal_detector: Optional[TerminalDetector] = None) -> list[ReasoningAction]:
@@ -185,6 +334,7 @@ def logic_actions(terminal_detector: Optional[TerminalDetector] = None) -> list[
         AssumeAction(),
         DeduceAction(),
         VerifyAction(),
+        CompareAction(),
         ConcludeAction(terminal_detector),
     ]
 
@@ -200,13 +350,16 @@ def math_actions(terminal_detector: Optional[TerminalDetector] = None) -> list[R
 
 
 def general_actions(terminal_detector: Optional[TerminalDetector] = None) -> list[ReasoningAction]:
-    """General-purpose action set."""
+    """Full action set including meta-actions."""
     return [
         DecomposeAction(),
         DeduceAction(),
         AssumeAction(),
         CalculateAction(),
         VerifyAction(),
+        CompareAction(),
+        SummarizeAction(),
+        RefineAction(),
         ConcludeAction(terminal_detector),
     ]
 
@@ -259,13 +412,20 @@ class ActionGenerator(Generator):
 
         return random.choices(self.actions, weights=weights, k=1)[0]
 
-    def generate(self, question: str, state: str, n: int = 1) -> list[Continuation]:
-        """Generate n continuations, each using a selected action."""
+    def generate(self, question: str, state: str, n: int = 1, node: Node | None = None) -> list[Continuation]:
+        """Generate n continuations, each using a selected action.
+
+        Args:
+            question: The original question.
+            state: Current reasoning state.
+            n: Number of continuations.
+            node: Optional tree node for meta-actions that need structural context.
+        """
         results = []
         selected_actions = [self._select_action(state) for _ in range(n)]
 
         for action in selected_actions:
-            messages = action.prompt(question, State(state))
+            messages = action.prompt(question, State(state), node=node)
             response = self.provider.generate(
                 messages, self.max_tokens, self.temperature,
             )
