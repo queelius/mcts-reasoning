@@ -392,25 +392,47 @@ class ActionGenerator(Generator):
         self.max_tokens = max_tokens
         self.temperature = temperature
 
+    # Default transition probabilities between action types.
+    # Produces coherent chains like ASSUME -> DEDUCE -> VERIFY -> CONCLUDE
+    # instead of random incoherent sequences.
+    DEFAULT_TRANSITIONS: dict[str | None, dict[str, float]] = {
+        None:        {"assume": 0.4, "deduce": 0.3, "decompose": 0.2, "compare": 0.1},
+        "assume":    {"deduce": 0.5, "verify": 0.3, "assume": 0.2},
+        "deduce":    {"verify": 0.4, "deduce": 0.3, "conclude": 0.2, "compare": 0.1},
+        "verify":    {"conclude": 0.4, "deduce": 0.3, "assume": 0.2, "compare": 0.1},
+        "compare":   {"conclude": 0.4, "deduce": 0.3, "assume": 0.3},
+        "conclude":  {"assume": 0.5, "deduce": 0.3, "verify": 0.2},
+        "calculate": {"calculate": 0.3, "verify": 0.3, "conclude": 0.2, "deduce": 0.2},
+        "decompose": {"assume": 0.3, "calculate": 0.3, "deduce": 0.3, "decompose": 0.1},
+        "summarize": {"conclude": 0.4, "deduce": 0.3, "verify": 0.3},
+        "refine":    {"conclude": 0.5, "verify": 0.3, "deduce": 0.2},
+    }
+
     def _select_action(self, state: str) -> ReasoningAction:
-        """Select an action, weighting CONCLUDE lower for shallow reasoning."""
-        # Count how many reasoning steps have been done (rough heuristic: count action tags)
-        depth = state.count("[deduce]") + state.count("[assume]") + state.count("[calculate]") + state.count("[decompose]") + state.count("[verify]")
+        """Select next action based on transition probabilities from previous action."""
+        # Find the last action tag in the state
+        prev_action = None
+        for tag in ["[deduce]", "[assume]", "[verify]", "[compare]", "[conclude]",
+                     "[calculate]", "[decompose]", "[summarize]", "[refine]"]:
+            if tag in state:
+                # Find the LAST occurrence
+                idx = state.rfind(tag)
+                if prev_action is None or idx > state.rfind(f"[{prev_action}]"):
+                    prev_action = tag[1:-1]  # strip brackets
 
+        # Get transition probabilities
+        transitions = self.DEFAULT_TRANSITIONS.get(prev_action, self.DEFAULT_TRANSITIONS[None])
+
+        # Filter to actions we actually have
+        available = {a.name: a for a in self.actions}
         weights = []
+        candidates = []
         for action in self.actions:
-            if action.name == "conclude":
-                # Low probability early, increasing with depth
-                weights.append(min(depth * 0.2, 1.0))
-            else:
-                weights.append(1.0)
+            w = transitions.get(action.name, 0.1)  # small default weight for unlisted
+            weights.append(w)
+            candidates.append(action)
 
-        # Ensure at least some weight on conclude
-        total = sum(weights)
-        if total == 0:
-            return random.choice(self.actions)
-
-        return random.choices(self.actions, weights=weights, k=1)[0]
+        return random.choices(candidates, weights=weights, k=1)[0]
 
     def generate(self, question: str, state: str, n: int = 1, node: Node | None = None) -> list[Continuation]:
         """Generate n continuations, each using a selected action.
