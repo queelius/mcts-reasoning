@@ -120,11 +120,23 @@ Respond with ONLY a number between 0 and 1 (e.g., 0.8):"""
             answer=answer,
         )
 
-        response = self.llm.generate(
-            prompt,
-            temperature=self.temperature,
-            max_tokens=50,
-        )
+        # Support both old (string) and new (list[Message]) provider interfaces
+        from .types import Message
+
+        messages = [Message(role="user", content=prompt)]
+        try:
+            response = self.llm.generate(
+                messages,
+                temperature=self.temperature,
+                max_tokens=50,
+            )
+        except TypeError:
+            # Fallback for providers that still take a raw string
+            response = self.llm.generate(
+                prompt,
+                temperature=self.temperature,
+                max_tokens=50,
+            )
 
         score = self._parse_score(response)
 
