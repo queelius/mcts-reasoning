@@ -1,0 +1,39 @@
+digraph mcts_tree {
+  rankdir=TB;
+  node [shape=box, style=rounded, fontsize=10, fontname="Courier"];
+  edge [color="#888888"];
+
+  n126479277503024 [label="v=0.27 n=4\nLet me solve this step by step."];
+  n126479277503024 -> n126479288302288;
+  n126479288302288 [label="ASSUME\nv=0.21 n=2\n[assume] Go ahead and state your assumption about "];
+  n126479288302288 -> n126479274420336;
+  n126479274420336 [label="VERIFY\nv=0.42 n=1\nWhat's the first statement you'd like to start wit"];
+  n126479274420336 -> n126479278665520;
+  n126479278665520 [label="CONCLUDE\nv=0.42 n=1\n[conclude] ANSWER: NO\nANSWER: NO", fillcolor="#f8717122", style="rounded,filled"];
+  n126479288302288 -> n126479262340576;
+  n126479262340576 [label="DEDUCE\nv=0.00 n=1\nSo, logically, if B is indeed a knave, then A must"];
+  n126479262340576 -> n126479277154880;
+  n126479277154880 [label="DEDUCE\nv=0.00 n=1\nIf B were a knave, they would say \"we are not the "];
+  n126479277154880 -> n126479262453200;
+  n126479262453200 [label="DEDUCE\nv=0.00 n=1\nAs a knave, A is lying when they say \"B is a knave"];
+  n126479262453200 -> n126479262464912;
+  n126479262464912 [label="ASSUME\nv=0.00 n=1\n(Note: Remember, the goal is to test an assumption"];
+  n126479262464912 -> n126479263843824;
+  n126479263843824 [label="DEDUCE\nv=0.00 n=1\nThis means A cannot be a knight; they must be a kn"];
+  n126479277503024 -> n126479262348016;
+  n126479262348016 [label="ASSUME\nv=0.32 n=2\n[assume] Go ahead and state your assumption about "];
+  n126479262348016 -> n126479272989120;
+  n126479272989120 [label="DEDUCE\nv=0.00 n=1\nSo, the logical deduction from what is established"];
+  n126479272989120 -> n126479288400112;
+  n126479288400112 [label="DEDUCE\nv=0.00 n=1\nA is a knave."];
+  n126479288400112 -> n126479260683920;
+  n126479260683920 [label="DEDUCE\nv=0.00 n=1\nB is actually saying \"We are not the same type,\" w"];
+  n126479260683920 -> n126479275775696;
+  n126479275775696 [label="VERIFY\nv=0.00 n=1\nSpecifically, where did you want to start verifyin"];
+  n126479262348016 -> n126479264262784;
+  n126479264262784 [label="DEDUCE\nv=0.65 n=1\nNow let's consider the statement made by B: \"We ar"];
+  n126479264262784 -> n126479262263792;
+  n126479262263792 [label="VERIFY\nv=0.65 n=1\nI'm here to help and provide feedback on my own re"];
+  n126479262263792 -> n126479262261008;
+  n126479262261008 [label="CONCLUDE\nv=0.65 n=1\nANSWER: NO\nANSWER: NO", fillcolor="#4ade8022", style="rounded,filled"];
+}

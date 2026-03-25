@@ -1,0 +1,47 @@
+digraph mcts_tree {
+  rankdir=TB;
+  node [shape=box, style=rounded, fontsize=10, fontname="Courier"];
+  edge [color="#888888"];
+
+  n130464834512576 [label="v=0.00 n=4\nLet me solve this step by step."];
+  n130464834512576 -> n130464836748736;
+  n130464836748736 [label="DEDUCE\nv=0.00 n=2\n[deduce] My next logical deduction would be that i"];
+  n130464836748736 -> n130464821594592;
+  n130464821594592 [label="VERIFY\nv=0.00 n=1\nSo, your initial conclusion that assuming A is a k"];
+  n130464821594592 -> n130464823852544;
+  n130464823852544 [label="CONCLUDE\nv=0.00 n=1\nAfter re-examining the problem, I"];
+  n130464823852544 -> n130464834721776;
+  n130464834721776 [label="DEDUCE\nv=0.00 n=1\n[deduce] That assuming A is either a knight or a k"];
+  n130464834721776 -> n130464831903728;
+  n130464831903728 [label="COMPARE\nv=0.00 n=1\nUltimately, I think this problem highlights the im"];
+  n130464836748736 -> n130464832452272;
+  n130464832452272 [label="DEDUCE\nv=0.00 n=1\nThis suggests that my assumption about A being a k"];
+  n130464832452272 -> n130464821595216;
+  n130464821595216 [label="VERIFY\nv=0.00 n=1\nThis contradiction suggests that I may have initia"];
+  n130464821595216 -> n130464822529584;
+  n130464822529584 [label="ASSUME\nv=0.00 n=1\nHowever, this assumption leads to another question"];
+  n130464822529584 -> n130464822531888;
+  n130464822531888 [label="COMPARE\nv=0.00 n=1\nOverall, I'm most confident in the logical structu"];
+  n130464822531888 -> n130464822526944;
+  n130464822526944 [label="VERIFY\nv=0.00 n=1\n3. While your analysis"];
+  n130464834512576 -> n130464832944560;
+  n130464832944560 [label="DEDUCE\nv=0.00 n=2\nHowever, since I'm trying to determine whether A i"];
+  n130464832944560 -> n130464823242544;
+  n130464823242544 [label="VERIFY\nv=0.00 n=1\nCan you clarify how you'd like to proceed? Are you"];
+  n130464823242544 -> n130464832730224;
+  n130464832730224 [label="CONCLUDE\nv=0.00 n=1\nLet me think about how B's lie would affect our un"];
+  n130464832730224 -> n130464823576096;
+  n130464823576096 [label="CONCLUDE\nv=0.00 n=1\nIt seems that if we assume B's statement \"We are t"];
+  n130464823576096 -> n130464823587232;
+  n130464823587232 [label="VERIFY\nv=0.00 n=1\nOverall, however, your self-reflection has been ex"];
+  n130464832944560 -> n130464822390000;
+  n130464822390000 [label="DEDUCE\nv=0.00 n=1\nIf we assume A's statement about B being a knave i"];
+  n130464822390000 -> n130464822394800;
+  n130464822394800 [label="VERIFY\nv=0.00 n=1\nI think I've found a problem with my reasoning. Th"];
+  n130464822394800 -> n130464822388464;
+  n130464822388464 [label="DEDUCE\nv=0.00 n=1\nThis new assumption seems to resolve the contradic"];
+  n130464822388464 -> n130464820194112;
+  n130464820194112 [label="VERIFY\nv=0.00 n=1\nOne possible way to resolve this paradox is to con"];
+  n130464820194112 -> n130464820184272;
+  n130464820184272 [label="ASSUME\nv=0.00 n=1\nHowever, this raises further questions: can we eve"];
+}

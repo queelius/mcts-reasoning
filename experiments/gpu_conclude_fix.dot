@@ -1,0 +1,17 @@
+digraph mcts_tree {
+  rankdir=TB;
+  node [shape=box, style=rounded, fontsize=10, fontname="Courier"];
+  edge [color="#888888"];
+
+  n131237739878288 [label="v=0.57 n=4\nLet me solve this step by step."];
+  n131237739878288 -> n131237737080368;
+  n131237737080368 [label="CONCLUDE\nv=0.57 n=2\nANSWER: A is a knave\nANSWER: A is a knave", fillcolor="#4ade8022", style="rounded,filled"];
+  n131237739878288 -> n131237726562224;
+  n131237726562224 [label="COMPARE\nv=0.57 n=2\n- In this case, A"];
+  n131237726562224 -> n131237738817264;
+  n131237738817264 [label="CONCLUDE\nv=0.57 n=1\nANSWER: A is a knight\nANSWER: A is a knight", fillcolor="#4ade8022", style="rounded,filled"];
+  n131237726562224 -> n131237737255696;
+  n131237737255696 [label="DEDUCE\nv=0.57 n=1\nThis means either both A and B are knights (tellin"];
+  n131237737255696 -> n131237727759168;
+  n131237727759168 [label="CONCLUDE\nv=0.57 n=1\nTherefore, ANSWER: A is a knight.\nANSWER: A is a knight.", fillcolor="#4ade8022", style="rounded,filled"];
+}

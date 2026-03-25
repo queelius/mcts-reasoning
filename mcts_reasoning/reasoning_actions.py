@@ -48,6 +48,21 @@ class ReasoningAction(ABC):
         """Short name for this action (e.g., 'deduce', 'assume')."""
 
 
+def _action_messages(system: str, question: str, state: State, action_word: str) -> list[Message]:
+    """Build a 3-message prompt: system, assistant (prior reasoning), user (continue).
+
+    Putting the state in the assistant role makes the model continue in its own
+    voice instead of slipping into reviewer/tutor mode. The user message is
+    kept minimal (just the action type) to avoid the model interpreting it
+    as a question to respond to.
+    """
+    return [
+        Message(role="system", content=f"You are solving this problem: {question}\n\n{system}"),
+        Message(role="assistant", content=str(state)),
+        Message(role="user", content=f"[{action_word}]"),
+    ]
+
+
 class DecomposeAction(ReasoningAction):
     """Break the problem into sub-problems."""
 
@@ -56,17 +71,11 @@ class DecomposeAction(ReasoningAction):
         return "decompose"
 
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
-        return [
-            Message(role="system", content=(
-                "You are solving a problem. Think about what sub-problems need to be solved. "
-                "Write in first person as if you are working through this yourself."
-            )),
-            Message(role="user", content=(
-                f"I need to solve: {question}\n\n"
-                f"My work so far:\n{state}\n\n"
-                f"Let me break this into sub-problems:"
-            )),
-        ]
+        return _action_messages(
+            "Break the problem into smaller sub-problems. List what needs to be figured out.",
+            question, state,
+            "decompose",
+        )
 
 
 class DeduceAction(ReasoningAction):
@@ -77,18 +86,11 @@ class DeduceAction(ReasoningAction):
         return "deduce"
 
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
-        return [
-            Message(role="system", content=(
-                "You are solving a problem step by step. "
-                "Make exactly ONE logical deduction from what you know so far. "
-                "Write in first person."
-            )),
-            Message(role="user", content=(
-                f"I need to solve: {question}\n\n"
-                f"My reasoning so far:\n{state}\n\n"
-                f"From what I know, I can deduce:"
-            )),
-        ]
+        return _action_messages(
+            "Make exactly ONE logical deduction from what is established so far.",
+            question, state,
+            "deduce",
+        )
 
 
 class AssumeAction(ReasoningAction):
@@ -99,18 +101,11 @@ class AssumeAction(ReasoningAction):
         return "assume"
 
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
-        return [
-            Message(role="system", content=(
-                "You are solving a problem by testing assumptions. "
-                "Pick ONE specific assumption, state it, and work out what follows. "
-                "If you hit a contradiction, say so clearly. Write in first person."
-            )),
-            Message(role="user", content=(
-                f"I need to solve: {question}\n\n"
-                f"My work so far:\n{state}\n\n"
-                f"Let me assume:"
-            )),
-        ]
+        return _action_messages(
+            "Test an assumption. Pick ONE specific assumption, state it, derive consequences. Note contradictions.",
+            question, state,
+            "assume",
+        )
 
 
 class VerifyAction(ReasoningAction):
@@ -121,18 +116,11 @@ class VerifyAction(ReasoningAction):
         return "verify"
 
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
-        return [
-            Message(role="system", content=(
-                "You are checking your own reasoning for mistakes. "
-                "Look for contradictions, invalid steps, or arithmetic errors. "
-                "Write in first person. Be honest about any problems you find."
-            )),
-            Message(role="user", content=(
-                f"I need to solve: {question}\n\n"
-                f"My reasoning so far:\n{state}\n\n"
-                f"Let me check my work:"
-            )),
-        ]
+        return _action_messages(
+            "Check the reasoning for contradictions, invalid steps, or errors. Be honest.",
+            question, state,
+            "verify",
+        )
 
 
 class CalculateAction(ReasoningAction):
@@ -143,17 +131,11 @@ class CalculateAction(ReasoningAction):
         return "calculate"
 
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
-        return [
-            Message(role="system", content=(
-                "You are doing a calculation. Perform ONE step, show your work. "
-                "Write in first person."
-            )),
-            Message(role="user", content=(
-                f"I need to solve: {question}\n\n"
-                f"My work so far:\n{state}\n\n"
-                f"Next calculation:"
-            )),
-        ]
+        return _action_messages(
+            "Perform ONE calculation step. Show work.",
+            question, state,
+            "calculate",
+        )
 
 
 class ConcludeAction(ReasoningAction):
@@ -168,20 +150,13 @@ class ConcludeAction(ReasoningAction):
 
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         instruction = self.terminal_detector.format_instruction()
-        return [
-            Message(role="system", content=(
-                "You are solving a problem. Based on your reasoning, decide if you have "
-                "enough to give a definitive answer to the ORIGINAL question. "
-                f"{instruction}\n\n"
-                "CRITICAL: Only write ANSWER: if you are CERTAIN. "
-                "If not ready, continue reasoning instead. Write in first person."
-            )),
-            Message(role="user", content=(
-                f"I need to solve: {question}\n\n"
-                f"My reasoning so far:\n{state}\n\n"
-                f"Do I have enough to answer? If yes, I conclude:"
-            )),
-        ]
+        return _action_messages(
+            f"State your answer to the original question. "
+            f"{instruction} Your answer must directly respond to what was asked (e.g., 'A is a knight', '42', 'yes'). "
+            f"Do NOT answer with 'certain', 'unsure', or meta-commentary. If you truly cannot answer yet, continue reasoning instead.",
+            question, state,
+            "conclude",
+        )
 
 
 # ─── Meta-actions (need tree context) ────────────────────────────
@@ -199,18 +174,11 @@ class SummarizeAction(ReasoningAction):
         return "summarize"
 
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
-        return [
-            Message(role="system", content=(
-                "You are solving a problem. Summarize what you have established so far. "
-                "Keep all conclusions, contradictions found, and key results. "
-                "Drop repetition and verbose explanations. Write in first person."
-            )),
-            Message(role="user", content=(
-                f"I need to solve: {question}\n\n"
-                f"My full reasoning so far:\n{state}\n\n"
-                f"Let me summarize what I know:"
-            )),
-        ]
+        return _action_messages(
+            "Summarize what has been established. Keep conclusions, contradictions, key results. Drop repetition.",
+            question, state,
+            "summarize",
+        )
 
 
 class CompareAction(ReasoningAction):
@@ -241,31 +209,17 @@ class CompareAction(ReasoningAction):
                 sibling_info = "\n".join(sibling_texts)
 
         if sibling_info:
-            return [
-                Message(role="system", content=(
-                    "You are solving a problem and have explored multiple approaches. "
-                    "Compare them to see what they agree on and where they diverge. "
-                    "Write in first person."
-                )),
-                Message(role="user", content=(
-                    f"I need to solve: {question}\n\n"
-                    f"My current approach:\n{state}\n\n"
-                    f"Other approaches I tried:\n{sibling_info}\n\n"
-                    f"Comparing these approaches, I notice:"
-                )),
-            ]
+            return _action_messages(
+                "Compare different approaches. What do they agree on? Where do they diverge?",
+                question, State(f"{state}\n\nOther approaches I explored:\n{sibling_info}"),
+                "compare",
+            )
         else:
-            return [
-                Message(role="system", content=(
-                    "You are solving a problem. Identify what you are most confident about "
-                    "and what remains uncertain. Write in first person."
-                )),
-                Message(role="user", content=(
-                    f"I need to solve: {question}\n\n"
-                    f"My reasoning:\n{state}\n\n"
-                    f"What am I most confident about? What is still uncertain?"
-                )),
-            ]
+            return _action_messages(
+                "Identify what is most established and what remains uncertain.",
+                question, state,
+                "compare",
+            )
 
 
 class RefineAction(ReasoningAction):
@@ -290,31 +244,17 @@ class RefineAction(ReasoningAction):
                 current = current.parent
 
         if existing_answer:
-            return [
-                Message(role="system", content=(
-                    "You are solving a problem and reached a preliminary answer. "
-                    "Re-examine it critically. If it holds up, confirm it. "
-                    "If you find a flaw, correct it. Write in first person."
-                )),
-                Message(role="user", content=(
-                    f"I need to solve: {question}\n\n"
-                    f"My reasoning so far:\n{state}\n\n"
-                    f"My preliminary answer: {existing_answer}\n\n"
-                    f"Let me double-check this:"
-                )),
-            ]
+            return _action_messages(
+                f"Re-examine the preliminary answer '{existing_answer}' critically. Confirm or correct it.",
+                question, state,
+                "refine",
+            )
         else:
-            return [
-                Message(role="system", content=(
-                    "You are solving a problem. Try to draw a conclusion from "
-                    "your reasoning so far. Write in first person."
-                )),
-                Message(role="user", content=(
-                    f"I need to solve: {question}\n\n"
-                    f"My reasoning:\n{state}\n\n"
-                    f"Can I draw a conclusion from this?"
-                )),
-            ]
+            return _action_messages(
+                "Try to draw a conclusion from the reasoning so far.",
+                question, state,
+                "refine",
+            )
 
 
 # ─── Pre-built action sets ──────────────────────────────────────
@@ -414,14 +354,17 @@ class ActionGenerator(Generator):
         # Get transition probabilities
         transitions = self.DEFAULT_TRANSITIONS.get(prev_action, self.DEFAULT_TRANSITIONS[None])
 
-        # Filter to actions we actually have
-        available = {a.name: a for a in self.actions}
+        # Build weights from transition table
         weights = []
         candidates = []
         for action in self.actions:
-            w = transitions.get(action.name, 0.1)  # small default weight for unlisted
+            w = transitions.get(action.name, 0.0)  # 0 for unlisted (don't randomly pick conclude early)
             weights.append(w)
             candidates.append(action)
+
+        # If all weights are 0 (shouldn't happen), fall back to uniform
+        if sum(weights) == 0:
+            weights = [1.0] * len(candidates)
 
         return random.choices(candidates, weights=weights, k=1)[0]
 

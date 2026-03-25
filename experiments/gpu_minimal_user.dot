@@ -1,0 +1,33 @@
+digraph mcts_tree {
+  rankdir=TB;
+  node [shape=box, style=rounded, fontsize=10, fontname="Courier"];
+  edge [color="#888888"];
+
+  n137809477644848 [label="v=0.59 n=4\nLet me solve this step by step."];
+  n137809477644848 -> n137809475518592;
+  n137809475518592 [label="DEDUCE\nv=0.61 n=2\nTherefore, since B cannot be telling the truth (as"];
+  n137809475518592 -> n137809462077648;
+  n137809462077648 [label="DEDUCE\nv=0.65 n=1\nSo, logically deduced: Both A and B are knaves."];
+  n137809462077648 -> n137809463076736;
+  n137809463076736 [label="VERIFY\nv=0.65 n=1\nA and B are indeed both knaves."];
+  n137809463076736 -> n137809473598912;
+  n137809473598912 [label="COMPARE\nv=0.65 n=1\nBoth approaches arrive at the same conclusion: A a"];
+  n137809473598912 -> n137809477513968;
+  n137809477513968 [label="CONCLUDE\nv=0.65 n=1\n[conclude] ANSWER: CERTAIN\nANSWER: CERTAIN", fillcolor="#4ade8022", style="rounded,filled"];
+  n137809475518592 -> n137809464704992;
+  n137809464704992 [label="CONCLUDE\nv=0.57 n=1\nThis creates an inconsistency. We cannot definitiv"];
+  n137809464704992 -> n137809460198288;
+  n137809460198288 [label="DEDUCE\nv=0.57 n=1\n- Since we know A said B is a knave, this would me"];
+  n137809460198288 -> n137809464700384;
+  n137809464700384 [label="CONCLUDE\nv=0.57 n=1\nANSWER: NOT CERTAIN\nANSWER: NOT CERTAIN", fillcolor="#4ade8022", style="rounded,filled"];
+  n137809477644848 -> n137809475831616;
+  n137809475831616 [label="DEDUCE\nv=0.57 n=2\nTherefore, our assumption that A is a knave must b"];
+  n137809475831616 -> n137809477643312;
+  n137809477643312 [label="VERIFY\nv=0.65 n=1\nSo, we can conclude that A is indeed a knight (tel"];
+  n137809477643312 -> n137809478659984;
+  n137809478659984 [label="VERIFY\nv=0.65 n=1\n- But if A is a knave (lying), and we assume"];
+  n137809478659984 -> n137809480071504;
+  n137809480071504 [label="CONCLUDE\nv=0.65 n=1\nWe've reached a point where our initial assumption\nANSWER: UNSURE.", fillcolor="#4ade8022", style="rounded,filled"];
+  n137809475831616 -> n137809460454672;
+  n137809460454672 [label="CONCLUDE\nv=0.50 n=1\nANSWER: NOT ENOUGH INFORMATION\nANSWER: NOT ENOUGH INFORMATION", fillcolor="#f8717122", style="rounded,filled"];
+}

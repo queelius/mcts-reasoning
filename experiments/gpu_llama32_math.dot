@@ -1,0 +1,39 @@
+digraph mcts_tree {
+  rankdir=TB;
+  node [shape=box, style=rounded, fontsize=10, fontname="Courier"];
+  edge [color="#888888"];
+
+  n125246457321744 [label="v=0.57 n=5\nLet me solve this step by step."];
+  n125246457321744 -> n125246457321600;
+  n125246457321600 [label="CALCULATE\nv=0.57 n=2\nSo, the updated equation becomes:"];
+  n125246457321600 -> n125246457322560;
+  n125246457322560 [label="CONCLUDE\nv=0.57 n=1\nANSWER: 180\nANSWER: 180", fillcolor="#4ade8022", style="rounded,filled"];
+  n125246457321600 -> n125246457322608;
+  n125246457322608 [label="DECOMPOSE\nv=0.57 n=1\n2. Add the result from step 1 to 55."];
+  n125246457322608 -> n125246457322656;
+  n125246457322656 [label="CONCLUDE\nv=0.57 n=1\nANSWER: 180\nANSWER: 180", fillcolor="#4ade8022", style="rounded,filled"];
+  n125246457321744 -> n125246457321552;
+  n125246457321552 [label="DECOMPOSE\nv=0.61 n=2\nThese sub-problems can be solved in this order to "];
+  n125246457321552 -> n125246457322176;
+  n125246457322176 [label="17 * 23\nv=0.57 n=1\nSo, 17 * 23 equals 391."];
+  n125246457322176 -> n125246457322368;
+  n125246457322368 [label="VERIFY\nv=0.57 n=1\nOverall, your reasoning seems sound so far. Well d"];
+  n125246457322368 -> n125246457322416;
+  n125246457322416 [label="DECOMPOSE\nv=0.57 n=1\n4. Add 55 to result of 3"];
+  n125246457322416 -> n125246457322464;
+  n125246457322464 [label="VERIFY\nv=0.57 n=1\n[verify]"];
+  n125246457322464 -> n125246457322512;
+  n125246457322512 [label="CONCLUDE\nv=0.57 n=1\n[conclude] ANSWER: (391) - (294) + 55\nANSWER: (391) - (294) + 55", fillcolor="#4ade8022", style="rounded,filled"];
+  n125246457321552 -> n125246457322272;
+  n125246457322272 [label="CALCULATE\nv=0.65 n=1\nSo the result of (17 * 23) is 391."];
+  n125246457322272 -> n125246457322224;
+  n125246457322224 [label="VERIFY\nv=0.65 n=1\nNow that we have the result of the first calculati"];
+  n125246457322224 -> n125246457322320;
+  n125246457322320 [label="ADDITION\nv=0.65 n=1\nANSWER: 124\nANSWER: 124", fillcolor="#4ade8022", style="rounded,filled"];
+  n125246457321744 -> n125246457321504;
+  n125246457321504 [label="VERIFY\nv=0.50 n=1\nSo far, everything checks out. You've identified t"];
+  n125246457321504 -> n125246457322032;
+  n125246457322032 [label="VERIFY\nv=0.50 n=1\nPlease proceed with the calculation: (17 * 23) - ("];
+  n125246457322032 -> n125246457322128;
+  n125246457322128 [label="CONCLUDE\nv=0.50 n=1\nANSWER: 180\nANSWER: 180", fillcolor="#f8717122", style="rounded,filled"];
+}
