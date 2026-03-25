@@ -1,0 +1,177 @@
+[
+  {
+    "domain": "number_theory",
+    "problem": "Find (3 + 33) mod 6",
+    "solution": "0",
+    "correct": true,
+    "response": "0"
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find gcd(28, 43)",
+    "solution": "1",
+    "correct": true,
+    "response": "gcd(28, 43) = 1"
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find 17 mod 2",
+    "solution": "1",
+    "correct": true,
+    "response": "1"
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find (27 + 28) mod 3",
+    "solution": "1",
+    "correct": false,
+    "response": "5"
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find lcm(16, 35)",
+    "solution": "560",
+    "correct": true,
+    "response": "The LCM of 16 and 35 is 560."
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find 24 mod 4",
+    "solution": "0",
+    "correct": true,
+    "response": "20"
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find lcm(22, 12)",
+    "solution": "132",
+    "correct": false,
+    "response": "44"
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find gcd(46, 58)",
+    "solution": "2",
+    "correct": true,
+    "response": "The GCD of 46 and 58 is 2."
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find gcd(14, 31)",
+    "solution": "1",
+    "correct": true,
+    "response": "1"
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find 11 mod 5",
+    "solution": "1",
+    "correct": false,
+    "response": "6"
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find lcm(12, 26)",
+    "solution": "156",
+    "correct": true,
+    "response": "The LCM of 12 and 26 is 156."
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find gcd(58, 39)",
+    "solution": "1",
+    "correct": true,
+    "response": "The greatest common divisor (gcd) of 58 and 39 is 1."
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find gcd(33, 38)",
+    "solution": "1",
+    "correct": true,
+    "response": "gcd(33, 38) = 1"
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find gcd(60, 21)",
+    "solution": "3",
+    "correct": true,
+    "response": "The GCD of 60 and 21 is 3."
+  },
+  {
+    "domain": "number_theory",
+    "problem": "Find 19 mod 5",
+    "solution": "4",
+    "correct": true,
+    "response": "4"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: (((((((((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))) OR ((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s))) AND (((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s)))) OR ((((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))) OR ((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)))) AND (((((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))) OR ((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s))) AND (((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))))) OR ((((((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))) OR ((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s))) AND (((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s)))) OR ((((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))) OR ((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s))))) AND ((((((((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))) OR ((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s))) AND (((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s)))) OR ((((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))) OR ((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)))) AND (((((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))) OR ((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s))) AND (((((s AND s) OR s) AND (s AND s)) OR ((s AND s) OR s)) AND (((s AND s) OR s) AND (s AND s))))) OR r))",
+    "solution": "(s AND (r OR s))",
+    "correct": false,
+    "response": "The expression is too complex to simplify directly, but we c"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: (q OR NOT r)",
+    "solution": "(q OR NOT r)",
+    "correct": false,
+    "response": "NOT (NOT q AND r)"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: NOT ((NOT r AND (q OR q)))",
+    "solution": "(r OR NOT q)",
+    "correct": false,
+    "response": "\u00ac((\u00acr \u2227 (q \u2228 q))) = \u00ac(\u00acr \u2227 True) = \u00ac\u00acr = r"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: NOT (((FALSE AND r) OR q))",
+    "solution": "NOT q",
+    "correct": false,
+    "response": "NOT ((r AND FALSE) OR q)\n\n= NOT (r AND FALSE)\n= NOT r"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: NOT ((s OR r))",
+    "solution": "(NOT s AND NOT r)",
+    "correct": false,
+    "response": "\u00ac(s \u2228 r)"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: ((NOT r AND FALSE) AND q)",
+    "solution": "FALSE",
+    "correct": false,
+    "response": "\u2205"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: (s AND NOT p)",
+    "solution": "(s AND NOT p)",
+    "correct": false,
+    "response": "\u00acp"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: NOT NOT FALSE",
+    "solution": "FALSE",
+    "correct": false,
+    "response": "TRUE"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: (((((((((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))) OR ((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE))) AND (((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s)))) OR ((((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))) OR ((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)))) AND (((((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))) OR ((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE))) AND (((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))))) OR ((((((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))) OR ((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE))) AND (((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s)))) OR ((((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))) OR ((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE))))) AND ((((((((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))) OR ((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE))) AND (((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s)))) OR ((((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))) OR ((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)))) AND (((((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))) OR ((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE))) AND (((((NOT p AND s) OR TRUE) AND (NOT p AND s)) OR ((NOT p AND s) OR TRUE)) AND (((NOT p AND s) OR TRUE) AND (NOT p AND s))))) OR s))",
+    "solution": "((NOT p AND s) OR s)",
+    "correct": false,
+    "response": "The simplified expression is:\n\ns"
+  },
+  {
+    "domain": "logic",
+    "problem": "Simplify: (r OR (r OR p))",
+    "solution": "(r OR (p OR r))",
+    "correct": false,
+    "response": "r"
+  }
+]
