@@ -58,14 +58,13 @@ class DecomposeAction(ReasoningAction):
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
-                "You break problems into smaller, manageable sub-problems. "
-                "List the key things that need to be figured out, in order. "
-                "Be specific and concise."
+                "You are solving a problem. Think about what sub-problems need to be solved. "
+                "Write in first person as if you are working through this yourself."
             )),
             Message(role="user", content=(
-                f"Problem: {question}\n\n"
-                f"Work so far:\n{state}\n\n"
-                f"What are the key sub-problems to solve? List them briefly."
+                f"I need to solve: {question}\n\n"
+                f"My work so far:\n{state}\n\n"
+                f"Let me break this into sub-problems:"
             )),
         ]
 
@@ -80,14 +79,14 @@ class DeduceAction(ReasoningAction):
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
-                "You make careful logical deductions. "
-                "Given the current state of reasoning, derive exactly ONE new conclusion. "
-                "State what you conclude and why."
+                "You are solving a problem step by step. "
+                "Make exactly ONE logical deduction from what you know so far. "
+                "Write in first person."
             )),
             Message(role="user", content=(
-                f"Problem: {question}\n\n"
-                f"What we know so far:\n{state}\n\n"
-                f"What is one thing that logically follows from what we know?"
+                f"I need to solve: {question}\n\n"
+                f"My reasoning so far:\n{state}\n\n"
+                f"From what I know, I can deduce:"
             )),
         ]
 
@@ -102,14 +101,14 @@ class AssumeAction(ReasoningAction):
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
-                "You test assumptions by stating them explicitly and deriving consequences. "
-                "Pick ONE specific assumption to test. State it clearly, then derive "
-                "what would follow if it were true. Note any contradictions."
+                "You are solving a problem by testing assumptions. "
+                "Pick ONE specific assumption, state it, and work out what follows. "
+                "If you hit a contradiction, say so clearly. Write in first person."
             )),
             Message(role="user", content=(
-                f"Problem: {question}\n\n"
-                f"Work so far:\n{state}\n\n"
-                f"State one assumption to test and derive its consequences."
+                f"I need to solve: {question}\n\n"
+                f"My work so far:\n{state}\n\n"
+                f"Let me assume:"
             )),
         ]
 
@@ -124,14 +123,14 @@ class VerifyAction(ReasoningAction):
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
-                "You are a careful checker. Review the reasoning so far and look for: "
-                "contradictions, invalid steps, unstated assumptions, or arithmetic errors. "
-                "If everything checks out, say so. If you find a problem, identify it precisely."
+                "You are checking your own reasoning for mistakes. "
+                "Look for contradictions, invalid steps, or arithmetic errors. "
+                "Write in first person. Be honest about any problems you find."
             )),
             Message(role="user", content=(
-                f"Problem: {question}\n\n"
-                f"Reasoning to check:\n{state}\n\n"
-                f"Is this reasoning correct so far? Check for errors."
+                f"I need to solve: {question}\n\n"
+                f"My reasoning so far:\n{state}\n\n"
+                f"Let me check my work:"
             )),
         ]
 
@@ -146,13 +145,13 @@ class CalculateAction(ReasoningAction):
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
-                "You perform careful calculations, one step at a time. "
-                "Show your work clearly. Do ONE calculation, not the whole problem."
+                "You are doing a calculation. Perform ONE step, show your work. "
+                "Write in first person."
             )),
             Message(role="user", content=(
-                f"Problem: {question}\n\n"
-                f"Work so far:\n{state}\n\n"
-                f"Perform the next calculation step."
+                f"I need to solve: {question}\n\n"
+                f"My work so far:\n{state}\n\n"
+                f"Next calculation:"
             )),
         ]
 
@@ -171,19 +170,16 @@ class ConcludeAction(ReasoningAction):
         instruction = self.terminal_detector.format_instruction()
         return [
             Message(role="system", content=(
-                "Based on the reasoning so far, determine if you can give a definitive answer "
-                "to the ORIGINAL question (not a sub-question). "
-                "If the reasoning is sufficient, state your answer clearly. "
+                "You are solving a problem. Based on your reasoning, decide if you have "
+                "enough to give a definitive answer to the ORIGINAL question. "
                 f"{instruction}\n\n"
-                "CRITICAL: If you do NOT have enough reasoning to answer definitively, "
-                "do NOT write 'ANSWER:'. Instead, continue reasoning with the next logical step. "
-                "Only write ANSWER: when you are CERTAIN of the answer."
+                "CRITICAL: Only write ANSWER: if you are CERTAIN. "
+                "If not ready, continue reasoning instead. Write in first person."
             )),
             Message(role="user", content=(
-                f"Original question: {question}\n\n"
-                f"Full reasoning:\n{state}\n\n"
-                f"Can you answer the original question definitively? "
-                f"If yes, give the answer. If not, take the next reasoning step instead."
+                f"I need to solve: {question}\n\n"
+                f"My reasoning so far:\n{state}\n\n"
+                f"Do I have enough to answer? If yes, I conclude:"
             )),
         ]
 
@@ -205,18 +201,14 @@ class SummarizeAction(ReasoningAction):
     def prompt(self, question: str, state: State, node: Node | None = None) -> list[Message]:
         return [
             Message(role="system", content=(
-                "You are a precise summarizer. Given a chain of reasoning steps, "
-                "produce a concise summary that preserves:\n"
-                "- All conclusions reached so far\n"
-                "- Any contradictions or dead ends found\n"
-                "- Key intermediate results needed for future reasoning\n\n"
-                "Discard: repetition, hedging, false starts, verbose explanations.\n"
-                "The summary should be a self-contained starting point for further reasoning."
+                "You are solving a problem. Summarize what you have established so far. "
+                "Keep all conclusions, contradictions found, and key results. "
+                "Drop repetition and verbose explanations. Write in first person."
             )),
             Message(role="user", content=(
-                f"Question: {question}\n\n"
-                f"Full reasoning chain:\n{state}\n\n"
-                f"Summarize the key findings and conclusions so far:"
+                f"I need to solve: {question}\n\n"
+                f"My full reasoning so far:\n{state}\n\n"
+                f"Let me summarize what I know:"
             )),
         ]
 
@@ -251,27 +243,27 @@ class CompareAction(ReasoningAction):
         if sibling_info:
             return [
                 Message(role="system", content=(
-                    "You compare different reasoning paths that branched from the same point. "
-                    "Identify what they agree on, where they diverge, and which path seems more promising."
+                    "You are solving a problem and have explored multiple approaches. "
+                    "Compare them to see what they agree on and where they diverge. "
+                    "Write in first person."
                 )),
                 Message(role="user", content=(
-                    f"Question: {question}\n\n"
-                    f"Current path:\n{state}\n\n"
-                    f"Alternative branches from the same parent:\n{sibling_info}\n\n"
-                    f"Compare these paths. What do they agree on? Where do they diverge?"
+                    f"I need to solve: {question}\n\n"
+                    f"My current approach:\n{state}\n\n"
+                    f"Other approaches I tried:\n{sibling_info}\n\n"
+                    f"Comparing these approaches, I notice:"
                 )),
             ]
         else:
-            # No siblings — fall back to self-review
             return [
                 Message(role="system", content=(
-                    "Review the reasoning so far. Identify the strongest conclusions "
-                    "and any areas of uncertainty."
+                    "You are solving a problem. Identify what you are most confident about "
+                    "and what remains uncertain. Write in first person."
                 )),
                 Message(role="user", content=(
-                    f"Question: {question}\n\n"
-                    f"Reasoning:\n{state}\n\n"
-                    f"What are the strongest conclusions so far? What is still uncertain?"
+                    f"I need to solve: {question}\n\n"
+                    f"My reasoning:\n{state}\n\n"
+                    f"What am I most confident about? What is still uncertain?"
                 )),
             ]
 
@@ -300,28 +292,27 @@ class RefineAction(ReasoningAction):
         if existing_answer:
             return [
                 Message(role="system", content=(
-                    "You have a preliminary answer. Re-examine it critically. "
-                    "Check the reasoning that led to it. If it holds up, confirm it "
-                    "with a clearer explanation. If you find a flaw, derive the correct answer."
+                    "You are solving a problem and reached a preliminary answer. "
+                    "Re-examine it critically. If it holds up, confirm it. "
+                    "If you find a flaw, correct it. Write in first person."
                 )),
                 Message(role="user", content=(
-                    f"Question: {question}\n\n"
-                    f"Reasoning so far:\n{state}\n\n"
-                    f"Preliminary answer: {existing_answer}\n\n"
-                    f"Is this answer correct? Verify it carefully."
+                    f"I need to solve: {question}\n\n"
+                    f"My reasoning so far:\n{state}\n\n"
+                    f"My preliminary answer: {existing_answer}\n\n"
+                    f"Let me double-check this:"
                 )),
             ]
         else:
             return [
                 Message(role="system", content=(
-                    "Review the reasoning so far and try to draw a conclusion. "
-                    "If the reasoning is sufficient, state the answer. "
-                    "If not, identify what's missing."
+                    "You are solving a problem. Try to draw a conclusion from "
+                    "your reasoning so far. Write in first person."
                 )),
                 Message(role="user", content=(
-                    f"Question: {question}\n\n"
-                    f"Reasoning:\n{state}\n\n"
-                    f"Can we draw a conclusion from this?"
+                    f"I need to solve: {question}\n\n"
+                    f"My reasoning:\n{state}\n\n"
+                    f"Can I draw a conclusion from this?"
                 )),
             ]
 
