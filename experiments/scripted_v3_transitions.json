@@ -1,0 +1,440 @@
+{
+  "question": "A says B is a knave. B says we are the same type. Is A a knight or knave?",
+  "simulations_run": 10,
+  "exploration_constant": 1.414,
+  "max_children_per_node": 3,
+  "max_rollout_depth": 5,
+  "terminal_states": [
+    {
+      "answer": "A is a knight",
+      "score": 0.425,
+      "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[deduce] The analysis is complete. A=knight is consistent, A=knave contradicts. AN"
+    },
+    {
+      "answer": "A is a knight",
+      "score": 0.425,
+      "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[deduce] The analysis is complete. A=knight is consistent, A=knave contradicts. AN"
+    },
+    {
+      "answer": "A is a knight",
+      "score": 0.425,
+      "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[deduce] The analysis is complete. A=knight is consistent, A=knave contradicts. AN"
+    },
+    {
+      "answer": "A is a knight",
+      "score": 0.425,
+      "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[deduce] The analysis is complete. A=knight is consistent, A=knave contradicts. AN"
+    }
+  ],
+  "root": {
+    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.",
+    "visits": 10,
+    "value": 0.16999999999999998,
+    "is_terminal": false,
+    "answer": null,
+    "_continuations": null,
+    "_continuation_index": 0,
+    "children": [
+      {
+        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[deduce] The analysis is complete. A=knight is consistent, A=knave contradicts. ANSWER: A is a knight",
+        "visits": 4,
+        "value": 0.425,
+        "is_terminal": true,
+        "answer": "A is a knight",
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": []
+      },
+      {
+        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...",
+        "visits": 3,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[conclude] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[conclude] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[verify] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[conclude] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[verify] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[assume] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[deduce] Comparing: A-is-knight branch is consistent, A-is-knave branch contradicts. A must be a knight.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[deduce] Comparing: A-is-knight branch is consistent, A-is-knave branch contradicts. A must be a knight.\n\n[verify] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[deduce] Comparing: A-is-knight branch is consistent, A-is-knave branch contradicts. A must be a knight.\n\n[verify] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[deduce] Comparing: A-is-knight branch is consistent, A-is-knave branch contradicts. A must be a knight.\n\n[verify] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[verify] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[deduce] Comparing: A-is-knight branch is consistent, A-is-knave branch contradicts. A must be a knight.\n\n[verify] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[verify] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[deduce] Comparing: A-is-knight branch is consistent, A-is-knave branch contradicts. A must be a knight.\n\n[verify] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[verify] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[verify] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[conclude] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[conclude] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[verify] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[conclude] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[verify] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[conclude] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[compare] Analyzing the puzzle further...\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[conclude] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[verify] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[conclude] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[assume] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+        "visits": 3,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[verify] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[verify] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[conclude] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[verify] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[conclude] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[verify] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[conclude] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[conclude] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[conclude] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[conclude] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[conclude] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[verify] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[conclude] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[verify] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[deduce] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[conclude] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[deduce] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[verify] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[compare] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[verify] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[verify] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[verify] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[verify] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[assume] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[verify] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.\n\n[assume] ASSUME: A is a knave. THEN: A lies, so B is a knight. CHECK: Need to verify.\n\n[verify] ASSUME: B is a knight. THEN: B tells truth about same type. CHECK: But A says B is knave. CONTRADICTION!\n\n[assume] ASSUME: A is a knight. THEN: A tells truth, so B is a knave. CHECK: Consistent so far.",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

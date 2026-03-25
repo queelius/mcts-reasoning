@@ -1,0 +1,105 @@
+{
+  "question": "A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.",
+  "simulations_run": 2,
+  "exploration_constant": 1.414,
+  "max_children_per_node": 2,
+  "max_rollout_depth": 3,
+  "terminal_states": [],
+  "root": {
+    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.\n\nLet me solve this step by step.",
+    "visits": 2,
+    "value": 0.0,
+    "is_terminal": false,
+    "answer": null,
+    "_continuations": null,
+    "_continuation_index": 0,
+    "children": [
+      {
+        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.\n\nLet me solve this step by step.\n\nTo solve this problem, let's break it down step by step:\n\n1. A says B is a knave.",
+        "visits": 1,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.\n\nLet me solve this step by step.\n\nTo solve this problem, let's break it down step by step:\n\n1. A says B is a knave.\n\n- If A is a knight (tells the truth), then A's statement must be true. Therefore, B would indeed be a knave.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.\n\nLet me solve this step by step.\n\nTo solve this problem, let's break it down step by step:\n\n1. A says B is a knave.\n\n- If A is a knight (tells the truth), then A's statement must be true. Therefore, B would indeed be a knave.\n\nTo solve this problem, let's break it down step by step:\n\n1. A says B is a knave.",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.\n\nLet me solve this step by step.\n\nTo solve this problem, let's break it down step by step:\n\n1. A says B is a knave.\n\n- If A is a knight (tells the truth), then A's statement must be true. Therefore, B would indeed be a knave.\n\nTo solve this problem, let's break it down step by step:\n\n1. A says B is a knave.\n\n- If A is a knight (tells the truth), then A's statement must be true. Therefore, B would indeed be a knave.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.\n\nLet me solve this step by step.\n\nLet's continue solving the problem step by step:\n\n1. A says B is a knave.",
+        "visits": 1,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.\n\nLet me solve this step by step.\n\nLet's continue solving the problem step by step:\n\n1. A says B is a knave.\n\n- If A is a knave, then B is actually a knight (since knaves lie). - But B says we are the same type.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.\n\nLet me solve this step by step.\n\nLet's continue solving the problem step by step:\n\n1. A says B is a knave.\n\n- If A is a knave, then B is actually a knight (since knaves lie). - But B says we are the same type.\n\nLet's continue solving the problem step by step:\n\n1. A says B is a knave.",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave? Knights tell truth, knaves lie.\n\nLet me solve this step by step.\n\nLet's continue solving the problem step by step:\n\n1. A says B is a knave.\n\n- If A is a knave, then B is actually a knight (since knaves lie). - But B says we are the same type.\n\nLet's continue solving the problem step by step:\n\n1. A says B is a knave.\n\n- If A is a knave, then B is actually a knight (since knaves lie). - But B says we are the same type.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

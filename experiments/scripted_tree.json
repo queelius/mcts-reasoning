@@ -1,0 +1,669 @@
+{
+  "question": "A says B is a knave. B says we are the same type. Is A a knight or knave?",
+  "simulations_run": 10,
+  "exploration_constant": 1.414,
+  "max_children_per_node": 3,
+  "max_rollout_depth": 5,
+  "terminal_states": [
+    {
+      "answer": "A is a knight",
+      "score": 0.5,
+      "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason "
+    },
+    {
+      "answer": "A is a knight",
+      "score": 0.5,
+      "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason "
+    }
+  ],
+  "root": {
+    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.",
+    "visits": 10,
+    "value": 0.1,
+    "is_terminal": false,
+    "answer": null,
+    "_continuations": null,
+    "_continuation_index": 0,
+    "children": [
+      {
+        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...",
+        "visits": 4,
+        "value": 0.125,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[assume] Continuing to reason about the problem...",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[compare] Continuing to reason about the problem...",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[compare] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+            "visits": 2,
+            "value": 0.25,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+                "visits": 1,
+                "value": 0.5,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...",
+                    "visits": 1,
+                    "value": 0.5,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+                        "visits": 1,
+                        "value": 0.5,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.",
+                            "visits": 1,
+                            "value": 0.5,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[deduce] The reasoning is complete. We tested both cases: A=knight is consistent, A=knave leads to contradiction. ANSWER: A is a knight",
+                                "visits": 1,
+                                "value": 0.5,
+                                "is_terminal": true,
+                                "answer": "A is a knight",
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[assume] Continuing to reason about the problem...",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[compare] Continuing to reason about the problem...",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[compare] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": [
+                                  {
+                                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[compare] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                                    "visits": 1,
+                                    "value": 0.0,
+                                    "is_terminal": false,
+                                    "answer": null,
+                                    "_continuations": null,
+                                    "_continuation_index": 0,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...",
+        "visits": 3,
+        "value": 0.16666666666666666,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+            "visits": 1,
+            "value": 0.5,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+                "visits": 1,
+                "value": 0.5,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+                    "visits": 1,
+                    "value": 0.5,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[deduce] The reasoning is complete. We tested both cases: A=knight is consistent, A=knave leads to contradiction. ANSWER: A is a knight",
+                        "visits": 1,
+                        "value": 0.5,
+                        "is_terminal": true,
+                        "answer": "A is a knight",
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[verify] Continuing to reason about the problem...",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[deduce] Not enough reasoning yet to conclude definitively. Need to test more cases.\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...",
+        "visits": 3,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: A says B is a knave. B says we are the same type. Is A a knight or knave?\n\nLet me solve this step by step.\n\n[assume] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[verify] Continuing to reason about the problem...\n\n[conclude] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[compare] Continuing to reason about the problem...\n\n[assume] Continuing to reason about the problem...",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
