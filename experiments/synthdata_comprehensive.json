@@ -1,0 +1,552 @@
+[
+  {
+    "problem": "Find gcd(15, 30)",
+    "ground_truth": "15",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": false,
+    "baseline_answer": "5",
+    "baseline_dist": {
+      "5": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "15",
+    "mcts_dist": {
+      "15": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 15
+  },
+  {
+    "problem": "Find lcm(24, 17)",
+    "ground_truth": "408",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": false,
+    "baseline_answer": "102",
+    "baseline_dist": {
+      "1368": 2,
+      "102": 3,
+      "24": 1
+    },
+    "mcts_correct": true,
+    "mcts_answer": "408",
+    "mcts_dist": {
+      "408": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 17
+  },
+  {
+    "problem": "Find lcm(26, 13)",
+    "ground_truth": "26",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": false,
+    "baseline_answer": "78",
+    "baseline_dist": {
+      "78": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "26",
+    "mcts_dist": {
+      "26": 3,
+      "338": 1
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 15
+  },
+  {
+    "problem": "Find 6 mod 4",
+    "ground_truth": "2",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": true,
+    "baseline_answer": "2",
+    "baseline_dist": {
+      "2": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "2",
+    "mcts_dist": {
+      "2": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 17
+  },
+  {
+    "problem": "Find lcm(14, 12)",
+    "ground_truth": "84",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": true,
+    "baseline_answer": "84",
+    "baseline_dist": {
+      "84": 5,
+      "42": 1
+    },
+    "mcts_correct": true,
+    "mcts_answer": "84",
+    "mcts_dist": {
+      "84": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 17
+  },
+  {
+    "problem": "Find lcm(13, 13)",
+    "ground_truth": "13",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": true,
+    "baseline_answer": "13",
+    "baseline_dist": {
+      "13": 4,
+      "169": 1,
+      "1567": 1
+    },
+    "mcts_correct": true,
+    "mcts_answer": "13",
+    "mcts_dist": {
+      "169": 1,
+      "13": 2
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 16
+  },
+  {
+    "problem": "Find gcd(34, 13)",
+    "ground_truth": "1",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": false,
+    "baseline_answer": "6",
+    "baseline_dist": {
+      "6": 3,
+      "5": 2,
+      "1": 1
+    },
+    "mcts_correct": true,
+    "mcts_answer": "1",
+    "mcts_dist": {
+      "1": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 18
+  },
+  {
+    "problem": "Find gcd(23, 13)",
+    "ground_truth": "1",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": true,
+    "baseline_answer": "1",
+    "baseline_dist": {
+      "1": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "1",
+    "mcts_dist": {
+      "1": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 20
+  },
+  {
+    "problem": "Find lcm(13, 25)",
+    "ground_truth": "325",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": false,
+    "baseline_answer": "475",
+    "baseline_dist": {
+      "675": 1,
+      "475": 2,
+      "175": 2,
+      "65": 1
+    },
+    "mcts_correct": true,
+    "mcts_answer": "325",
+    "mcts_dist": {
+      "325": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 16
+  },
+  {
+    "problem": "Find (5 * 3) mod 4",
+    "ground_truth": "3",
+    "difficulty": "0.2-0.5",
+    "baseline_correct": false,
+    "baseline_answer": "15",
+    "baseline_dist": {
+      "15": 4,
+      "1": 2
+    },
+    "mcts_correct": true,
+    "mcts_answer": "3",
+    "mcts_dist": {
+      "3": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 19
+  },
+  {
+    "problem": "Find lcm(17, 29)",
+    "ground_truth": "493",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": false,
+    "baseline_answer": "589",
+    "baseline_dist": {
+      "585": 2,
+      "589": 4
+    },
+    "mcts_correct": true,
+    "mcts_answer": "493",
+    "mcts_dist": {
+      "493": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 15
+  },
+  {
+    "problem": "Find gcd(39, 50)",
+    "ground_truth": "1",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": true,
+    "baseline_answer": "1",
+    "baseline_dist": {
+      "6": 1,
+      "1": 5
+    },
+    "mcts_correct": true,
+    "mcts_answer": "1",
+    "mcts_dist": {
+      "1": 3
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 17
+  },
+  {
+    "problem": "Find (22 + 5) mod 8",
+    "ground_truth": "3",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": false,
+    "baseline_answer": "7",
+    "baseline_dist": {
+      "3": 1,
+      "7": 2,
+      "5": 1,
+      "4": 2
+    },
+    "mcts_correct": true,
+    "mcts_answer": "3",
+    "mcts_dist": {
+      "3": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 17
+  },
+  {
+    "problem": "Find lcm(29, 21)",
+    "ground_truth": "609",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": false,
+    "baseline_answer": "58",
+    "baseline_dist": {
+      "58": 4,
+      "87": 1,
+      "174": 1
+    },
+    "mcts_correct": true,
+    "mcts_answer": "609",
+    "mcts_dist": {
+      "609": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 16
+  },
+  {
+    "problem": "Find gcd(58, 38)",
+    "ground_truth": "2",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": true,
+    "baseline_answer": "2",
+    "baseline_dist": {
+      "2": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "2",
+    "mcts_dist": {
+      "1": 1,
+      "4": 1,
+      "2": 2
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 18
+  },
+  {
+    "problem": "Find gcd(36, 20)",
+    "ground_truth": "4",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": true,
+    "baseline_answer": "4",
+    "baseline_dist": {
+      "4": 4,
+      "12": 2
+    },
+    "mcts_correct": true,
+    "mcts_answer": "4",
+    "mcts_dist": {
+      "4": 2
+    },
+    "mcts_terminals": 2,
+    "mcts_nodes": 19
+  },
+  {
+    "problem": "Find lcm(14, 34)",
+    "ground_truth": "238",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": false,
+    "baseline_answer": "42",
+    "baseline_dist": {
+      "42": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "238",
+    "mcts_dist": {
+      "238": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 17
+  },
+  {
+    "problem": "Find gcd(56, 33)",
+    "ground_truth": "1",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": false,
+    "baseline_answer": "11",
+    "baseline_dist": {
+      "11": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "1",
+    "mcts_dist": {
+      "1": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 17
+  },
+  {
+    "problem": "Find gcd(27, 47)",
+    "ground_truth": "1",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": true,
+    "baseline_answer": "1",
+    "baseline_dist": {
+      "1": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "1",
+    "mcts_dist": {
+      "1": 3,
+      "7": 1
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 16
+  },
+  {
+    "problem": "Find lcm(23, 28)",
+    "ground_truth": "644",
+    "difficulty": "0.4-0.7",
+    "baseline_correct": false,
+    "baseline_answer": "58",
+    "baseline_dist": {
+      "58": 1,
+      "184": 1,
+      "1592": 1,
+      "46": 1,
+      "116": 1,
+      "276": 1
+    },
+    "mcts_correct": true,
+    "mcts_answer": "644",
+    "mcts_dist": {
+      "644": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 17
+  },
+  {
+    "problem": "Find lcm(30, 11)",
+    "ground_truth": "330",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": true,
+    "baseline_answer": "330",
+    "baseline_dist": {
+      "330": 4,
+      "165": 2
+    },
+    "mcts_correct": true,
+    "mcts_answer": "330",
+    "mcts_dist": {
+      "330": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 18
+  },
+  {
+    "problem": "Find lcm(11, 15)",
+    "ground_truth": "165",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": true,
+    "baseline_answer": "165",
+    "baseline_dist": {
+      "165": 3,
+      "33": 3
+    },
+    "mcts_correct": true,
+    "mcts_answer": "165",
+    "mcts_dist": {
+      "15": 1,
+      "165": 3
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 14
+  },
+  {
+    "problem": "Find lcm(20, 13)",
+    "ground_truth": "260",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": false,
+    "baseline_answer": "60",
+    "baseline_dist": {
+      "60": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "260",
+    "mcts_dist": {
+      "260": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 15
+  },
+  {
+    "problem": "Find gcd(69, 68)",
+    "ground_truth": "1",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": true,
+    "baseline_answer": "1",
+    "baseline_dist": {
+      "1": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "1",
+    "mcts_dist": {
+      "1": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 18
+  },
+  {
+    "problem": "Find gcd(37, 74)",
+    "ground_truth": "37",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": true,
+    "baseline_answer": "37",
+    "baseline_dist": {
+      "59": 1,
+      "37": 5
+    },
+    "mcts_correct": true,
+    "mcts_answer": "37",
+    "mcts_dist": {
+      "37": 2
+    },
+    "mcts_terminals": 2,
+    "mcts_nodes": 18
+  },
+  {
+    "problem": "Find lcm(20, 27)",
+    "ground_truth": "540",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": false,
+    "baseline_answer": "180",
+    "baseline_dist": {
+      "180": 6
+    },
+    "mcts_correct": false,
+    "mcts_answer": "108",
+    "mcts_dist": {
+      "108": 2
+    },
+    "mcts_terminals": 2,
+    "mcts_nodes": 18
+  },
+  {
+    "problem": "Find lcm(38, 26)",
+    "ground_truth": "494",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": false,
+    "baseline_answer": "78",
+    "baseline_dist": {
+      "78": 2,
+      "114": 2,
+      "94": 1,
+      "38": 1
+    },
+    "mcts_correct": true,
+    "mcts_answer": "494",
+    "mcts_dist": {
+      "494": 2,
+      "988": 1
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 16
+  },
+  {
+    "problem": "Find gcd(27, 21)",
+    "ground_truth": "3",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": true,
+    "baseline_answer": "3",
+    "baseline_dist": {
+      "3": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "3",
+    "mcts_dist": {
+      "3": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 15
+  },
+  {
+    "problem": "Find gcd(42, 23)",
+    "ground_truth": "1",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": true,
+    "baseline_answer": "1",
+    "baseline_dist": {
+      "1": 6
+    },
+    "mcts_correct": true,
+    "mcts_answer": "1",
+    "mcts_dist": {
+      "1": 3
+    },
+    "mcts_terminals": 3,
+    "mcts_nodes": 14
+  },
+  {
+    "problem": "Find gcd(57, 68)",
+    "ground_truth": "1",
+    "difficulty": "0.6-0.9",
+    "baseline_correct": false,
+    "baseline_answer": "5",
+    "baseline_dist": {
+      "5": 3,
+      "1": 1,
+      "17": 1,
+      "7": 1
+    },
+    "mcts_correct": true,
+    "mcts_answer": "1",
+    "mcts_dist": {
+      "1": 4
+    },
+    "mcts_terminals": 4,
+    "mcts_nodes": 16
+  }
+]
