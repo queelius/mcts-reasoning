@@ -175,6 +175,7 @@ def generate_assignment_problem(n: int = 4, n_constraints: int = 3) -> Problem |
             "type": "assignment",
             "n": n,
             "n_constraints": n_constraints,
+            "constraints": [(items[item], slots[slot]) for item, slot in constraints],
             "solution": {items[i]: slots[solution[i]] for i in range(n)},
         },
     )

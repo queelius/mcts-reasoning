@@ -41,6 +41,7 @@ class LLMExtractor:
 
     def extract(self, question: str, response: str) -> list[ExtractedStep]:
         """Extract structured steps from a natural CoT response."""
+        self._current_question = question  # stored for answer extraction in conclude steps
         messages = [
             Message(role="system", content=(
                 "You analyze reasoning text and extract its logical structure.\n\n"
@@ -90,10 +91,12 @@ class LLMExtractor:
 
             check = self.terminal_detector.is_terminal(text)
 
-            # For conclude steps, try to extract the answer even without ANSWER: marker
+            # For conclude steps, extract answer via LLM judge (not regex)
             answer = check.answer
             if step_type == "conclude" and not answer:
-                answer = self._extract_answer_from_conclusion(text)
+                from .judge import LLMJudge
+                judge = LLMJudge(self.provider)
+                answer = judge.extract_answer(self._current_question, text)
 
             steps.append(ExtractedStep(
                 text=text.strip(),
@@ -105,21 +108,6 @@ class LLMExtractor:
             ))
 
         return steps
-
-    @staticmethod
-    def _extract_answer_from_conclusion(text: str) -> str | None:
-        """Extract the answer from a conclusion like 'gcd(36,46) = 2'."""
-        import re
-        patterns = [
-            r'(?:is|=|equals)\s+(\S+(?:\s+\S+)?)\s*$',
-            r'(?:is|=|equals)\s+(.+?)(?:\.|$)',
-            r'(\d+)\s*$',
-        ]
-        for pattern in patterns:
-            m = re.search(pattern, text.strip().rstrip('.'), re.IGNORECASE)
-            if m:
-                return m.group(1).strip()
-        return None
 
     def build_tree(self, question: str, steps: list[ExtractedStep]) -> Node:
         """Convert extracted steps into a Node tree."""
