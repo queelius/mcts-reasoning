@@ -90,16 +90,36 @@ class LLMExtractor:
 
             check = self.terminal_detector.is_terminal(text)
 
+            # For conclude steps, try to extract the answer even without ANSWER: marker
+            answer = check.answer
+            if step_type == "conclude" and not answer:
+                answer = self._extract_answer_from_conclusion(text)
+
             steps.append(ExtractedStep(
                 text=text.strip(),
                 step_type=step_type,
                 parent_idx=parent_idx,
                 is_branch=(step_type == "assume" and parent_idx < len(steps) - 1),
                 is_terminal=check.is_terminal or step_type == "conclude",
-                answer=check.answer,
+                answer=answer,
             ))
 
         return steps
+
+    @staticmethod
+    def _extract_answer_from_conclusion(text: str) -> str | None:
+        """Extract the answer from a conclusion like 'gcd(36,46) = 2'."""
+        import re
+        patterns = [
+            r'(?:is|=|equals)\s+(\S+(?:\s+\S+)?)\s*$',
+            r'(?:is|=|equals)\s+(.+?)(?:\.|$)',
+            r'(\d+)\s*$',
+        ]
+        for pattern in patterns:
+            m = re.search(pattern, text.strip().rstrip('.'), re.IGNORECASE)
+            if m:
+                return m.group(1).strip()
+        return None
 
     def build_tree(self, question: str, steps: list[ExtractedStep]) -> Node:
         """Convert extracted steps into a Node tree."""
