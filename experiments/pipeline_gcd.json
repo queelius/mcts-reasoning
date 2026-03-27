@@ -1,0 +1,441 @@
+{
+  "question": "Find gcd(36, 46)",
+  "simulations_run": 6,
+  "exploration_constant": 1.414,
+  "max_children_per_node": 3,
+  "max_rollout_depth": 5,
+  "terminal_states": [],
+  "root": {
+    "state": "Question: Find gcd(36, 46)",
+    "visits": 5,
+    "value": 0.0,
+    "is_terminal": false,
+    "answer": null,
+    "_continuations": null,
+    "_continuation_index": 0,
+    "children": [
+      {
+        "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide the larger number (46) by the smaller number (36)",
+        "visits": 1,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide the larger number (46) by the smaller number (36)\n\n[calculate] 10 = 36 x 1 + 10",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide the larger number (46) by the smaller number (36)\n\n[calculate] 10 = 36 x 1 + 10\n\n[assume] Continue to the next step since remainder is not zero",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide the larger number (46) by the smaller number (36)\n\n[calculate] 10 = 36 x 1 + 10\n\n[assume] Continue to the next step since remainder is not zero\n\n[deduce] 10 = 36 x 0 + 10",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide the larger number (46) by the smaller number (36)\n\n[calculate] 10 = 36 x 1 + 10\n\n[assume] Continue to the next step since remainder is not zero\n\n[deduce] 10 = 36 x 0 + 10\n\n[verify] Stop here since remainder is no longer divisible by smaller number",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide the larger number (46) by the smaller number (36)\n\n[calculate] 10 = 36 x 1 + 10\n\n[assume] Continue to the next step since remainder is not zero\n\n[deduce] 10 = 36 x 0 + 10\n\n[verify] Stop here since remainder is no longer divisible by smaller number\n\n[conclude] The gcd of 36 and 46 is 10",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": true,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: Find gcd(36, 46)\n\n[assume] Assume two numbers a and b",
+        "visits": 1,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: Find gcd(36, 46)\n\n[assume] Assume two numbers a and b\n\n[deduce] Divide a by b: quotient q and remainder r",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: Find gcd(36, 46)\n\n[assume] Assume two numbers a and b\n\n[deduce] Divide a by b: quotient q and remainder r\n\n[verify] Express a as b \u00d7 q + r",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: Find gcd(36, 46)\n\n[assume] Assume two numbers a and b\n\n[deduce] Divide a by b: quotient q and remainder r\n\n[verify] Express a as b \u00d7 q + r\n\n[calculate] Repeat with new values of a and b (b, r)",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: Find gcd(36, 46)\n\n[assume] Assume two numbers a and b\n\n[deduce] Divide a by b: quotient q and remainder r\n\n[verify] Express a as b \u00d7 q + r\n\n[calculate] Repeat with new values of a and b (b, r)\n\n[repeat] Until the remainder is 0",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: Find gcd(36, 46)\n\n[assume] Assume two numbers a and b\n\n[deduce] Divide a by b: quotient q and remainder r\n\n[verify] Express a as b \u00d7 q + r\n\n[calculate] Repeat with new values of a and b (b, r)\n\n[repeat] Until the remainder is 0\n\n[conclude] The last non-zero remainder is gcd(a, b)",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": true,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder",
+        "visits": 1,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder\n\n[calculate] 36 = 3 \u00d7 10 + 6 (quotient * divisor + remainder)",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder\n\n[calculate] 36 = 3 \u00d7 10 + 6 (quotient * divisor + remainder)\n\n[deduce] Divide 10 by 6 to find the quotient and remainder",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder\n\n[calculate] 36 = 3 \u00d7 10 + 6 (quotient * divisor + remainder)\n\n[deduce] Divide 10 by 6 to find the quotient and remainder\n\n[calculate] 10 = 1 \u00d7 6 + 4 (quotient * divisor + remainder)",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder\n\n[calculate] 36 = 3 \u00d7 10 + 6 (quotient * divisor + remainder)\n\n[deduce] Divide 10 by 6 to find the quotient and remainder\n\n[calculate] 10 = 1 \u00d7 6 + 4 (quotient * divisor + remainder)\n\n[deduce] Divide 6 by 4 to find the quotient and remainder",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder\n\n[calculate] 36 = 3 \u00d7 10 + 6 (quotient * divisor + remainder)\n\n[deduce] Divide 10 by 6 to find the quotient and remainder\n\n[calculate] 10 = 1 \u00d7 6 + 4 (quotient * divisor + remainder)\n\n[deduce] Divide 6 by 4 to find the quotient and remainder\n\n[calculate] 6 = 1 \u00d7 4 + 2 (quotient * divisor + remainder)",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder\n\n[calculate] 36 = 3 \u00d7 10 + 6 (quotient * divisor + remainder)\n\n[deduce] Divide 10 by 6 to find the quotient and remainder\n\n[calculate] 10 = 1 \u00d7 6 + 4 (quotient * divisor + remainder)\n\n[deduce] Divide 6 by 4 to find the quotient and remainder\n\n[calculate] 6 = 1 \u00d7 4 + 2 (quotient * divisor + remainder)\n\n[deduce] Divide 4 by 2 to find the quotient and remainder",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": [
+                                  {
+                                    "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder\n\n[calculate] 36 = 3 \u00d7 10 + 6 (quotient * divisor + remainder)\n\n[deduce] Divide 10 by 6 to find the quotient and remainder\n\n[calculate] 10 = 1 \u00d7 6 + 4 (quotient * divisor + remainder)\n\n[deduce] Divide 6 by 4 to find the quotient and remainder\n\n[calculate] 6 = 1 \u00d7 4 + 2 (quotient * divisor + remainder)\n\n[deduce] Divide 4 by 2 to find the quotient and remainder\n\n[calculate] 4 = 2 \u00d7 2 + 0 (quotient * divisor + remainder)",
+                                    "visits": 1,
+                                    "value": 0.0,
+                                    "is_terminal": false,
+                                    "answer": null,
+                                    "_continuations": null,
+                                    "_continuation_index": 0,
+                                    "children": [
+                                      {
+                                        "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder\n\n[calculate] 36 = 3 \u00d7 10 + 6 (quotient * divisor + remainder)\n\n[deduce] Divide 10 by 6 to find the quotient and remainder\n\n[calculate] 10 = 1 \u00d7 6 + 4 (quotient * divisor + remainder)\n\n[deduce] Divide 6 by 4 to find the quotient and remainder\n\n[calculate] 6 = 1 \u00d7 4 + 2 (quotient * divisor + remainder)\n\n[deduce] Divide 4 by 2 to find the quotient and remainder\n\n[calculate] 4 = 2 \u00d7 2 + 0 (quotient * divisor + remainder)\n\n[verify] Since the remainder is now 0, we stop here",
+                                        "visits": 1,
+                                        "value": 0.0,
+                                        "is_terminal": false,
+                                        "answer": null,
+                                        "_continuations": null,
+                                        "_continuation_index": 0,
+                                        "children": [
+                                          {
+                                            "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36 to find the quotient and remainder\n\n[calculate] 36 = 3 \u00d7 10 + 6 (quotient * divisor + remainder)\n\n[deduce] Divide 10 by 6 to find the quotient and remainder\n\n[calculate] 10 = 1 \u00d7 6 + 4 (quotient * divisor + remainder)\n\n[deduce] Divide 6 by 4 to find the quotient and remainder\n\n[calculate] 6 = 1 \u00d7 4 + 2 (quotient * divisor + remainder)\n\n[deduce] Divide 4 by 2 to find the quotient and remainder\n\n[calculate] 4 = 2 \u00d7 2 + 0 (quotient * divisor + remainder)\n\n[verify] Since the remainder is now 0, we stop here\n\n[conclude] Therefore gcd(36, 46) = 2",
+                                            "visits": 1,
+                                            "value": 0.0,
+                                            "is_terminal": true,
+                                            "answer": null,
+                                            "_continuations": null,
+                                            "_continuation_index": 0,
+                                            "children": []
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36",
+        "visits": 1,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36\n\n[calculate] 10 = 6 \u00d7 1 + 4",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36\n\n[calculate] 10 = 6 \u00d7 1 + 4\n\n[deduce] Divide 36 by 10",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36\n\n[calculate] 10 = 6 \u00d7 1 + 4\n\n[deduce] Divide 36 by 10\n\n[calculate] 6 = 4 \u00d7 1 + 2",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36\n\n[calculate] 10 = 6 \u00d7 1 + 4\n\n[deduce] Divide 36 by 10\n\n[calculate] 6 = 4 \u00d7 1 + 2\n\n[deduce] Divide 10 by 6",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36\n\n[calculate] 10 = 6 \u00d7 1 + 4\n\n[deduce] Divide 36 by 10\n\n[calculate] 6 = 4 \u00d7 1 + 2\n\n[deduce] Divide 10 by 6\n\n[calculate] 4 = 2 \u00d7 2 + 0",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36\n\n[calculate] 10 = 6 \u00d7 1 + 4\n\n[deduce] Divide 36 by 10\n\n[calculate] 6 = 4 \u00d7 1 + 2\n\n[deduce] Divide 10 by 6\n\n[calculate] 4 = 2 \u00d7 2 + 0\n\n[verify] Remainder is now 0, stop",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": false,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": [
+                                  {
+                                    "state": "Question: Find gcd(36, 46)\n\n[deduce] Divide 46 by 36\n\n[calculate] 10 = 6 \u00d7 1 + 4\n\n[deduce] Divide 36 by 10\n\n[calculate] 6 = 4 \u00d7 1 + 2\n\n[deduce] Divide 10 by 6\n\n[calculate] 4 = 2 \u00d7 2 + 0\n\n[verify] Remainder is now 0, stop\n\n[conclude] gcd(36, 46) = last non-zero remainder (2)",
+                                    "visits": 1,
+                                    "value": 0.0,
+                                    "is_terminal": true,
+                                    "answer": null,
+                                    "_continuations": null,
+                                    "_continuation_index": 0,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "state": "Question: Find gcd(36, 46)\n\n[assume] Start with initial values: a = 46, b = 36",
+        "visits": 1,
+        "value": 0.0,
+        "is_terminal": false,
+        "answer": null,
+        "_continuations": null,
+        "_continuation_index": 0,
+        "children": [
+          {
+            "state": "Question: Find gcd(36, 46)\n\n[assume] Start with initial values: a = 46, b = 36\n\n[assume] Assume a and b are positive integers",
+            "visits": 1,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": [
+              {
+                "state": "Question: Find gcd(36, 46)\n\n[assume] Start with initial values: a = 46, b = 36\n\n[assume] Assume a and b are positive integers\n\n[deduce] Divide a by b to get quotient q and remainder r",
+                "visits": 1,
+                "value": 0.0,
+                "is_terminal": false,
+                "answer": null,
+                "_continuations": null,
+                "_continuation_index": 0,
+                "children": [
+                  {
+                    "state": "Question: Find gcd(36, 46)\n\n[assume] Start with initial values: a = 46, b = 36\n\n[assume] Assume a and b are positive integers\n\n[deduce] Divide a by b to get quotient q and remainder r\n\n[calculate] q = a // b",
+                    "visits": 1,
+                    "value": 0.0,
+                    "is_terminal": false,
+                    "answer": null,
+                    "_continuations": null,
+                    "_continuation_index": 0,
+                    "children": [
+                      {
+                        "state": "Question: Find gcd(36, 46)\n\n[assume] Start with initial values: a = 46, b = 36\n\n[assume] Assume a and b are positive integers\n\n[deduce] Divide a by b to get quotient q and remainder r\n\n[calculate] q = a // b\n\n[calculate] r = a % b",
+                        "visits": 1,
+                        "value": 0.0,
+                        "is_terminal": false,
+                        "answer": null,
+                        "_continuations": null,
+                        "_continuation_index": 0,
+                        "children": [
+                          {
+                            "state": "Question: Find gcd(36, 46)\n\n[assume] Start with initial values: a = 46, b = 36\n\n[assume] Assume a and b are positive integers\n\n[deduce] Divide a by b to get quotient q and remainder r\n\n[calculate] q = a // b\n\n[calculate] r = a % b\n\n[verify] Repeat step 2 until r is not zero",
+                            "visits": 1,
+                            "value": 0.0,
+                            "is_terminal": false,
+                            "answer": null,
+                            "_continuations": null,
+                            "_continuation_index": 0,
+                            "children": [
+                              {
+                                "state": "Question: Find gcd(36, 46)\n\n[assume] Start with initial values: a = 46, b = 36\n\n[assume] Assume a and b are positive integers\n\n[deduce] Divide a by b to get quotient q and remainder r\n\n[calculate] q = a // b\n\n[calculate] r = a % b\n\n[verify] Repeat step 2 until r is not zero\n\n[conclude] The GCD of a and b is the last non-zero remainder r",
+                                "visits": 1,
+                                "value": 0.0,
+                                "is_terminal": true,
+                                "answer": null,
+                                "_continuations": null,
+                                "_continuation_index": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "state": "Question: Find gcd(36, 46)\n\n[assume] Start with initial values: a = 46, b = 36\n\n[deduce] Divide larger number by smaller number and take remainder as new smaller number",
+            "visits": 0,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": []
+          },
+          {
+            "state": "Question: Find gcd(36, 46)\n\n[assume] Start with initial values: a = 46, b = 36\n\n[assume] Initial values: a = 46, b = 36",
+            "visits": 0,
+            "value": 0.0,
+            "is_terminal": false,
+            "answer": null,
+            "_continuations": null,
+            "_continuation_index": 0,
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}
