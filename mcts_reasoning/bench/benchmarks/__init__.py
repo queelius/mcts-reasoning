@@ -12,11 +12,13 @@ from __future__ import annotations
 
 from .knights import KnightsAndKnaves
 from .arithmetic import ArithmeticChains
+from .combinatorial import CombinatorialBenchmark
 
 
 _REGISTRY: dict[str, type] = {
     "knights": KnightsAndKnaves,
     "arithmetic": ArithmeticChains,
+    "combinatorial": CombinatorialBenchmark,
 }
 
 
